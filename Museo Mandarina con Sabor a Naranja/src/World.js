@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -36,6 +36,17 @@ export class World {
         pc.setRotation(Math.PI); // Mirando hacia el Norte
         this.scene.add(pc.mesh);
         this.interactables.push(pc.interactableMesh);
+        this.pc = pc; // Store ref for main.js
+
+        // Agregar Mobiliario: Lámpara de Escritorio
+        const deskLamp = new DeskLamp();
+        // Desk at 0, 0, 3. Size 2x1.
+        // PC at 0, 0.8, 3.
+        // Lamp to the right: x = 0.7, y = 0.8, z = 3.
+        deskLamp.setPosition(0.7, 0.8, 3);
+        deskLamp.setRotation(Math.PI * 1.2); // Angled towards user/center
+        this.scene.add(deskLamp.mesh);
+        this.interactables.push(deskLamp.interactableMesh);
 
         // Agregar Reloj de Pared (En lugar del cuadro 1 - Norte)
         this.clock = new Clock();

@@ -89,7 +89,8 @@ export class RetroComputer {
         // Materiales
         const beigeMat = new THREE.MeshStandardMaterial({ color: 0xeeddcc, roughness: 0.6 });
         const darkBeigeMat = new THREE.MeshStandardMaterial({ color: 0xdcbba0, roughness: 0.6 });
-        const screenMat = new THREE.MeshBasicMaterial({ color: 0x001100 }); // Verde muy oscuro (apagado)
+        // Start Dark
+        this.screenMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
         const darkMat = new THREE.MeshStandardMaterial({ color: 0x222222 }); // Para detalles (disqueteras)
 
         // --- 1. CASE (CPU Horizontal) ---
@@ -138,7 +139,7 @@ export class RetroComputer {
 
         // Pantalla (Inset)
         const screenGeo = new THREE.PlaneGeometry(0.3, 0.22);
-        const screen = new THREE.Mesh(screenGeo, screenMat);
+        const screen = new THREE.Mesh(screenGeo, this.screenMat); // Use member mat
         // Posicionada en la cara frontal del monitor
         screen.position.set(0, monitorItm.position.y, monitorD / 2 + 0.005);
         this.mesh.add(screen);
@@ -146,6 +147,12 @@ export class RetroComputer {
         // Borde Pantalla (Bezel) - Simulado visualmente por el monitorBox, 
         // pero añadimos una "visera" o marco interno simple si queremos más detalle.
         // Por ahora lo simple funciona bien.
+
+        // LIGHTING (Monitor Glow)
+        this.monitorLight = new THREE.PointLight(0x88ccff, 0, 5); // Start 0 Intensity
+        this.monitorLight.position.set(0, monitorItm.position.y, 0.5);
+        this.monitorLight.castShadow = false;
+        this.mesh.add(this.monitorLight);
 
 
         // --- 3. TECLADO ---
@@ -192,6 +199,93 @@ export class RetroComputer {
 
     setRotation(y) {
         this.mesh.rotation.y = y;
+    }
+
+    turnOn() {
+        if (this.screenMat) this.screenMat.color.setHex(0x88ccff);
+        if (this.monitorLight) this.monitorLight.intensity = 1.5;
+    }
+
+    turnOff() {
+        if (this.screenMat) this.screenMat.color.setHex(0x111111);
+        if (this.monitorLight) this.monitorLight.intensity = 0;
+    }
+}
+
+export class DeskLamp {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.isOn = false;
+        this.light = null;
+        this.bulbMat = null;
+        this.build();
+    }
+
+    build() {
+        // Simple Modern Desk Lamp
+        const matC = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.5, roughness: 0.5 }); // Dark Metal
+
+        // Base
+        const baseGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.02, 32);
+        const base = new THREE.Mesh(baseGeo, matC);
+        this.mesh.add(base);
+
+        // Arm (Angled)
+        const armGeo = new THREE.CapsuleGeometry(0.015, 0.4, 4);
+        const arm = new THREE.Mesh(armGeo, matC);
+        arm.position.y = 0.2;
+        arm.rotation.z = Math.PI / 8; // Tilt slightly
+        this.mesh.add(arm);
+
+        // Head
+        const headGroup = new THREE.Group();
+        headGroup.position.set(-0.1, 0.4, 0);
+        headGroup.rotation.z = Math.PI / 3; // Look down
+        this.mesh.add(headGroup);
+
+        const shadeGeo = new THREE.ConeGeometry(0.08, 0.15, 32, 1, true);
+        const shade = new THREE.Mesh(shadeGeo, matC);
+        shade.position.y = 0.05;
+        headGroup.add(shade);
+
+        // Bulb
+        const bulbGeo = new THREE.SphereGeometry(0.03);
+        this.bulbMat = new THREE.MeshBasicMaterial({ color: 0x333333 }); // Off
+        const bulb = new THREE.Mesh(bulbGeo, this.bulbMat);
+        bulb.position.y = 0;
+        headGroup.add(bulb);
+
+        // Light
+        this.light = new THREE.SpotLight(0xffffee, 0);
+        this.light.position.set(0, 0, 0);
+        this.light.target.position.set(0, -1, 0);
+        this.light.angle = Math.PI / 4;
+        this.light.penumbra = 0.5;
+        this.light.castShadow = true;
+        headGroup.add(this.light);
+        headGroup.add(this.light.target);
+
+        // Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(0.3, 0.6, 0.3);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.y = 0.3;
+        hitBox.userData = { type: 'desk-lamp', parentObj: this };
+        this.mesh.add(hitBox);
+        this.interactableMesh = hitBox; // Expose for World
+    }
+
+    setPosition(x, y, z) { this.mesh.position.set(x, y, z); }
+    setRotation(y) { this.mesh.rotation.y = y; }
+
+    toggle() {
+        this.isOn = !this.isOn;
+        if (this.isOn) {
+            this.light.intensity = 2.0;
+            this.bulbMat.color.setHex(0xffffee);
+        } else {
+            this.light.intensity = 0;
+            this.bulbMat.color.setHex(0x333333);
+        }
     }
 }
 

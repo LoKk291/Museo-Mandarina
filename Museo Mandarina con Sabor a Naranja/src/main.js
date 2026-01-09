@@ -109,6 +109,8 @@ function checkInteraction() {
         // Personalizar mensaje según objeto
         if (hitObject.userData.type === 'computer') {
             interactionMsg.textContent = "Click para usar PC";
+        } else if (hitObject.userData.type === 'desk-lamp') {
+            interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOn ? "apagar" : "encender"); // Dynamic? Maybe simple "Click" is better
         } else {
             interactionMsg.textContent = "Click para ver";
         }
@@ -133,6 +135,8 @@ document.addEventListener('click', () => {
 
             if (hitObject.userData.type === 'computer') {
                 openPc();
+            } else if (hitObject.userData.type === 'desk-lamp') {
+                hitObject.userData.parentObj.toggle();
             } else if (hitObject.userData.painting) {
                 openModal(hitObject.userData.painting);
             } else {
@@ -150,7 +154,9 @@ document.addEventListener('click', () => {
 function openPc() {
     isModalOpen = true;
     player.unlock();
+    player.unlock();
     document.getElementById('instructions').style.display = 'none';
+    if (world.pc) world.pc.turnOn(); // Turn ON screen
     pcInterface.classList.remove('hidden');
     // Reset terminal state
     pcTerminal.classList.add('hidden');
@@ -163,6 +169,7 @@ function openPc() {
 
 function closePc() {
     isModalOpen = false;
+    if (world.pc) world.pc.turnOff(); // Turn OFF screen
     pcInterface.classList.add('hidden');
     // Stop any playing video
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
