@@ -521,3 +521,110 @@ body {
         opacity: 0.5;
     }
 }
+
+/* Snake Game Styles */
+#pc-snake {
+    background-color: #223322;
+    /* Dark Greenish */
+    color: #00ff00;
+    font-family: 'VT323', monospace;
+    position: absolute;
+    top: 48px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 88px);
+    display: flex;
+    flex-direction: column;
+    z-index: 23;
+    border: 4px solid #00aa00;
+    box-sizing: border-box;
+}
+
+#pc-snake.hidden {
+    display: none;
+}
+
+.snake-header {
+    background-color: #00aa00;
+    color: black;
+    padding: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+#snake-close {
+    background: black;
+    color: #00aa00;
+    border: 2px solid #00ff00;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+}
+
+.snake-game-area {
+    flex-grow: 1;
+    background-color: #111;
+    position: relative;
+    border: 2px solid #004400;
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#snake-canvas {
+    background-color: #000;
+    border: 1px solid #333;
+    image-rendering: pixelated;
+}
+
+#snake-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#snake-overlay.hidden {
+    display: none;
+}
+
+#snake-msg {
+    font-size: 40px;
+    color: red;
+    text-shadow: 2px 2px 0 #fff;
+    margin-bottom: 20px;
+}
+
+.snake-info {
+    padding: 10px;
+    background-color: #002200;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 2px solid #00aa00;
+}
+
+.score-board {
+    font-size: 2rem;
+    color: #00ff00;
+}
+
+.controls-hint {
+    font-size: 1.2rem;
+    color: #00cc00;
+}

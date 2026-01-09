@@ -95,7 +95,7 @@
                 <span id="close-pc">X</span>
             </div>
             <div class="pc-desktop">
-                <div class="pc-icon">
+                <div class="pc-icon" id="icon-snake">
                     <div class="icon-img">🐍</div>
                     <div class="icon-label">SNAKE.EXE</div>
                 </div>
@@ -163,6 +163,25 @@
                 </div>
                 <div class="pony-controls">
                     <button id="pony-random">✨ EPISODIO RANDOM ✨</button>
+                </div>
+            </div>
+
+            <!-- Ventana Snake Game -->
+            <div id="pc-snake" class="hidden">
+                <div class="snake-header">
+                    <span>SNAKE.EXE</span>
+                    <button id="snake-close">X</button>
+                </div>
+                <div class="snake-game-area">
+                    <canvas id="snake-canvas" width="560" height="280"></canvas>
+                    <div id="snake-overlay" class="hidden">
+                        <h2 id="snake-msg">GAME OVER</h2>
+                        <p>Press SPACE to Restart</p>
+                    </div>
+                </div>
+                <div class="snake-info">
+                    <div class="score-board">SCORE: <span id="snake-score">0</span></div>
+                    <div class="controls-hint">USE ARROW KEYS TO MOVE</div>
                 </div>
             </div>
 

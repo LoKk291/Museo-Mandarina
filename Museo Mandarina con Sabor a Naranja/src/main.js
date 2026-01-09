@@ -133,6 +133,8 @@ function openPc() {
     pcTerminal.classList.add('hidden');
     document.getElementById('pc-browser').classList.add('hidden');
     document.getElementById('pc-pony').classList.add('hidden');
+    document.getElementById('pc-snake').classList.add('hidden');
+    if (typeof stopSnake === 'function') stopSnake();
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
 }
 
@@ -141,6 +143,7 @@ function closePc() {
     pcInterface.classList.add('hidden');
     // Stop any playing video
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
+    if (typeof stopSnake === 'function') stopSnake();
     player.lock();
 }
 
@@ -166,6 +169,8 @@ iconCmd.onclick = () => {
     pcTerminal.classList.remove('hidden');
     pcBrowser.classList.add('hidden');
     pcPony.classList.add('hidden'); // Close Pony
+    pcSnake.classList.add('hidden');
+    stopSnake();
     if (ponyIframe) ponyIframe.src = ""; // Stop video if playing
     cmdInput.value = "";
     cmdInput.focus();
@@ -176,6 +181,8 @@ iconInternet.onclick = () => {
     pcBrowser.classList.remove('hidden');
     pcTerminal.classList.add('hidden');
     pcPony.classList.add('hidden'); // Close Pony
+    pcSnake.classList.add('hidden');
+    stopSnake();
     if (ponyIframe) ponyIframe.src = ""; // Stop video if playing
     browserInput.value = "";
     browserInput.focus();
@@ -206,6 +213,8 @@ iconPony.onclick = () => {
     pcPony.classList.remove('hidden');
     pcTerminal.classList.add('hidden');
     pcBrowser.classList.add('hidden');
+    pcSnake.classList.add('hidden'); // Close Snake
+    stopSnake();
     loadRandomEpisode();
 };
 
@@ -231,6 +240,178 @@ function loadRandomEpisode() {
 }
 
 ponyRandom.onclick = loadRandomEpisode;
+
+// --- SNAKE GAME LOGIC ---
+const iconSnake = document.getElementById('icon-snake');
+const pcSnake = document.getElementById('pc-snake');
+const snakeClose = document.getElementById('snake-close');
+const snakeCanvas = document.getElementById('snake-canvas');
+const snakeCtx = snakeCanvas.getContext('2d');
+const snakeScoreEl = document.getElementById('snake-score');
+const snakeOverlay = document.getElementById('snake-overlay');
+const snakeMsg = document.getElementById('snake-msg');
+
+let snakeGameInterval;
+let snake = [];
+let food = {};
+let direction = 'RIGHT';
+let nextDirection = 'RIGHT';
+let score = 0;
+let gameSpeed = 150;
+let isSnakeGameRunning = false;
+let isSnakeGameOver = false;
+
+const gridSize = 20;
+let tileCountX = snakeCanvas.width / gridSize;
+let tileCountY = snakeCanvas.height / gridSize;
+
+function initSnakeGame() {
+    // Recalculate based on current canvas size
+    tileCountX = snakeCanvas.width / gridSize;
+    tileCountY = snakeCanvas.height / gridSize;
+
+    snake = [
+        { x: 10, y: 10 },
+        { x: 9, y: 10 },
+        { x: 8, y: 10 }
+    ];
+    score = 0;
+    direction = 'RIGHT';
+    nextDirection = 'RIGHT';
+    isSnakeGameOver = false;
+    snakeScoreEl.innerText = score;
+    snakeOverlay.classList.add('hidden');
+    placeFood();
+    isSnakeGameRunning = true;
+    if (snakeGameInterval) clearInterval(snakeGameInterval);
+    snakeGameInterval = setInterval(gameLoop, gameSpeed);
+}
+
+function stopSnake() {
+    isSnakeGameRunning = false;
+    clearInterval(snakeGameInterval);
+}
+
+function placeFood() {
+    food = {
+        x: Math.floor(Math.random() * tileCountX),
+        y: Math.floor(Math.random() * tileCountY)
+    };
+    // Ensure food doesn't spawn on snake
+    for (let part of snake) {
+        if (part.x === food.x && part.y === food.y) {
+            placeFood();
+            break;
+        }
+    }
+}
+
+function gameLoop() {
+    direction = nextDirection;
+
+    const head = { x: snake[0].x, y: snake[0].y };
+    switch (direction) {
+        case 'UP': head.y--; break;
+        case 'DOWN': head.y++; break;
+        case 'LEFT': head.x--; break;
+        case 'RIGHT': head.x++; break;
+    }
+
+    // Collision with walls
+    if (head.x < 0 || head.x >= tileCountX || head.y < 0 || head.y >= tileCountY) {
+        gameOver();
+        return;
+    }
+
+    // Collision with self
+    for (let part of snake) {
+        if (part.x === head.x && part.y === head.y) {
+            gameOver();
+            return;
+        }
+    }
+
+    snake.unshift(head);
+
+    // Collision with food
+    if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        snakeScoreEl.innerText = score;
+        placeFood();
+        // Speed up slightly
+        if (gameSpeed > 50) gameSpeed -= 1;
+        clearInterval(snakeGameInterval);
+        snakeGameInterval = setInterval(gameLoop, gameSpeed);
+    } else {
+        snake.pop();
+    }
+
+    drawSnakeGame();
+}
+
+function drawSnakeGame() {
+    // Clear
+    snakeCtx.fillStyle = 'black';
+    snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+    // Draw Snake
+    snakeCtx.fillStyle = '#00ff00';
+    for (let i = 0; i < snake.length; i++) {
+        // Head is slightly different color or shape? Nah, retro style simple
+        if (i === 0) snakeCtx.fillStyle = '#ccffcc';
+        else snakeCtx.fillStyle = '#00cc00';
+
+        snakeCtx.fillRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize - 2, gridSize - 2);
+    }
+
+    // Draw Food
+    snakeCtx.fillStyle = 'red';
+    snakeCtx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+}
+
+function gameOver() {
+    isSnakeGameOver = true;
+    stopSnake();
+    snakeOverlay.classList.remove('hidden');
+}
+
+// Controls
+window.addEventListener('keydown', (e) => {
+    if (!isModalOpen || pcSnake.classList.contains('hidden')) return;
+
+    // Prevent scrolling
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].indexOf(e.code) > -1) {
+        e.preventDefault();
+    }
+
+    if (isSnakeGameOver && e.code === 'Space') {
+        initSnakeGame();
+        return;
+    }
+
+    switch (e.key) {
+        case 'ArrowUp': if (direction !== 'DOWN') nextDirection = 'UP'; break;
+        case 'ArrowDown': if (direction !== 'UP') nextDirection = 'DOWN'; break;
+        case 'ArrowLeft': if (direction !== 'RIGHT') nextDirection = 'LEFT'; break;
+        case 'ArrowRight': if (direction !== 'LEFT') nextDirection = 'RIGHT'; break;
+    }
+});
+
+iconSnake.onclick = () => {
+    pcSnake.classList.remove('hidden');
+    pcTerminal.classList.add('hidden');
+    pcBrowser.classList.add('hidden');
+    pcPony.classList.add('hidden');
+    // Close others logic is getting duplicated, should refactor but fine for now
+    if (ponyIframe) ponyIframe.src = "";
+
+    initSnakeGame();
+};
+
+snakeClose.onclick = () => {
+    pcSnake.classList.add('hidden');
+    stopSnake();
+};
 
 // Mantener foco en input si se hace click en terminal
 pcTerminal.onclick = () => {
