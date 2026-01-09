@@ -14,10 +14,16 @@ export class Player {
         this.radius = 0.5; // Radio del cuerpo del jugador
 
         // Estado
+        // Physics
+        this.gravity = 30.0;
+        this.jumpForce = 12.0;
+
+        // Estado
         this.moveForward = false;
         this.moveBackward = false;
         this.moveLeft = false;
         this.moveRight = false;
+        this.canJump = false;
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.isLocked = false;
@@ -59,6 +65,12 @@ export class Player {
             case 'KeyD':
                 this.moveRight = true;
                 break;
+            case 'Space':
+                if (this.canJump) {
+                    this.velocity.y += this.jumpForce;
+                    this.canJump = false;
+                }
+                break;
         }
     }
 
@@ -90,6 +102,9 @@ export class Player {
         this.velocity.x -= this.velocity.x * 10.0 * delta;
         this.velocity.z -= this.velocity.z * 10.0 * delta;
 
+        // Gravity
+        this.velocity.y -= this.gravity * delta;
+
         // Input
         this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
         this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
@@ -102,6 +117,23 @@ export class Player {
         // Calculamos desplazamiento potencial
         const dX = -this.velocity.x * delta * 0.08; // Más velocidad final
         const dZ = -this.velocity.z * delta * 0.08;
+
+        // Check Floor collision (Simple Y plane)
+        if (this.camera.position.y < this.height) {
+            this.velocity.y = 0;
+            this.camera.position.y = this.height;
+            this.canJump = true;
+        }
+
+        // Apply Vertical Velocity
+        this.camera.position.y += this.velocity.y * delta;
+
+        // Ensure floor clamp again
+        if (this.camera.position.y < this.height) {
+            this.velocity.y = 0;
+            this.camera.position.y = this.height;
+            this.canJump = true;
+        }
 
         // Colisión X
         this.controls.moveRight(dX);

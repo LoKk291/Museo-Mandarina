@@ -198,7 +198,7 @@ iconCmd.onclick = () => {
     pcPony.classList.add('hidden'); // Close Pony
     pcSnake.classList.add('hidden');
     stopSnake();
-    if (ponyIframe) ponyIframe.src = ""; // Stop video if playing
+    if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = ""; // Stop video if playing
     cmdInput.value = "";
     cmdInput.focus();
 };
@@ -210,7 +210,7 @@ iconInternet.onclick = () => {
     pcPony.classList.add('hidden'); // Close Pony
     pcSnake.classList.add('hidden');
     stopSnake();
-    if (ponyIframe) ponyIframe.src = ""; // Stop video if playing
+    if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = ""; // Stop video if playing
     browserInput.value = "";
     browserInput.focus();
 };
@@ -247,7 +247,7 @@ iconPony.onclick = () => {
 
 ponyClose.onclick = () => {
     pcPony.classList.add('hidden');
-    ponyIframe.src = ""; // Stop video
+    if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = ""; // Stop video
 };
 
 function loadRandomEpisode() {
