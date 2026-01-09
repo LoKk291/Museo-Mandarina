@@ -13,17 +13,16 @@ export class Player {
         this.height = 1.7;
         this.radius = 0.5; // Radio del cuerpo del jugador
 
-        // Estado
         // Physics
         this.gravity = 30.0;
-        this.jumpForce = 12.0;
+        this.jumpForce = 8.0;
 
         // Estado
         this.moveForward = false;
         this.moveBackward = false;
         this.moveLeft = false;
         this.moveRight = false;
-        this.canJump = false;
+        this.canJump = true; // Start enabled
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.isLocked = false;
@@ -67,6 +66,7 @@ export class Player {
                 break;
             case 'Space':
                 if (this.canJump) {
+                    console.log("JUMP!");
                     this.velocity.y += this.jumpForce;
                     this.canJump = false;
                 }
@@ -122,7 +122,7 @@ export class Player {
         if (this.camera.position.y < this.height) {
             this.velocity.y = 0;
             this.camera.position.y = this.height;
-            this.canJump = true;
+            if (!this.canJump) this.canJump = true; // Robust reset
         }
 
         // Apply Vertical Velocity
@@ -132,7 +132,7 @@ export class Player {
         if (this.camera.position.y < this.height) {
             this.velocity.y = 0;
             this.camera.position.y = this.height;
-            this.canJump = true;
+            if (!this.canJump) this.canJump = true;
         }
 
         // Colisión X
