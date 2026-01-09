@@ -89,8 +89,14 @@ export class RetroComputer {
         // Materiales
         const beigeMat = new THREE.MeshStandardMaterial({ color: 0xeeddcc, roughness: 0.6 });
         const darkBeigeMat = new THREE.MeshStandardMaterial({ color: 0xdcbba0, roughness: 0.6 });
-        // Start Dark
-        this.screenMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+        // Start with Faint Blue Glow (Always On)
+        this.screenMat = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            emissive: 0x004488, // Deep faint blue
+            emissiveIntensity: 0.8, // Visible but not blinding
+            roughness: 0.2,
+            metalness: 0.5
+        });
         const darkMat = new THREE.MeshStandardMaterial({ color: 0x222222 }); // Para detalles (disqueteras)
 
         // --- 1. CASE (CPU Horizontal) ---
@@ -116,6 +122,28 @@ export class RetroComputer {
         const vent = new THREE.Mesh(ventGeo, darkBeigeMat);
         vent.position.set(-0.15, 0.05, 0.251);
         this.mesh.add(vent);
+
+        // --- STATUS LEDS (Red & Green) ---
+        // Power LED (Green)
+        const ledGeo = new THREE.BoxGeometry(0.015, 0.015, 0.01);
+        const greenLedMat = new THREE.MeshStandardMaterial({
+            color: 0x00ff00,
+            emissive: 0x00ff00,
+            emissiveIntensity: 2.0
+        });
+        const greenLed = new THREE.Mesh(ledGeo, greenLedMat);
+        greenLed.position.set(-0.02, 0.08, 0.251); // Center-Left
+        this.mesh.add(greenLed);
+
+        // HDD LED (Red)
+        const redLedMat = new THREE.MeshStandardMaterial({
+            color: 0xff0000,
+            emissive: 0xff0000,
+            emissiveIntensity: 1.5
+        });
+        const redLed = new THREE.Mesh(ledGeo, redLedMat);
+        redLed.position.set(0.02, 0.08, 0.251); // Center-Right
+        this.mesh.add(redLed);
 
 
         // --- 2. MONITOR CRT ---
@@ -143,10 +171,6 @@ export class RetroComputer {
         // Posicionada en la cara frontal del monitor
         screen.position.set(0, monitorItm.position.y, monitorD / 2 + 0.005);
         this.mesh.add(screen);
-
-        // Borde Pantalla (Bezel) - Simulado visualmente por el monitorBox, 
-        // pero añadimos una "visera" o marco interno simple si queremos más detalle.
-        // Por ahora lo simple funciona bien.
 
         // LIGHTING (Monitor Glow)
         this.monitorLight = new THREE.PointLight(0x88ccff, 0, 5); // Start 0 Intensity
@@ -202,13 +226,31 @@ export class RetroComputer {
     }
 
     turnOn() {
-        if (this.screenMat) this.screenMat.color.setHex(0x88ccff);
-        if (this.monitorLight) this.monitorLight.intensity = 1.5;
+        if (this.screenMat) {
+            this.screenMat.color.setHex(0x222222);
+            this.screenMat.emissive.setHex(0x0088ff); // Bright Cyan/Blue Active
+            this.screenMat.emissiveIntensity = 3.0; // Boosted Emissive
+        }
+        if (this.monitorLight) {
+            this.monitorLight.color.setHex(0x66ccff);
+            this.monitorLight.intensity = 6.0; // Much Stronger (was 3.0)
+            this.monitorLight.distance = 10;   // Further reach
+        }
     }
 
     turnOff() {
-        if (this.screenMat) this.screenMat.color.setHex(0x111111);
-        if (this.monitorLight) this.monitorLight.intensity = 0;
+        // "Off" state is now "Idle/Screensaver": Faint Blue Glow
+        if (this.screenMat) {
+            this.screenMat.color.setHex(0x111111);
+            this.screenMat.emissive.setHex(0x004488); // Deep faint blue
+            this.screenMat.emissiveIntensity = 1.2; // Visible glow (was 0.8)
+        }
+        // Keep a small glow light even when "off"
+        if (this.monitorLight) {
+            this.monitorLight.color.setHex(0x004488);
+            this.monitorLight.intensity = 1.5; // Stronger dim light (was 0.5)
+            this.monitorLight.distance = 5;
+        }
     }
 }
 
@@ -222,56 +264,121 @@ export class DeskLamp {
     }
 
     build() {
-        // Simple Modern Desk Lamp
-        const matC = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.5, roughness: 0.5 }); // Dark Metal
+        // Nordic Style Lamp (White + Light Wood)
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0xd2a679, roughness: 0.8 }); // Light wood
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.2 });
 
-        // Base
-        const baseGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.02, 32);
-        const base = new THREE.Mesh(baseGeo, matC);
+        // 1. Base (White Cylinder)
+        const baseGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.03, 32);
+        const base = new THREE.Mesh(baseGeo, whiteMat);
+        base.castShadow = true;
+        base.receiveShadow = true;
         this.mesh.add(base);
 
-        // Arm (Angled)
-        const armGeo = new THREE.CapsuleGeometry(0.015, 0.4, 4);
-        const arm = new THREE.Mesh(armGeo, matC);
-        arm.position.y = 0.2;
-        arm.rotation.z = Math.PI / 8; // Tilt slightly
-        this.mesh.add(arm);
+        // 2. Vertical Stand (Two wooden poles)
+        const poleH = 0.35;
+        const poleW = 0.025;
+        const poleD = 0.025;
+        const gap = 0.04;
 
-        // Head
-        const headGroup = new THREE.Group();
-        headGroup.position.set(-0.1, 0.4, 0);
-        headGroup.rotation.z = Math.PI / 3; // Look down
-        this.mesh.add(headGroup);
+        const poleGeo = new THREE.BoxGeometry(poleW, poleH, poleD);
 
-        const shadeGeo = new THREE.ConeGeometry(0.08, 0.15, 32, 1, true);
-        const shade = new THREE.Mesh(shadeGeo, matC);
-        shade.position.y = 0.05;
-        headGroup.add(shade);
+        const pole1 = new THREE.Mesh(poleGeo, woodMat);
+        pole1.position.set(-gap / 2, poleH / 2 + 0.015, 0);
+        pole1.castShadow = true;
+        this.mesh.add(pole1);
+
+        const pole2 = new THREE.Mesh(poleGeo, woodMat);
+        pole2.position.set(gap / 2, poleH / 2 + 0.015, 0);
+        pole2.castShadow = true;
+        this.mesh.add(pole2);
+
+        // 3. Hardware (Pivot Bolt)
+        const pivotH = 0.3; // Height of pivot
+        const boltGeo = new THREE.CylinderGeometry(0.008, 0.008, gap + 0.04, 16);
+        const bolt = new THREE.Mesh(boltGeo, metalMat);
+        bolt.rotation.z = Math.PI / 2;
+        bolt.position.set(0, pivotH, 0);
+        this.mesh.add(bolt);
+
+        // Wingnut (Decoration)
+        const nutGeo = new THREE.BoxGeometry(0.01, 0.03, 0.01);
+        const nut = new THREE.Mesh(nutGeo, metalMat);
+        nut.position.set(gap / 2 + 0.02, pivotH, 0);
+        this.mesh.add(nut);
+
+        // 4. Arm (Wooden Bar) passing between poles
+        const armL = 0.4;
+        const armW = 0.025;
+        const armD = 0.035;
+
+        const armGroup = new THREE.Group();
+        armGroup.position.set(0, pivotH, 0);
+        // Tilt forward
+        armGroup.rotation.x = Math.PI / 4;
+        this.mesh.add(armGroup);
+
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(armW, armL, armD), woodMat);
+        // Pivot is at proportional position Y.
+        // If arm is 0.4 long, and pivot is at 0.1 from bottom.
+        // Center of geometry is 0. So we shift geometry up by (0.4/2 - 0.1) = 0.1
+        arm.position.y = 0.1;
+        arm.castShadow = true;
+        armGroup.add(arm);
+
+        // 5. Shade (White Cup)
+        const shadeGroup = new THREE.Group();
+        // Top of arm is at: y = 0.1 + 0.4/2 = 0.3 inside the armGroup
+        shadeGroup.position.set(0, 0.3, 0);
+        shadeGroup.rotation.x = Math.PI / 2 + 0.2; // Point down/forward
+        armGroup.add(shadeGroup);
+
+        // Connector (small wood or metal piece)
+        const conn = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.05), woodMat);
+        conn.rotation.z = Math.PI / 2;
+        shadeGroup.add(conn);
+
+        // Actual Shade (Cylinder for cup shape)
+        const hoodGeo = new THREE.CylinderGeometry(0.06, 0.12, 0.25, 32, 1, true);
+        const hood = new THREE.Mesh(hoodGeo, whiteMat);
+        hood.rotation.x = Math.PI; // Flip so wide part is down
+        hood.position.y = 0.125; // Shift so top (narrow) connects to pivot
+        shadeGroup.add(hood);
+
+        // Cap for closed narrow end
+        const capGeo = new THREE.CircleGeometry(0.06, 32);
+        const cap = new THREE.Mesh(capGeo, whiteMat);
+        cap.rotation.x = -Math.PI / 2;
+        cap.position.y = 0; // At pivot point (narrow end)
+        shadeGroup.add(cap);
 
         // Bulb
-        const bulbGeo = new THREE.SphereGeometry(0.03);
+        const bulbGeo = new THREE.SphereGeometry(0.04);
         this.bulbMat = new THREE.MeshBasicMaterial({ color: 0x333333 }); // Off
         const bulb = new THREE.Mesh(bulbGeo, this.bulbMat);
-        bulb.position.y = 0;
-        headGroup.add(bulb);
+        bulb.position.y = 0.15; // Inside shade
+        shadeGroup.add(bulb);
 
-        // Light
+        // Light (Spotlight)
         this.light = new THREE.SpotLight(0xffffee, 0);
-        this.light.position.set(0, 0, 0);
-        this.light.target.position.set(0, -1, 0);
-        this.light.angle = Math.PI / 4;
-        this.light.penumbra = 0.5;
+        this.light.position.set(0, 0.1, 0);
+        this.light.target.position.set(0, 1, 0); // Local direction +Y (which is "down" relative to shade rotation)
+        this.light.angle = Math.PI / 3;
+        this.light.penumbra = 0.2;
         this.light.castShadow = true;
-        headGroup.add(this.light);
-        headGroup.add(this.light.target);
+        // SpotLight target needs to be in scene or added to hierarchy
+        shadeGroup.add(this.light);
+        shadeGroup.add(this.light.target);
+
 
         // Hitbox
-        const hitBoxGeo = new THREE.BoxGeometry(0.3, 0.6, 0.3);
+        const hitBoxGeo = new THREE.BoxGeometry(0.4, 0.7, 0.4);
         const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
-        hitBox.position.y = 0.3;
+        hitBox.position.y = 0.35;
         hitBox.userData = { type: 'desk-lamp', parentObj: this };
         this.mesh.add(hitBox);
-        this.interactableMesh = hitBox; // Expose for World
+        this.interactableMesh = hitBox;
     }
 
     setPosition(x, y, z) { this.mesh.position.set(x, y, z); }
@@ -410,32 +517,6 @@ export class FloorLamp {
         const legHeight = 1.4;
         const legspread = 0.4;
         const legGeo = new THREE.CylinderGeometry(0.02, 0.02, legHeight);
-
-        // Leg 1
-        const leg1 = new THREE.Mesh(legGeo, woodMat);
-        leg1.position.set(0, legHeight / 2, legspread / 2);
-        leg1.rotation.x = -0.15; // Tilt out
-        // Rotation logic for tripod is tricky manually. 
-        // Let's create a container for each leg and rotate container Y
-
-        for (let i = 0; i < 3; i++) {
-            const pivot = new THREE.Group();
-            pivot.rotation.y = (i / 3) * Math.PI * 2;
-
-            const leg = new THREE.Mesh(legGeo, woodMat);
-            leg.position.y = legHeight / 2;
-            leg.position.z = legspread; // Offset from center
-            leg.rotation.x = -0.15; // Slant inward/outward? 
-            // If z is positive, and we want bottom to be further out...
-            // Top is at ~0. Bottom is at +Z.
-            // Wait, standard tripod: tops meet at center, feet are spread.
-            // So if pivot is center Y=height... no.
-            // Let's model leg vertical at origin, then top at 0, bottom out.
-
-            // Simpler: Just position tops near 1.3 height, bottoms spread.
-            pivot.add(leg);
-            this.mesh.add(pivot);
-        }
 
         // Doing proper tripod manually:
         // Tops meet at height 1.3

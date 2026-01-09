@@ -22,29 +22,36 @@ export class World {
         centralRoom.addDoor('West', 4, 3.5);
 
         // Agregar Mobiliario: Escritorio
-        const desk = new Desk(2.2, 1.0, 0.8);
-        desk.setPosition(0, 0, 3); // Un poco desplazado hacia el sur desde el centro
+        const desk = new Desk(2.6, 1.3, 0.8); // Larger Desk
+        desk.setPosition(0, 0, -6.0); // Further from wall
+        desk.setRotation(Math.PI); // Drawers on other side?
         this.scene.add(desk.mesh);
 
         // Agregar Mobiliario: Computadora Retro
         const pc = new RetroComputer();
         // El escritorio esta en y=0, altura 0.8. La PC debe ir encima (y=0.8)
-        pc.setPosition(0, 0.8, 3);
-        // Rotar para mirar hacia "atras" (hacia la cámara si entras desde el norte)
-        // Ojo: Desk está en Z=3. Si entras desde Z=-10, ves el escritorio de frente?
-        // El escritorio está orientado por defecto (largo X).
-        pc.setRotation(Math.PI); // Mirando hacia el Norte
+        pc.setPosition(0, 0.8, -6.0);
+        // Rotar para mirar hacia el Norte (Wall). Back to user entering room.
+        pc.setRotation(Math.PI);
+        this.scene.add(pc.mesh);
         this.scene.add(pc.mesh);
         this.interactables.push(pc.interactableMesh);
         this.pc = pc; // Store ref for main.js
 
         // Agregar Mobiliario: Lámpara de Escritorio
         const deskLamp = new DeskLamp();
-        // Desk at 0, 0, 3. Size 2x1.
-        // PC at 0, 0.8, 3.
-        // Lamp to the right: x = 0.7, y = 0.8, z = 3.
-        deskLamp.setPosition(0.7, 0.8, 3);
-        deskLamp.setRotation(Math.PI * 1.2); // Angled towards user/center
+        // Desk at 0, 0, -6.0.
+        // Lamp to the right of sitting person (facing North) -> East (+X)
+        deskLamp.setPosition(0.7, 0.8, -6.0);
+        // Point Towards Back Wall (North / -Z).
+        // "Opposite" of towards user.
+        // Towards user was ~0 (South).
+        // Towards wall is PI (North).
+        deskLamp.setRotation(Math.PI - 0.2); // Slight angle still to face center-ish if needed, or straight back.
+        // actually PI points straight North. -0.2 makes it point North-North-West (tilted left).
+        // To aim at center of desk back from right side, we probably want North-West.
+        // Math.PI + 0.2 would be North-North-East (Right).
+        // Math.PI - 0.2 is North-North-West (Left). Correct.
         this.scene.add(deskLamp.mesh);
         this.interactables.push(deskLamp.interactableMesh);
 
@@ -61,9 +68,10 @@ export class World {
         this.scene.add(this.clock.mesh);
 
         // Agregar colisión simple para el escritorio (Caja invisible)
-        const deskCollisionGeo = new THREE.BoxGeometry(2.2, 2, 1.0);
+        // Agregar colisión simple para el escritorio (Caja invisible)
+        const deskCollisionGeo = new THREE.BoxGeometry(2.6, 2, 1.3);
         const deskCollision = new THREE.Mesh(deskCollisionGeo, new THREE.MeshBasicMaterial({ visible: false }));
-        deskCollision.position.set(0, 1, 3);
+        deskCollision.position.set(0, 1, -6.0);
         this.scene.add(deskCollision);
         this.collidables.push(deskCollision);
 
