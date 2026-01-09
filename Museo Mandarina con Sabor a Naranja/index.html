@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museo Mandarina 3D</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Import Map para usar Three.js sin bundler -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        #error-console {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(200, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            z-index: 9999;
+            display: none;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="error-console"></div>
+    <script>
+        let errorTimeout;
+        function showTempError(content) {
+            const div = document.getElementById('error-console');
+            div.style.display = 'block';
+            div.innerHTML += content;
+
+            if (errorTimeout) clearTimeout(errorTimeout);
+            errorTimeout = setTimeout(() => {
+                div.style.display = 'none';
+                div.innerHTML = ''; // Limpiar para la próxima
+            }, 5000);
+        }
+
+        window.onerror = function (msg, url, line, col, error) {
+            showTempError(`<h3>Error Detectado:</h3><p>${msg}</p><p>En: ${url}:${line}</p><br>Trying to run local modules (file://) without a server often causes this. Use the start_game.bat file!`);
+        };
+        window.addEventListener('unhandledrejection', function (event) {
+            showTempError(`<h3>Error de Promesa:</h3><p>${event.reason}</p>`);
+        });
+    </script>
+    <div id="game-container"></div>
+
+    <!-- Instrucciones de inicio -->
+    <div id="instructions">
+        <div class="menu-box">
+            <h1>Museo Mandarina<br><span style="font-size: 0.6em">con Sabor a Naranja</span></h1>
+            <p>> Haz click para comenzar_</p>
+            <div class="controls-info">
+                <p>[W,A,S,D] :: MOVERSE</p>
+                <p>[MOUSE] :: MIRAR</p>
+                <p>[CLICK] :: INTERACTUAR</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Retícula de mira -->
+    <div id="crosshair">+</div>
+
+    <!-- Overlay de Interacción (Mensaje flotante) -->
+    <div id="interaction-message">Click para ver</div>
+
+    <!-- Modal para ver el cuadro -->
+    <div id="painting-modal" class="hidden">
+        <div class="modal-content">
+            <span id="close-modal">&times;</span>
+            <img id="modal-image" src="" alt="Cuadro">
+            <div id="modal-description">
+                <h2 id="modal-title">Título del Cuadro</h2>
+                <p id="modal-text">Descripción...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interfaz computadora Retro -->
+    <div id="pc-interface" class="hidden">
+        <div class="pc-screen">
+            <div class="pc-header">
+                <span>MANDARINAOS v1.0</span>
+                <span id="close-pc">X</span>
+            </div>
+            <div class="pc-desktop">
+                <div class="pc-icon">
+                    <div class="icon-img">🐍</div>
+                    <div class="icon-label">SNAKE.EXE</div>
+                </div>
+                <!-- Nuevo Icono CMD -->
+                <div class="pc-icon" id="icon-cmd">
+                    <div class="icon-img">_></div>
+                    <div class="icon-label">CMD.EXE</div>
+                </div>
+                <div class="pc-icon">
+                    <div class="icon-img">⚙️</div>
+                    <div class="icon-label">SETUP.BAT</div>
+                </div>
+                <div class="pc-icon">
+                    <div class="icon-img">🌐</div>
+                    <div class="icon-label">INTERNET</div>
+                </div>
+            </div>
+
+            <!-- Ventana Terminal -->
+            <div id="pc-terminal" class="hidden">
+                <div id="terminal-output">
+                    <p>MANDARINA OS [Version 1.0.4]</p>
+                    <p>(c) 2026 Mandarina Corp. All rights reserved.</p>
+                    <br>
+                </div>
+                <div class="terminal-input-line">
+                    <span>C:\USER></span>
+                    <input type="text" id="cmd-input" maxlength="40" autocomplete="off" spellcheck="false" autofocus>
+                </div>
+            </div>
+
+            <div class="pc-footer">
+                READY.
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>
