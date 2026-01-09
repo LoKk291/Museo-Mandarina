@@ -182,6 +182,7 @@ function openPc() {
     document.getElementById('pc-browser').classList.add('hidden');
     document.getElementById('pc-pony').classList.add('hidden');
     document.getElementById('pc-snake').classList.add('hidden');
+    pcCalc.classList.add('hidden');
     if (typeof stopSnake === 'function') stopSnake();
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
 }
@@ -193,6 +194,7 @@ function closePc() {
     // Stop any playing video
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
     if (typeof stopSnake === 'function') stopSnake();
+    pcCalc.classList.add('hidden');
     player.lock();
 }
 
@@ -217,12 +219,20 @@ const ponyPlaceholder = document.getElementById('pony-placeholder');
 const iconSetup = document.getElementById('icon-setup');
 const pcSettings = document.getElementById('pc-settings');
 
+// Calc Refs
+const iconCalc = document.getElementById('icon-calc');
+const pcCalc = document.getElementById('pc-calc');
+const calcClose = document.getElementById('calc-close');
+const calcDisplay = document.getElementById('calc-display');
+const calcButtons = document.querySelectorAll('.calc-btn');
+
 // Terminal Logic
 iconCmd.onclick = () => {
     pcTerminal.classList.remove('hidden');
     pcBrowser.classList.add('hidden');
     pcPony.classList.add('hidden'); // Close Pony
     pcSnake.classList.add('hidden');
+    pcCalc.classList.add('hidden');
     stopSnake();
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = ""; // Stop video if playing
     cmdInput.value = "";
@@ -235,6 +245,7 @@ iconInternet.onclick = () => {
     pcTerminal.classList.add('hidden');
     pcPony.classList.add('hidden'); // Close Pony
     pcSnake.classList.add('hidden');
+    pcCalc.classList.add('hidden');
     stopSnake();
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = ""; // Stop video if playing
     browserInput.value = "";
@@ -267,6 +278,7 @@ iconPony.onclick = () => {
     pcTerminal.classList.add('hidden');
     pcBrowser.classList.add('hidden');
     pcSnake.classList.add('hidden'); // Close Snake
+    pcCalc.classList.add('hidden');
     stopSnake();
     loadRandomEpisode();
 };
@@ -331,6 +343,7 @@ iconSetup.onclick = () => {
     pcBrowser.classList.add('hidden');
     pcPony.classList.add('hidden');
     pcSnake.classList.add('hidden');
+    pcCalc.classList.add('hidden');
     stopSnake();
     if (ponyIframe) ponyIframe.src = "";
 
@@ -369,6 +382,60 @@ if (timeSlider) {
         document.getElementById('time-display').textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     });
 }
+
+// --- CALCULATOR LOGIC ---
+let calcExpression = "";
+
+iconCalc.onclick = () => {
+    pcCalc.classList.remove('hidden');
+    pcTerminal.classList.add('hidden');
+    pcBrowser.classList.add('hidden');
+    pcPony.classList.add('hidden');
+    pcSnake.classList.add('hidden');
+    stopSnake();
+    if (ponyIframe) ponyIframe.src = "";
+    soundManager.play('click_mouse');
+    calcExpression = "0";
+    updateCalcDisplay();
+};
+
+calcClose.onclick = () => {
+    pcCalc.classList.add('hidden');
+};
+
+function updateCalcDisplay() {
+    calcDisplay.textContent = calcExpression || "0";
+}
+
+calcButtons.forEach(btn => {
+    btn.onclick = () => {
+        const val = btn.getAttribute('data-val');
+        soundManager.play('click');
+
+        if (val === 'C') {
+            calcExpression = "0";
+        } else if (val === 'DEL') {
+            calcExpression = calcExpression.slice(0, -1);
+            if (calcExpression === "") calcExpression = "0";
+        } else if (val === '=') {
+            try {
+                // Safety check: only allow digits and operators
+                if (/^[0-9+\-*/.]+$/.test(calcExpression)) {
+                    calcExpression = eval(calcExpression).toString();
+                }
+            } catch (e) {
+                calcExpression = "ERROR";
+            }
+        } else {
+            if (calcExpression === "0" || calcExpression === "ERROR") {
+                calcExpression = val;
+            } else {
+                calcExpression += val;
+            }
+        }
+        updateCalcDisplay();
+    };
+});
 
 function initSnakeGame() {
     // Recalculate based on current canvas size
@@ -507,6 +574,7 @@ iconSnake.onclick = () => {
     pcTerminal.classList.add('hidden');
     pcBrowser.classList.add('hidden');
     pcPony.classList.add('hidden');
+    pcCalc.classList.add('hidden');
     // Close others logic is getting duplicated, should refactor but fine for now
     if (ponyIframe) ponyIframe.src = "";
 

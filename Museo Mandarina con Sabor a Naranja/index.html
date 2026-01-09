@@ -116,6 +116,10 @@
                     <div class="icon-img">🦄</div>
                     <div class="icon-label">PONY.EXE</div>
                 </div>
+                <div class="pc-icon" id="icon-calc">
+                    <div class="icon-img">🧮</div>
+                    <div class="icon-label">CALC.EXE</div>
+                </div>
             </div>
 
             <!-- Ventana Terminal -->
@@ -201,6 +205,41 @@
                         <input type="range" id="time-slider" min="0" max="23.9" step="0.1" value="8">
                     </div>
                     <p class="hint">Ajusta el control para cambiar la hora.</p>
+                </div>
+            </div>
+
+            <!-- Ventana Calculadora -->
+            <div id="pc-calc" class="hidden">
+                <div class="calc-header">
+                    <span>CALCULADORA v1.0</span>
+                    <button id="calc-close">X</button>
+                </div>
+                <div class="calc-body">
+                    <div id="calc-display">0</div>
+                    <div class="calc-buttons">
+                        <button class="calc-btn" data-val="C">C</button>
+                        <button class="calc-btn" data-val="/">/</button>
+                        <button class="calc-btn" data-val="*">*</button>
+                        <button class="calc-btn" data-val="DEL">DEL</button>
+
+                        <button class="calc-btn" data-val="7">7</button>
+                        <button class="calc-btn" data-val="8">8</button>
+                        <button class="calc-btn" data-val="9">9</button>
+                        <button class="calc-btn" data-val="-">-</button>
+
+                        <button class="calc-btn" data-val="4">4</button>
+                        <button class="calc-btn" data-val="5">5</button>
+                        <button class="calc-btn" data-val="6">6</button>
+                        <button class="calc-btn" data-val="+">+</button>
+
+                        <button class="calc-btn" data-val="1">1</button>
+                        <button class="calc-btn" data-val="2">2</button>
+                        <button class="calc-btn" data-val="3">3</button>
+                        <button class="calc-btn" data-val="=" id="calc-equal">=</button>
+
+                        <button class="calc-btn wide" data-val="0">0</button>
+                        <button class="calc-btn" data-val=".">.</button>
+                    </div>
                 </div>
             </div>
 
