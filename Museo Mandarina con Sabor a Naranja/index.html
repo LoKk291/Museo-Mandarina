@@ -112,12 +112,16 @@
                     <div class="icon-img">🌐</div>
                     <div class="icon-label">INTERNET</div>
                 </div>
+                <div class="pc-icon" id="icon-pony">
+                    <div class="icon-img">🦄</div>
+                    <div class="icon-label">PONY.EXE</div>
+                </div>
             </div>
 
             <!-- Ventana Terminal -->
             <div id="pc-terminal" class="hidden">
                 <div id="terminal-output">
-                    <p>MANDARINA OS [Version 1.0.4]</p>
+                    <p>MANDARINAOS v1.0</p>
                     <p>(c) 2026 Mandarina Corp. All rights reserved.</p>
                     <br>
                 </div>
@@ -141,6 +145,24 @@
                         <p>Gateway to the World Wide Web</p>
                         <p class="blink">_</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Ventana Pony Player -->
+            <div id="pc-pony" class="hidden">
+                <div class="pony-header">
+                    <span>MY LITTLE PONY PLAYER</span>
+                    <button id="pony-close">X</button>
+                </div>
+                <div class="pony-screen">
+                    <div id="pony-placeholder">
+                        <p>Loading Magic...</p>
+                    </div>
+                    <iframe id="pony-iframe" width="100%" height="100%" src="" frameborder="0"
+                        allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                </div>
+                <div class="pony-controls">
+                    <button id="pony-random">✨ EPISODIO RANDOM ✨</button>
                 </div>
             </div>
 

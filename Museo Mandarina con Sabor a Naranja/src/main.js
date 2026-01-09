@@ -131,14 +131,16 @@ function openPc() {
     pcInterface.classList.remove('hidden');
     // Reset terminal state
     pcTerminal.classList.add('hidden');
-    // Ensure browser is closed by default when opening PC, or maybe keep state?
-    // Let's reset for now
     document.getElementById('pc-browser').classList.add('hidden');
+    document.getElementById('pc-pony').classList.add('hidden');
+    if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
 }
 
 function closePc() {
     isModalOpen = false;
     pcInterface.classList.add('hidden');
+    // Stop any playing video
+    if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
     player.lock();
 }
 
@@ -151,10 +153,20 @@ const browserInput = document.getElementById('browser-input');
 const browserGo = document.getElementById('browser-go');
 const browserClose = document.getElementById('browser-close');
 
+// Pony Refs
+const iconPony = document.getElementById('icon-pony');
+const pcPony = document.getElementById('pc-pony');
+const ponyClose = document.getElementById('pony-close');
+const ponyRandom = document.getElementById('pony-random');
+const ponyIframe = document.getElementById('pony-iframe');
+const ponyPlaceholder = document.getElementById('pony-placeholder');
+
 // Terminal Logic
 iconCmd.onclick = () => {
     pcTerminal.classList.remove('hidden');
-    pcBrowser.classList.add('hidden'); // Ensure browser is closed
+    pcBrowser.classList.add('hidden');
+    pcPony.classList.add('hidden'); // Close Pony
+    if (ponyIframe) ponyIframe.src = ""; // Stop video if playing
     cmdInput.value = "";
     cmdInput.focus();
 };
@@ -162,7 +174,9 @@ iconCmd.onclick = () => {
 // Browser Logic
 iconInternet.onclick = () => {
     pcBrowser.classList.remove('hidden');
-    pcTerminal.classList.add('hidden'); // Ensure terminal is closed
+    pcTerminal.classList.add('hidden');
+    pcPony.classList.add('hidden'); // Close Pony
+    if (ponyIframe) ponyIframe.src = ""; // Stop video if playing
     browserInput.value = "";
     browserInput.focus();
 };
@@ -174,7 +188,6 @@ browserClose.onclick = () => {
 function performSearch() {
     const query = browserInput.value.trim();
     if (query) {
-        // Open Google search in a new tab
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
         browserInput.value = "";
     }
@@ -187,6 +200,37 @@ browserInput.addEventListener('keydown', (e) => {
         performSearch();
     }
 });
+
+// Pony Logic
+iconPony.onclick = () => {
+    pcPony.classList.remove('hidden');
+    pcTerminal.classList.add('hidden');
+    pcBrowser.classList.add('hidden');
+    loadRandomEpisode();
+};
+
+ponyClose.onclick = () => {
+    pcPony.classList.add('hidden');
+    ponyIframe.src = ""; // Stop video
+};
+
+function loadRandomEpisode() {
+    ponyPlaceholder.style.display = 'block';
+    // Playlist ID for MLP FiM
+    const playlistId = 'PLKw8kqfW5YzKkIvaKHKqrW1Uzm0TQZWeH';
+    // Random index between 1 and 200 (Approx episodes available in playlist)
+    const index = Math.floor(Math.random() * 200) + 1;
+
+    // Embed URL
+    const url = `https://www.youtube.com/embed?listType=playlist&list=${playlistId}&index=${index}&autoplay=1`;
+    ponyIframe.src = url;
+
+    setTimeout(() => {
+        ponyPlaceholder.style.display = 'none';
+    }, 2000);
+}
+
+ponyRandom.onclick = loadRandomEpisode;
 
 // Mantener foco en input si se hace click en terminal
 pcTerminal.onclick = () => {
