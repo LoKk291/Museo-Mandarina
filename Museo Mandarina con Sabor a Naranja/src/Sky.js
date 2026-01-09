@@ -234,6 +234,41 @@ export class Sky {
         this.scene.fog.color.copy(fogColor);
     }
 
+    setTime(targetHour) {
+        // Reverse calculate cycleTime from targetHour
+        // Day: 06:00 to 20:00 (14 hours) -> 0 to 600s
+        // Night: 20:00 to 06:00 (10 hours) -> 600 to 900s
+
+        let newCycleTime = 0;
+
+        // Normalize targetHour 0-24
+        if (targetHour < 0) targetHour += 24;
+        if (targetHour >= 24) targetHour -= 24;
+
+        // Check if in Day Range (6 <= h < 20)
+        if (targetHour >= 6 && targetHour < 20) {
+            const hoursIntoDay = targetHour - 6;
+            const ratio = hoursIntoDay / 14.0;
+            newCycleTime = ratio * this.dayDuration;
+        } else {
+            // Night Range (20 <= h < 24 OR 0 <= h < 6)
+            let hoursIntoNight = 0;
+            if (targetHour >= 20) {
+                hoursIntoNight = targetHour - 20;
+            } else {
+                hoursIntoNight = (targetHour + 24) - 20;
+            }
+            const ratio = hoursIntoNight / 10.0;
+            newCycleTime = this.dayDuration + (ratio * this.nightDuration);
+        }
+
+        // Update this.time preserving current cycle loop count to avoid glitches?
+        // Actually this.time is cumulative. We can just set it to newCycleTime logic.
+        // But better to keep the magnitude.
+        const currentCycles = Math.floor(this.time / this.cycleDuration);
+        this.time = (currentCycles * this.cycleDuration) + newCycleTime;
+    }
+
     getGameTime() {
         return this.calculateGameTime(this.time % this.cycleDuration);
     }

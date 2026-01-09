@@ -48,6 +48,26 @@ const closeModalBtn = document.getElementById('close-modal');
 const instructions = document.getElementById('instructions');
 const crosshair = document.getElementById('crosshair');
 
+// --- EASTER EGG: ORQUIDEA ---
+let eggBuffer = "";
+const eggCode = "orquidea";
+document.addEventListener('keydown', (e) => {
+    // Only works if NOT playing (Controls Unlocked / Menu Visible)
+    if (!player.isLocked) {
+        // Simple buffer check
+        if (e.key.length === 1) { // Ignore modifiers
+            eggBuffer += e.key.toLowerCase();
+            if (eggBuffer.length > eggCode.length) {
+                eggBuffer = eggBuffer.slice(-eggCode.length);
+            }
+            if (eggBuffer === eggCode) {
+                window.open("https://upload.wikimedia.org/wikipedia/commons/d/df/Orchid_high_resolution.jpg", "_blank");
+                eggBuffer = ""; // Reset
+            }
+        }
+    }
+});
+
 // UI Logic moved from Player.js to here for better control
 player.controls.addEventListener('lock', () => {
     player.isLocked = true;
@@ -167,6 +187,10 @@ const ponyRandom = document.getElementById('pony-random');
 const ponyIframe = document.getElementById('pony-iframe');
 const ponyPlaceholder = document.getElementById('pony-placeholder');
 
+// Setup Refs
+const iconSetup = document.getElementById('icon-setup');
+const pcSettings = document.getElementById('pc-settings');
+
 // Terminal Logic
 iconCmd.onclick = () => {
     pcTerminal.classList.remove('hidden');
@@ -245,6 +269,7 @@ function loadRandomEpisode() {
 ponyRandom.onclick = loadRandomEpisode;
 
 // --- SNAKE GAME LOGIC ---
+// --- SNAKE GAME LOGIC ---
 const iconSnake = document.getElementById('icon-snake');
 const pcSnake = document.getElementById('pc-snake');
 const snakeClose = document.getElementById('snake-close');
@@ -267,6 +292,57 @@ let isSnakeGameOver = false;
 const gridSize = 20;
 let tileCountX = snakeCanvas.width / gridSize;
 let tileCountY = snakeCanvas.height / gridSize;
+
+// ... (Rest of Snake Logic)
+
+// --- SETUP / SETTINGS LOGIC ---
+iconSetup.onclick = () => {
+    // Hide Desktop
+    document.querySelector('.pc-desktop').classList.add('hidden');
+
+    // Hide others (just in case)
+    pcTerminal.classList.add('hidden');
+    pcBrowser.classList.add('hidden');
+    pcPony.classList.add('hidden');
+    pcSnake.classList.add('hidden');
+    stopSnake();
+    if (ponyIframe) ponyIframe.src = "";
+
+    // Show Settings
+    pcSettings.classList.remove('hidden');
+
+    // Sync slider
+    const gt = sky.getGameTime();
+    const currentH = gt.continuousHour;
+
+    const slider = document.getElementById('time-slider');
+    const display = document.getElementById('time-display');
+
+    if (slider) slider.value = currentH;
+    if (display) {
+        const h = Math.floor(currentH);
+        const m = Math.floor((currentH - h) * 60);
+        display.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    }
+};
+
+document.getElementById('settings-close').addEventListener('click', () => {
+    pcSettings.classList.add('hidden');
+    // Show Desktop again
+    document.querySelector('.pc-desktop').classList.remove('hidden');
+});
+
+const timeSlider = document.getElementById('time-slider');
+if (timeSlider) {
+    timeSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        sky.setTime(val);
+
+        const h = Math.floor(val);
+        const m = Math.floor((val - h) * 60);
+        document.getElementById('time-display').textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    });
+}
 
 function initSnakeGame() {
     // Recalculate based on current canvas size
