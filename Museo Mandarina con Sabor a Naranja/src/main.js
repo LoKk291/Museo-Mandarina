@@ -41,6 +41,7 @@ const soundManager = new SoundManager();
 // Let's rely on standard formats.
 soundManager.load('jump', 'sounds/jump.mp3');
 soundManager.load('click', 'sounds/click.mp3');
+soundManager.load('click_mouse', 'sounds/click_mouse.mp3');
 soundManager.load('pc_start', 'sounds/pc_startup.mp3');
 soundManager.load('switch', 'sounds/switch.mp3');
 
@@ -146,7 +147,7 @@ document.addEventListener('click', () => {
             console.log("Interactuando con:", hitObject.userData);
 
             if (hitObject.userData.type === 'computer') {
-                soundManager.play('click');
+                soundManager.play('click_mouse'); // Specific mouse click sound
                 openPc();
             } else if (hitObject.userData.type === 'desk-lamp') {
                 soundManager.play('switch');
