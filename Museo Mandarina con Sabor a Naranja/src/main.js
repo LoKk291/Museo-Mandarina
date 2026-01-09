@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { World } from './World.js';
 import { Player } from './Player.js';
 import { Sky } from './Sky.js';
+import { SoundManager } from './SoundManager.js';
 
 // --- CONFIGURACIÓN E INICIALIZACIÓN ---
 const scene = new THREE.Scene();
@@ -33,9 +34,20 @@ const sky = new Sky(scene, { dirLight, amiLight });
 // --- MUNDO ---
 const world = new World(scene);
 
+// --- SONIDO ---
+const soundManager = new SoundManager();
+// Load default sounds from placeholders if not present user can replace
+// Ideally we would load real files. For now we assume they might exist or browser will just warn.
+// Let's rely on standard formats.
+soundManager.load('jump', 'sounds/jump.mp3');
+soundManager.load('click', 'sounds/click.mp3');
+soundManager.load('pc_start', 'sounds/pc_startup.mp3');
+soundManager.load('switch', 'sounds/switch.mp3');
+
 // --- JUGADOR ---
 // Pasamos las paredes para colisiones
 const player = new Player(camera, document.body, scene, world.collidables);
+player.soundManager = soundManager; // Inject Sound Manager
 
 // --- UI / INTERACCIÓN ---
 const interactionMsg = document.getElementById('interaction-message');
@@ -134,10 +146,13 @@ document.addEventListener('click', () => {
             console.log("Interactuando con:", hitObject.userData);
 
             if (hitObject.userData.type === 'computer') {
+                soundManager.play('click');
                 openPc();
             } else if (hitObject.userData.type === 'desk-lamp') {
+                soundManager.play('switch');
                 hitObject.userData.parentObj.toggle();
             } else if (hitObject.userData.painting) {
+                soundManager.play('click');
                 openModal(hitObject.userData.painting);
             } else {
                 console.error("Objeto interactuable sin tipo o datos definidos:", hitObject);
@@ -156,7 +171,10 @@ function openPc() {
     player.unlock();
     player.unlock();
     document.getElementById('instructions').style.display = 'none';
+    player.unlock();
+    document.getElementById('instructions').style.display = 'none';
     if (world.pc) world.pc.turnOn(); // Turn ON screen
+    soundManager.play('pc_start');
     pcInterface.classList.remove('hidden');
     // Reset terminal state
     pcTerminal.classList.add('hidden');

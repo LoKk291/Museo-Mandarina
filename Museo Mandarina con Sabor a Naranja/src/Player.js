@@ -67,6 +67,7 @@ export class Player {
             case 'Space':
                 if (this.canJump) {
                     console.log("JUMP!");
+                    if (this.soundManager) this.soundManager.play('jump');
                     this.velocity.y += this.jumpForce;
                     this.canJump = false;
                 }
