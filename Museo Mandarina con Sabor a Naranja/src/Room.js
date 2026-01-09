@@ -51,12 +51,12 @@ export class Room {
         floor.receiveShadow = true;
         this.group.add(floor);
 
-        // Techo
-        const ceilingGeo = new THREE.PlaneGeometry(this.width, this.depth);
-        const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
-        ceiling.rotation.x = Math.PI / 2;
-        ceiling.position.y = this.height;
-        this.group.add(ceiling);
+        // Techo (ELIMINADO: Para ver el cielo real dinámico)
+        // const ceilingGeo = new THREE.PlaneGeometry(this.width, this.depth);
+        // const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+        // ceiling.rotation.x = Math.PI / 2;
+        // ceiling.position.y = this.height;
+        // this.group.add(ceiling);
 
         // Construir 4 paredes base
         // Nota: Las puertas son huecos. Por simplicidad inicial, construiremos paredes completas

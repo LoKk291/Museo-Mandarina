@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -8,6 +8,7 @@ export class World {
         this.rooms = [];
         this.collidables = []; // Walls for collision
         this.interactables = []; // Paintings for clicking
+        this.clock = null;
 
         this.init();
     }
@@ -36,20 +37,44 @@ export class World {
         this.scene.add(pc.mesh);
         this.interactables.push(pc.interactableMesh);
 
+        // Agregar Reloj de Pared (En lugar del cuadro 1 - Norte)
+        this.clock = new Clock();
+        // Pared Norte está en Z = -10. 
+        // addPaintingToWall en Norte pone Z = -depth/2 + dist + thickness/2.
+        // -10 + 0.1 + 0.25 = -9.65 approx.
+        // ShiftH era 0.
+        // Altura cuadro era por defecto (height/2 = 2) + shiftV (0) = 2.
+        // Clock queremos un poco mas alto quizas, o igual. 
+        // Painting 1 size was 4x3. Center at Y=2.
+        this.clock.mesh.position.set(0, 2.0, -9.8);
+        this.scene.add(this.clock.mesh);
 
         // Agregar colisión simple para el escritorio (Caja invisible)
-        // Nota: Nuestro sistema de colisión actual usa meshes directos con BoundingBox.
-        // Podríamos añadir las partes del escritorio a collidables, pero sería caro.
-        // Mejor añadir una caja invisible simple.
         const deskCollisionGeo = new THREE.BoxGeometry(2.2, 2, 1.0);
         const deskCollision = new THREE.Mesh(deskCollisionGeo, new THREE.MeshBasicMaterial({ visible: false }));
         deskCollision.position.set(0, 1, 3);
         this.scene.add(deskCollision);
         this.collidables.push(deskCollision);
 
+        // Agregar Lamparas de Pie (Luz Calida)
+        const lamp1 = new FloorLamp();
+        lamp1.setPosition(-9, 0, -9); // Esquina Noroeste (Mas cerca esquina)
+        this.scene.add(lamp1.mesh);
+
+        const lamp2 = new FloorLamp();
+        lamp2.setPosition(9, 0, 9); // Esquina Sureste (Mas cerca esquina)
+        this.scene.add(lamp2.mesh);
 
         // Agregar Cuadros a Central
-        centralRoom.addPaintingToWall('North', 4, 3, '', 'Mona Lisa (Falsa)', 'Una copia muy convincente.', '1');
+        // Mover Cuadro 1 "Mona Lisa" a otro lado.
+        // Pared Sur tiene "El Grito".
+        // Pared Este tiene puerta centrada.
+        // Pared Oeste tiene puerta centrada.
+        // Movemos Mona Lisa al SUR, desplazada? O al Norte desplazada?
+        // Hagamos Norte desplazada a la derecha
+        centralRoom.addPaintingToWall('North', 4, 3, '', 'Mona Lisa (Falsa)', 'Una copia muy convincente.', '1', 6, 0);
+
+        // El otro cuadro ya estaba en Sur
         centralRoom.addPaintingToWall('South', 3, 4, '', 'El Grito (Silencioso)', 'No hace ruido.', '2');
 
         this.addRoom(centralRoom);

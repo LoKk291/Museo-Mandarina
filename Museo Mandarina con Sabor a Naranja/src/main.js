@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { World } from './World.js';
 import { Player } from './Player.js';
+import { Sky } from './Sky.js';
 
 // --- CONFIGURACIÓN E INICIALIZACIÓN ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111111);
-scene.fog = new THREE.Fog(0x111111, 0, 60);
+scene.fog = new THREE.Fog(0x111111, 0, 200); // Fog distance increased
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500); // Far plane increased
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -26,6 +26,9 @@ dirLight.shadow.camera.bottom = -20;
 dirLight.shadow.camera.left = -20;
 dirLight.shadow.camera.right = 20;
 scene.add(dirLight);
+
+// --- CLIMA / CIELO ---
+const sky = new Sky(scene, { dirLight, amiLight });
 
 // --- MUNDO ---
 const world = new World(scene);
@@ -496,6 +499,15 @@ function animate() {
     requestAnimationFrame(animate);
 
     const delta = clock.getDelta();
+
+    // Update Weather/Cycle
+    sky.update(delta);
+
+    // Update Clock
+    if (world.clock) {
+        const time = sky.getGameTime();
+        world.clock.setTime(time.hours, time.minutes);
+    }
 
     if (!isModalOpen) {
         player.update(delta);
