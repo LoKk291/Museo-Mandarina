@@ -108,7 +108,7 @@
                     <div class="icon-img">⚙️</div>
                     <div class="icon-label">SETUP.BAT</div>
                 </div>
-                <div class="pc-icon">
+                <div class="pc-icon" id="icon-internet">
                     <div class="icon-img">🌐</div>
                     <div class="icon-label">INTERNET</div>
                 </div>
@@ -124,6 +124,23 @@
                 <div class="terminal-input-line">
                     <span>C:\USER></span>
                     <input type="text" id="cmd-input" maxlength="40" autocomplete="off" spellcheck="false" autofocus>
+                </div>
+            </div>
+
+            <!-- Ventana Internet Browser -->
+            <div id="pc-browser" class="hidden">
+                <div class="browser-nav">
+                    <span>URL:</span>
+                    <input type="text" id="browser-input" placeholder="Search or type URL" autocomplete="off">
+                    <button id="browser-go">GO</button>
+                    <button id="browser-close">X</button>
+                </div>
+                <div class="browser-content">
+                    <div class="browser-placeholder">
+                        <h1>Mandarina Web</h1>
+                        <p>Gateway to the World Wide Web</p>
+                        <p class="blink">_</p>
+                    </div>
                 </div>
             </div>
 

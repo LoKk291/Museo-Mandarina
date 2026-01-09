@@ -131,6 +131,9 @@ function openPc() {
     pcInterface.classList.remove('hidden');
     // Reset terminal state
     pcTerminal.classList.add('hidden');
+    // Ensure browser is closed by default when opening PC, or maybe keep state?
+    // Let's reset for now
+    document.getElementById('pc-browser').classList.add('hidden');
 }
 
 function closePc() {
@@ -141,12 +144,49 @@ function closePc() {
 
 closePcBtn.onclick = closePc;
 
+// Browser Refs
+const iconInternet = document.getElementById('icon-internet');
+const pcBrowser = document.getElementById('pc-browser');
+const browserInput = document.getElementById('browser-input');
+const browserGo = document.getElementById('browser-go');
+const browserClose = document.getElementById('browser-close');
+
 // Terminal Logic
 iconCmd.onclick = () => {
     pcTerminal.classList.remove('hidden');
+    pcBrowser.classList.add('hidden'); // Ensure browser is closed
     cmdInput.value = "";
     cmdInput.focus();
 };
+
+// Browser Logic
+iconInternet.onclick = () => {
+    pcBrowser.classList.remove('hidden');
+    pcTerminal.classList.add('hidden'); // Ensure terminal is closed
+    browserInput.value = "";
+    browserInput.focus();
+};
+
+browserClose.onclick = () => {
+    pcBrowser.classList.add('hidden');
+};
+
+function performSearch() {
+    const query = browserInput.value.trim();
+    if (query) {
+        // Open Google search in a new tab
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+        browserInput.value = "";
+    }
+}
+
+browserGo.onclick = performSearch;
+
+browserInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        performSearch();
+    }
+});
 
 // Mantener foco en input si se hace click en terminal
 pcTerminal.onclick = () => {
