@@ -29,37 +29,43 @@ export class Sky {
     }
 
     initClouds() {
-        const cloudGeo = new THREE.BoxGeometry(1, 1, 1);
-        const cloudMat = new THREE.MeshLambertMaterial({
+        // Use Dodecahedron for "Low Poly Fluffy" look instead of Box
+        const cloudGeo = new THREE.DodecahedronGeometry(1, 0);
+        const cloudMat = new THREE.MeshStandardMaterial({
             color: 0xffffff,
+            roughness: 0.9,
+            metalness: 0.1,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.9, // More solid white
             flatShading: true
         });
 
         // Create a few clusters of clouds
-        for (let i = 0; i < 20; i++) {
+        // Increased count (15 -> 60) and range (200 -> 800)
+        for (let i = 0; i < 60; i++) {
             const cluster = new THREE.Group();
 
             // Random position in sky
-            const x = (Math.random() - 0.5) * 200;
-            const z = (Math.random() - 0.5) * 200;
-            const y = 30 + Math.random() * 20;
+            const x = (Math.random() - 0.5) * 800; // Wider area
+            const z = (Math.random() - 0.5) * 800;
+            const y = 40 + Math.random() * 50; // Variation in height
 
-            // Random parts for the cloud
-            const parts = 3 + Math.floor(Math.random() * 5);
+            // Random parts for the cloud (More parts for realism)
+            const parts = 5 + Math.floor(Math.random() * 8);
             for (let j = 0; j < parts; j++) {
                 const mesh = new THREE.Mesh(cloudGeo, cloudMat);
+                // Offset from center of cluster
                 mesh.position.set(
-                    (Math.random() - 0.5) * 6,
-                    (Math.random() - 0.5) * 2,
-                    (Math.random() - 0.5) * 4
+                    (Math.random() - 0.5) * 10,
+                    (Math.random() - 0.5) * 4,
+                    (Math.random() - 0.5) * 6
                 );
-                mesh.scale.set(
-                    4 + Math.random() * 4,
-                    2 + Math.random() * 2,
-                    3 + Math.random() * 3
-                );
+                // Varied scales
+                const scale = 3 + Math.random() * 5;
+                mesh.scale.set(scale, scale * 0.8, scale);
+                // Random Rotation
+                mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
                 cluster.add(mesh);
             }
 
@@ -67,7 +73,7 @@ export class Sky {
             this.scene.add(cluster);
             this.clouds.push({
                 mesh: cluster,
-                speed: 1 + Math.random() * 2 // Moving speed
+                speed: 0.5 + Math.random() * 1.5 // Slower, varying speed
             });
         }
     }
@@ -117,8 +123,8 @@ export class Sky {
         // Move clouds
         this.clouds.forEach(cloud => {
             cloud.mesh.position.x += cloud.speed * delta;
-            if (cloud.mesh.position.x > 100) {
-                cloud.mesh.position.x = -100; // Wrap around
+            if (cloud.mesh.position.x > 400) {
+                cloud.mesh.position.x = -400; // Wrap around (half of 800)
             }
         });
 

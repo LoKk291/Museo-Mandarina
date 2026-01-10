@@ -6,9 +6,9 @@ import { SoundManager } from './SoundManager.js';
 
 // --- CONFIGURACIÓN E INICIALIZACIÓN ---
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x111111, 0, 200); // Fog distance increased
+scene.fog = new THREE.Fog(0x111111, 0, 600); // Increased fog distance (was 200)
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500); // Far plane increased
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); // Far plane increased (was 500)
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
