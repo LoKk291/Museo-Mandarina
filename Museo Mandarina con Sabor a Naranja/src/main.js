@@ -674,7 +674,9 @@ const clock = new THREE.Clock();
 function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
+    // Clamp delta to prevent physics explosions on lag
+    let delta = clock.getDelta();
+    delta = Math.min(delta, 0.05); // Max 0.05s (20 FPS minimum physics step)
 
     // Update Weather/Cycle
     sky.update(delta);

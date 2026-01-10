@@ -99,9 +99,11 @@ export class Player {
     update(delta) {
         if (!this.isLocked) return;
 
-        // Desaceleración simple
-        this.velocity.x -= this.velocity.x * 10.0 * delta;
-        this.velocity.z -= this.velocity.z * 10.0 * delta;
+        // Desaceleración simple (Exponential Decay for stability)
+        // Old: this.velocity.x -= this.velocity.x * 10.0 * delta; (Unstable if delta > 0.1)
+        const damping = Math.exp(-10.0 * delta);
+        this.velocity.x *= damping;
+        this.velocity.z *= damping;
 
         // Gravity
         this.velocity.y -= this.gravity * delta;
