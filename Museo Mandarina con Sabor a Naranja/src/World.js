@@ -10,7 +10,18 @@ export class World {
         this.interactables = []; // Paintings for clicking
         this.clock = null;
         this.lever = null;
-        this.isCeilingOpen = false; // Add state
+        this.chandelier = null; // Store ref
+
+        // Animation State
+        // 'CLOSED' (Default)
+        // 'OPENING_CHANDELIER' (Chandelier going up)
+        // 'OPENING_CEILING' (Ceiling opening)
+        // 'OPEN' (Fully Open)
+        // 'CLOSING_CEILING' (Ceiling closing)
+        // 'CLOSING_CHANDELIER' (Chandelier coming down)
+        this.animState = 'CLOSED';
+
+        this.isCeilingOpen = false; // Logical state for main.js lighting check
 
         this.init();
     }
@@ -96,13 +107,13 @@ export class World {
         this.scene.add(lamp2.mesh);
 
         // Agregar Candelabro Central
-        const chandelier = new Chandelier();
+        this.chandelier = new Chandelier();
         // Height: Room is 4. Hang it from center (0,0). 
         // Chain goes up 1m from body. Main body at 0. Top of chain at +1.5 from center?
         // Ceiling is at 4.
         // If we put it at y=3, top chain will be at ~3.5-4.
-        chandelier.setPosition(0, 3, 0);
-        this.scene.add(chandelier.mesh);
+        this.chandelier.setPosition(0, 3, 0);
+        this.scene.add(this.chandelier.mesh);
 
         // Agregar Cuadros a Central
         // Mover Cuadro 1 "Mona Lisa" a otro lado.
@@ -177,11 +188,21 @@ export class World {
         });
     }
 
-    toggleCeiling(isOpen) {
-        this.isCeilingOpen = isOpen;
-        this.rooms.forEach(room => {
-            room.setCeiling(isOpen);
-        });
+    toggleCeiling(shouldBeOpen) {
+        // Trigger the Sequence
+        if (shouldBeOpen) {
+            // User wants to OPEN
+            if (this.animState !== 'OPEN' && this.animState !== 'OPENING_CHANDELIER' && this.animState !== 'OPENING_CEILING') {
+                this.animState = 'OPENING_CHANDELIER';
+                console.log("Starting Open Sequence: Chandelier Retracting...");
+            }
+        } else {
+            // User wants to CLOSE
+            if (this.animState !== 'CLOSED' && this.animState !== 'CLOSING_CEILING' && this.animState !== 'CLOSING_CHANDELIER') {
+                this.animState = 'CLOSING_CEILING';
+                console.log("Starting Close Sequence: Ceiling Closing...");
+            }
+        }
     }
 
     getCeilingOpenness() {
@@ -196,8 +217,58 @@ export class World {
     }
 
     update(delta) {
+        // Update Components
+        if (this.chandelier) this.chandelier.update(delta);
+
         this.rooms.forEach(room => {
             room.updateCeiling(delta);
         });
+
+        // --- Sequence Logic ---
+        switch (this.animState) {
+            case 'OPENING_CHANDELIER':
+                if (this.chandelier) {
+                    this.chandelier.retract();
+                    if (this.chandelier.isHidden()) {
+                        this.chandelier.setVisible(false); // Make invisible
+                        this.animState = 'OPENING_CEILING';
+                        this.isCeilingOpen = true; // Signal main.js to start fading light
+                    }
+                } else {
+                    // No chandelier, skip
+                    this.animState = 'OPENING_CEILING';
+                }
+                break;
+
+            case 'OPENING_CEILING':
+                this.rooms.forEach(r => r.setCeiling(true)); // Open Ceiling
+                // Check if done? Not strictly necessary, can sit in OPEN state
+                // But strictly 'OPEN' means fully done.
+                if (this.getCeilingOpenness() > 0.99) {
+                    this.animState = 'OPEN';
+                }
+                break;
+
+            case 'CLOSING_CEILING':
+                this.isCeilingOpen = false; // Signal main.js to start fading light (darken)
+                this.rooms.forEach(r => r.setCeiling(false)); // Close Ceiling
+                // Wait for close
+                if (this.getCeilingOpenness() < 0.01) {
+                    this.animState = 'CLOSING_CHANDELIER';
+                    if (this.chandelier) this.chandelier.setVisible(true); // Make visible again
+                }
+                break;
+
+            case 'CLOSING_CHANDELIER':
+                if (this.chandelier) {
+                    this.chandelier.extend();
+                    if (this.chandelier.isFullyExtended()) {
+                        this.animState = 'CLOSED';
+                    }
+                } else {
+                    this.animState = 'CLOSED';
+                }
+                break;
+        }
     }
 }

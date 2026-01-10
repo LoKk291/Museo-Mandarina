@@ -664,6 +664,12 @@ export class Lever {
 export class Chandelier {
     constructor() {
         this.mesh = new THREE.Group();
+        this.baseY = 3.0; // Normal height
+        this.retractedY = 6.0; // Height when hidden (above ceiling)
+        this.currentY = this.baseY;
+        this.targetY = this.baseY;
+        this.moveSpeed = 2.0;
+
         this.build();
     }
 
@@ -764,5 +770,43 @@ export class Chandelier {
 
     setPosition(x, y, z) {
         this.mesh.position.set(x, y, z);
+        this.currentY = y;
+        this.baseY = y;
+        this.targetY = y;
+    }
+
+    retract() {
+        this.targetY = this.retractedY;
+    }
+
+    extend() {
+        this.targetY = this.baseY;
+    }
+
+    isHidden() {
+        return Math.abs(this.currentY - this.retractedY) < 0.1;
+    }
+
+    isFullyExtended() {
+        return Math.abs(this.currentY - this.baseY) < 0.1;
+    }
+
+    setVisible(visible) {
+        this.mesh.visible = visible;
+    }
+
+    update(delta) {
+        if (Math.abs(this.currentY - this.targetY) > 0.01) {
+            const diff = this.targetY - this.currentY;
+            const step = this.moveSpeed * delta * Math.sign(diff);
+
+            if (Math.abs(diff) < Math.abs(step)) {
+                this.currentY = this.targetY;
+            } else {
+                this.currentY += step;
+            }
+
+            this.mesh.position.y = this.currentY;
+        }
     }
 }
