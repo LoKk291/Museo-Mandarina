@@ -592,3 +592,177 @@ export class FloorLamp {
         this.mesh.position.set(x, y, z);
     }
 }
+
+export class Lever {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.isOpen = false;
+        this.handle = null;
+        this.interactableMesh = null;
+        this.build();
+    }
+
+    build() {
+        // Base
+        const baseGeo = new THREE.BoxGeometry(0.1, 0.02, 0.2);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.castShadow = true;
+        this.mesh.add(base);
+
+        // Fulcrum
+        const fulcrumGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.08); // Horizontal rod
+        const fulcrum = new THREE.Mesh(fulcrumGeo, baseMat);
+        fulcrum.rotation.x = Math.PI / 2;
+        fulcrum.position.y = 0.02;
+        this.mesh.add(fulcrum);
+
+        // Handle (The moving part)
+        this.handle = new THREE.Group();
+        this.handle.position.y = 0.02; // Pivot at fulcrum
+        this.mesh.add(this.handle);
+
+        const stickGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.15);
+        const stickMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5 });
+        const stick = new THREE.Mesh(stickGeo, stickMat);
+        stick.position.y = 0.075; // Move up so pivot is at bottom
+        this.handle.add(stick);
+
+        const knobGeo = new THREE.SphereGeometry(0.025);
+        const knobMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const knob = new THREE.Mesh(knobGeo, knobMat);
+        knob.position.y = 0.15;
+        this.handle.add(knob);
+
+        // Initial rotation (Closed state = Back)
+        this.handle.rotation.x = -Math.PI / 4;
+
+        // Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(0.2, 0.3, 0.3);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.y = 0.1;
+        hitBox.userData = { type: 'lever', parentObj: this };
+        this.interactableMesh = hitBox;
+        this.mesh.add(hitBox);
+    }
+
+    setPosition(x, y, z) { this.mesh.position.set(x, y, z); }
+    setRotation(y) { this.mesh.rotation.y = y; }
+
+    toggle() {
+        this.isOpen = !this.isOpen;
+        // Animation (Instant for now, or use tweening lib if available, but simple rotation is fine)
+        if (this.isOpen) {
+            this.handle.rotation.x = Math.PI / 4; // Forward
+        } else {
+            this.handle.rotation.x = -Math.PI / 4; // Back
+        }
+        return this.isOpen;
+    }
+}
+
+export class Chandelier {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        const goldMat = new THREE.MeshStandardMaterial({
+            color: 0xFFD700,
+            metalness: 0.8,
+            roughness: 0.2
+        });
+
+        const candleMat = new THREE.MeshStandardMaterial({
+            color: 0xFFFFF0,
+            roughness: 0.9
+        });
+
+        const flameMat = new THREE.MeshBasicMaterial({ color: 0xFFAA00 });
+
+        // Central Stem
+        const stemGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.0, 16);
+        const stem = new THREE.Mesh(stemGeo, goldMat);
+        stem.castShadow = true;
+        this.mesh.add(stem);
+
+        // Top Cone (decorative)
+        const topConeGeo = new THREE.ConeGeometry(0.1, 0.2, 16);
+        const topCone = new THREE.Mesh(topConeGeo, goldMat);
+        topCone.position.y = 0.4;
+        this.mesh.add(topCone);
+
+        // Main Body (Sphere)
+        const bodyGeo = new THREE.SphereGeometry(0.15, 16, 16);
+        const body = new THREE.Mesh(bodyGeo, goldMat);
+        body.position.y = -0.3;
+        this.mesh.add(body);
+
+        // Arms (8 arms)
+        const armCount = 8;
+        const radius = 0.8;
+
+        for (let i = 0; i < armCount; i++) {
+            const angle = (i / armCount) * Math.PI * 2;
+            const armGroup = new THREE.Group();
+
+            // Arm geometry (simple curved torus segment or cylinders)
+            // Simplified: Horizontal rod
+            const rodGeo = new THREE.CylinderGeometry(0.02, 0.02, radius - 0.15);
+            const rod = new THREE.Mesh(rodGeo, goldMat);
+            rod.rotation.z = Math.PI / 2;
+            rod.position.x = (radius - 0.15) / 2 + 0.15;
+            armGroup.add(rod);
+
+            // Cup at end
+            const cupGeo = new THREE.CylinderGeometry(0.06, 0.02, 0.1);
+            const cup = new THREE.Mesh(cupGeo, goldMat);
+            cup.position.x = radius;
+            cup.position.y = 0.05;
+            armGroup.add(cup);
+
+            // Candle
+            const candleGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.3);
+            const candle = new THREE.Mesh(candleGeo, candleMat);
+            candle.position.x = radius;
+            candle.position.y = 0.25;
+            armGroup.add(candle);
+
+            // Flame (Visual)
+            const flameGeo = new THREE.SphereGeometry(0.04);
+            const flame = new THREE.Mesh(flameGeo, flameMat);
+            flame.position.x = radius;
+            flame.position.y = 0.45;
+            armGroup.add(flame);
+
+            // Light
+            const light = new THREE.PointLight(0xFFDDAA, 0.5, 10);
+            light.position.set(radius, 0.5, 0);
+            // Shadows for all lights might be expensive. Enable for one or two or none?
+            // Let's enable for every other one or just rely on main ambient + point.
+            // For performance, let's enable shadows on 0 and 4.
+            if (i % 4 === 0) {
+                light.castShadow = true;
+                light.shadow.bias = -0.001;
+            }
+            armGroup.add(light);
+
+            armGroup.rotation.y = angle;
+            // Lower the arms from the body
+            armGroup.position.y = -0.3;
+
+            this.mesh.add(armGroup);
+        }
+
+        // Chain (Simple cylinder going up)
+        const chainGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.0);
+        const chain = new THREE.Mesh(chainGeo, goldMat);
+        chain.position.y = 1.0;
+        this.mesh.add(chain);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+}

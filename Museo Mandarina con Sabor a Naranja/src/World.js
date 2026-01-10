@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -9,6 +9,8 @@ export class World {
         this.collidables = []; // Walls for collision
         this.interactables = []; // Paintings for clicking
         this.clock = null;
+        this.lever = null;
+        this.isCeilingOpen = false; // Add state
 
         this.init();
     }
@@ -55,6 +57,15 @@ export class World {
         this.scene.add(deskLamp.mesh);
         this.interactables.push(deskLamp.interactableMesh);
 
+        // Agregar Palanca (Lever) para el techo
+        this.lever = new Lever();
+        // Colocar en el escritorio, lado izquierdo
+        this.lever.setPosition(-0.7, 0.8, -6.0);
+        this.lever.setRotation(Math.PI); // Mirando hacia usuario?? O hacia pared.
+        // Desk rotation is PI.
+        this.scene.add(this.lever.mesh);
+        this.interactables.push(this.lever.interactableMesh);
+
         // Agregar Reloj de Pared (En lugar del cuadro 1 - Norte)
         this.clock = new Clock();
         // Pared Norte está en Z = -10. 
@@ -83,6 +94,15 @@ export class World {
         const lamp2 = new FloorLamp();
         lamp2.setPosition(9, 0, 9); // Esquina Sureste (Mas cerca esquina)
         this.scene.add(lamp2.mesh);
+
+        // Agregar Candelabro Central
+        const chandelier = new Chandelier();
+        // Height: Room is 4. Hang it from center (0,0). 
+        // Chain goes up 1m from body. Main body at 0. Top of chain at +1.5 from center?
+        // Ceiling is at 4.
+        // If we put it at y=3, top chain will be at ~3.5-4.
+        chandelier.setPosition(0, 3, 0);
+        this.scene.add(chandelier.mesh);
 
         // Agregar Cuadros a Central
         // Mover Cuadro 1 "Mona Lisa" a otro lado.
@@ -154,6 +174,30 @@ export class World {
         // Agregar cuadros a la lista global de interactuables
         room.paintings.forEach(p => {
             if (p.mesh) this.interactables.push(p.mesh);
+        });
+    }
+
+    toggleCeiling(isOpen) {
+        this.isCeilingOpen = isOpen;
+        this.rooms.forEach(room => {
+            room.setCeiling(isOpen);
+        });
+    }
+
+    getCeilingOpenness() {
+        if (this.rooms.length > 0 && this.rooms[0].ceiling) {
+            // Ceiling Closed = Scale 1. Open = Scale 0.
+            // Openness = 1 - Scale.
+            const scale = this.rooms[0].ceilingScale;
+            // Clamp 0-1 just in case
+            return Math.max(0, Math.min(1, 1.0 - scale));
+        }
+        return 0;
+    }
+
+    update(delta) {
+        this.rooms.forEach(room => {
+            room.updateCeiling(delta);
         });
     }
 }

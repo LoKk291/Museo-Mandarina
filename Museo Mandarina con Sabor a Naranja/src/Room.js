@@ -51,12 +51,35 @@ export class Room {
         floor.receiveShadow = true;
         this.group.add(floor);
 
-        // Techo (ELIMINADO: Para ver el cielo real dinámico)
-        // const ceilingGeo = new THREE.PlaneGeometry(this.width, this.depth);
-        // const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
-        // ceiling.rotation.x = Math.PI / 2;
-        // ceiling.position.y = this.height;
-        // this.group.add(ceiling);
+        // Techo (Animado - Acordeon)
+        // Usaremos scale.y (Local Y) para abrir/cerrar.
+        // Rotamos X 90 grados, así que Local Y se alinea con Global Z.
+        // Queremos anclar en el Norte (Z negativo).
+        // En Geometry local, desplazamos para que el origen (0,0) sea el borde "inferior" (que será Norte).
+        const ceilingGeo = new THREE.PlaneGeometry(this.width, this.depth);
+        // Translate Y by +depth/2.
+        // Original range Y: [-depth/2, depth/2]
+        // New range Y: [0, depth]
+        // Local Origin (0,0) is now at the start of the plane.
+        ceilingGeo.translate(0, this.depth / 2, 0);
+
+        const ceiling = new THREE.Mesh(ceilingGeo, wallMat);
+        ceiling.rotation.x = Math.PI / 2; // Local Y+ points to Global Z+
+        // Position at North Wall (Z = -depth/2)
+        ceiling.position.set(0, this.height, -this.depth / 2);
+
+        // Initial State: Closed (Scale 1)
+        ceiling.scale.set(1, 1, 1);
+
+        // Shadow propertires
+        ceiling.castShadow = true;
+        ceiling.receiveShadow = true;
+
+        this.group.add(ceiling);
+        this.ceiling = ceiling;
+        this.ceilingOpen = false; // Estado lógico
+        this.ceilingScale = 1.0;  // Estado visual actual
+        this.ceilingTargetScale = 1.0; // Objetivo
 
         // Construir 4 paredes base
         // Nota: Las puertas son huecos. Por simplicidad inicial, construiremos paredes completas
@@ -199,5 +222,35 @@ export class Room {
 
     getCollidables() {
         return this.walls;
+    }
+
+    setCeiling(isOpen) {
+        this.ceilingOpen = isOpen;
+        // isOpen = true -> Queremos ver el cielo -> Escala 0
+        // isOpen = false -> Queremos techo cerrado -> Escala 1
+        this.ceilingTargetScale = isOpen ? 0.0 : 1.0;
+    }
+
+    updateCeiling(delta) {
+        if (!this.ceiling) return;
+
+        // Animar scale.y hacia targetScale
+        const speed = 2.0; // Unidades de escala por segundo
+        if (this.ceilingScale !== this.ceilingTargetScale) {
+            const diff = this.ceilingTargetScale - this.ceilingScale;
+            const step = speed * delta;
+
+            if (Math.abs(diff) < step) {
+                this.ceilingScale = this.ceilingTargetScale;
+            } else {
+                this.ceilingScale += Math.sign(diff) * step;
+            }
+
+            this.ceiling.scale.y = Math.max(0.001, this.ceilingScale); // Evitar 0 absoluto por warnings de matriz
+
+            // Opcional: Ajustar visibilidad si está muy pequeño para ahorrar draw calls?
+            // Pero scale 0 ya es invisible practicamente.
+            this.ceiling.visible = this.ceilingScale > 0.01;
+        }
     }
 }

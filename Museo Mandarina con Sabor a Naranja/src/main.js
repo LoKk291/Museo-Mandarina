@@ -22,10 +22,10 @@ scene.add(amiLight);
 const dirLight = new THREE.DirectionalLight(0xffaa33, 1.0); // Sol atardecer/cálido
 dirLight.position.set(10, 20, 10);
 dirLight.castShadow = true;
-dirLight.shadow.camera.top = 20;
-dirLight.shadow.camera.bottom = -20;
-dirLight.shadow.camera.left = -20;
-dirLight.shadow.camera.right = 20;
+dirLight.shadow.camera.top = 50;
+dirLight.shadow.camera.bottom = -50;
+dirLight.shadow.camera.left = -50;
+dirLight.shadow.camera.right = 50;
 scene.add(dirLight);
 
 // --- CLIMA / CIELO ---
@@ -124,6 +124,8 @@ function checkInteraction() {
             interactionMsg.textContent = "Click para usar PC";
         } else if (hitObject.userData.type === 'desk-lamp') {
             interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOn ? "apagar" : "encender"); // Dynamic? Maybe simple "Click" is better
+        } else if (hitObject.userData.type === 'lever') {
+            interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOpen ? "Cerrar Techo" : "Abrir Techo");
         } else {
             interactionMsg.textContent = "Click para ver";
         }
@@ -152,6 +154,10 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'desk-lamp') {
                 soundManager.play('switch');
                 hitObject.userData.parentObj.toggle();
+            } else if (hitObject.userData.type === 'lever') {
+                soundManager.play('switch'); // Re-use switch sound or different one
+                const isOpen = hitObject.userData.parentObj.toggle();
+                world.toggleCeiling(isOpen);
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
@@ -678,6 +684,42 @@ function animate() {
         const time = sky.getGameTime();
         world.clock.setTime(time.hours, time.minutes);
     }
+
+    // World Animations (Ceiling, etc)
+    world.update(delta);
+
+    // --- FIX: Progressive Interior Lighting ---
+    // Update Sky first (sets default OUTDOOR lighting targets)
+    // Then blend towards INDOOR defaults based on Ceiling Openness.
+
+    const openness = world.getCeilingOpenness(); // 0.0 (Closed) to 1.0 (Open)
+
+    // Target Outdoor Values (Calculated by Sky)
+    const outdoorDirInt = dirLight.intensity;
+    const outdoorAmbInt = amiLight.intensity;
+    const outdoorAmbCol = amiLight.color.clone();
+    const outdoorFogCol = scene.fog.color.clone();
+
+    // Target Indoor Values
+    const indoorDirInt = 0.0;
+    const indoorAmbInt = 0.2;
+    const indoorAmbCol = new THREE.Color(0x332211);
+    const indoorFogCol = new THREE.Color(0x050505);
+
+    // Apply Lerp
+    // If openness is 1, we use Outdoor. If 0, we use Indoor.
+
+    // 1. Directional Light (Sun)
+    dirLight.intensity = THREE.MathUtils.lerp(indoorDirInt, outdoorDirInt, openness);
+
+    // 2. Ambient Light
+    amiLight.intensity = THREE.MathUtils.lerp(indoorAmbInt, outdoorAmbInt, openness);
+    amiLight.color.lerpColors(indoorAmbCol, outdoorAmbCol, openness);
+
+    // 3. Fog
+    scene.fog.color.lerpColors(indoorFogCol, outdoorFogCol, openness);
+    scene.background = scene.fog.color; // Keep background synced
+    // --------------------------------------
 
     if (!isModalOpen) {
         player.update(delta);
