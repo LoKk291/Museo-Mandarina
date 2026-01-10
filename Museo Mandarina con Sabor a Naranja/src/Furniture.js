@@ -419,9 +419,10 @@ export class Clock {
         faceTexture.colorSpace = THREE.SRGBColorSpace;
 
         const faceGeo = new THREE.CylinderGeometry(1.4, 1.4, 0.21, 32);
-        const faceMat = new THREE.MeshBasicMaterial({
+        const faceMat = new THREE.MeshStandardMaterial({
             map: faceTexture,
-            color: 0xffffff
+            color: 0xffffff,
+            roughness: 0.8
         });
         const face = new THREE.Mesh(faceGeo, faceMat);
         face.rotation.x = Math.PI / 2;
@@ -434,21 +435,21 @@ export class Clock {
         // RE-DO Face as Circle for better UVs
         this.mesh.remove(face);
         const circleGeo = new THREE.CircleGeometry(1.4, 32);
-        const circleMat = new THREE.MeshBasicMaterial({ map: faceTexture });
+        const circleMat = new THREE.MeshStandardMaterial({ map: faceTexture, roughness: 0.8 });
         const circleFace = new THREE.Mesh(circleGeo, circleMat);
         circleFace.position.z = 0.11; // Slightly in front of case
         this.mesh.add(circleFace);
 
         // Center Cap (Gold/Brass)
         const dotGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.05, 16);
-        const dotMat = new THREE.MeshBasicMaterial({ color: 0xB5A642 });
+        const dotMat = new THREE.MeshStandardMaterial({ color: 0xB5A642, metalness: 0.6, roughness: 0.3 });
         const dot = new THREE.Mesh(dotGeo, dotMat);
         dot.rotation.x = Math.PI / 2;
         dot.position.z = 0.15;
         this.mesh.add(dot);
 
         // Hands (Black, Fancy style simplified to thin tapering boxes)
-        const handMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const handMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.5 });
 
         // Hour Hand
         // Tapered shape? Use simplified Box for now, maybe with scale
@@ -469,7 +470,7 @@ export class Clock {
 
         // Second Hand (Red, thin)
         this.secondHand = new THREE.Group();
-        const sMesh = new THREE.Mesh(new THREE.BoxGeometry(0.02, 1.2, 0.01), new THREE.MeshBasicMaterial({ color: 0xaa0000 }));
+        const sMesh = new THREE.Mesh(new THREE.BoxGeometry(0.02, 1.2, 0.01), new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.5 }));
         sMesh.position.y = 0.4;
         this.secondHand.add(sMesh);
         this.secondHand.position.z = 0.14;
