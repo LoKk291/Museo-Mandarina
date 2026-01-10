@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -139,6 +139,15 @@ export class World {
         // But South wall faces North?
         this.scene.add(this.mainDoor.mesh);
         this.interactables.push(this.mainDoor.interactableMesh);
+
+        // Agregar Alfombra Roja (Puerta a Escritorio)
+        // Puerta Z=10 (Wall). Escritorio Collision Z=-6.
+        // Carpet Z start: 10. Carpet Z end: -5.
+        // Length = 15.
+        // Center = (10 + -5) / 2 = 2.5
+        const carpet = new RedCarpet(3, 15);
+        carpet.setPosition(0, 0.01, 2.5); // Slightly above floor
+        this.scene.add(carpet.mesh);
 
         this.addRoom(centralRoom);
 

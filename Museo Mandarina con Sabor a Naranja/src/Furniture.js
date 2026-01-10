@@ -997,3 +997,124 @@ export class DoubleDoor {
         }
     }
 }
+
+export class RedCarpet {
+    constructor(width, length) {
+        this.width = width;
+        this.length = length;
+        this.mesh = new THREE.Group(); // Use Group to hold carpet + borders
+        this.build();
+    }
+
+    build() {
+        // Create Canvas Texture (Seamless Pattern)
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512; // Square tiling texture
+        const ctx = canvas.getContext('2d');
+
+        // 1. Background (Deep Red)
+        ctx.fillStyle = '#8B0000'; // Dark Red
+        ctx.fillRect(0, 0, 512, 512);
+
+        // 2. Pattern (Gold Lattice)
+        ctx.strokeStyle = '#DAA520'; // GoldenRod
+        ctx.lineWidth = 4;
+
+        // Draw Diagonal Grid
+        const step = 64;
+
+        // Diagonals /
+        for (let y = -512; y < 1024; y += step) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(512, y + 512); // Slope 1
+            ctx.stroke();
+        }
+
+        // Diagonals \
+        for (let y = -512; y < 1024; y += step) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(512, y - 512); // Slope -1
+            ctx.stroke();
+        }
+
+        // 3. Ornaments
+        ctx.fillStyle = '#FFD700'; // Gold
+        for (let x = step / 2; x < 512; x += step) {
+            for (let y = step / 2; y < 512; y += step) {
+                this.drawMotif(ctx, x, y, 8);
+            }
+        }
+
+        // REMOVED: Borders from texture (to avoid repeat issues)
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+
+        const repeatX = this.width / 2; // Density
+        const repeatY = this.length / 2;
+        texture.repeat.set(repeatX, repeatY);
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        // --- Main Carpet Mesh ---
+        const geo = new THREE.PlaneGeometry(this.width, this.length);
+        const mat = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 0.8,
+            metalness: 0.1
+        });
+
+        const carpetMesh = new THREE.Mesh(geo, mat);
+        carpetMesh.rotation.x = -Math.PI / 2; // Flat on floor
+        carpetMesh.receiveShadow = true;
+        this.mesh.add(carpetMesh);
+
+        // --- 3D Gold Borders ---
+        const borderW = 0.2;
+        const borderH = 0.02; // Thickness
+        const borderMat = new THREE.MeshStandardMaterial({
+            color: 0xFFD700,
+            roughness: 0.3,
+            metalness: 0.8
+        });
+
+        const borderGeo = new THREE.BoxGeometry(borderW, borderH, this.length);
+
+        // Left Border
+        const leftBorder = new THREE.Mesh(borderGeo, borderMat);
+        // Position: X = -width/2 + borderW/2 (Inside edge) ? Or centered on edge?
+        // Let's center it on the edge.
+        leftBorder.position.set(-this.width / 2 + borderW / 2, borderH / 2, 0);
+        leftBorder.castShadow = true;
+        leftBorder.receiveShadow = true;
+        this.mesh.add(leftBorder);
+
+        // Right Border
+        const rightBorder = new THREE.Mesh(borderGeo, borderMat);
+        rightBorder.position.set(this.width / 2 - borderW / 2, borderH / 2, 0);
+        rightBorder.castShadow = true;
+        rightBorder.receiveShadow = true;
+        this.mesh.add(rightBorder);
+    }
+
+    drawMotif(ctx, x, y, size) {
+        ctx.beginPath();
+        // Cross / Flower shape
+        ctx.fillRect(x - size, y - size / 2, size * 2, size);
+        ctx.fillRect(x - size / 2, y - size, size, size * 2);
+        // Diamond Center
+        ctx.beginPath();
+        ctx.moveTo(x, y - size);
+        ctx.lineTo(x + size, y);
+        ctx.lineTo(x, y + size);
+        ctx.lineTo(x - size, y);
+        ctx.fill();
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+}
