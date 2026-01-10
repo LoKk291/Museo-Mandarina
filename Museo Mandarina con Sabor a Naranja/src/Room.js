@@ -81,6 +81,9 @@ export class Room {
         this.ceilingScale = 1.0;  // Estado visual actual
         this.ceilingTargetScale = 1.0; // Objetivo
 
+        // Create Ceiling Lights (Panels + PointLights)
+        this.createCeilingLights();
+
         // Construir 4 paredes base
         // Nota: Las puertas son huecos. Por simplicidad inicial, construiremos paredes completas
         // y luego consideraremos "puertas" como ausencia de pared o segmentos.
@@ -252,5 +255,55 @@ export class Room {
             // Pero scale 0 ya es invisible practicamente.
             this.ceiling.visible = this.ceilingScale > 0.01;
         }
+    }
+    createCeilingLights() {
+        if (!this.ceiling) return;
+
+        // 4 Light Panels
+        const panelMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF }); // Emissive look (White)
+        // Fix: Use correct dimensions relative to Local Space.
+        // Local X = Global Width.
+        // Local Y = Global Depth (Scales with ceiling).
+        // Local Z = Global Vertical (Thickness).
+        const panelGeo = new THREE.BoxGeometry(0.8, 0.8, 0.05); // Flat panel (0.05 thick)
+        // But relative to ceiling (Plane), Y is up.
+
+        // Ceiling is rotated X=90. Local Y+ is Global Z+. Local Z+ is Global Y-.
+        // Wait, Ceiling rotation:
+        // ceiling.rotation.x = Math.PI / 2;
+        // Global Y is Local Z-.
+        // So 'down' relative to ceiling mesh is +Z in local space? No, Plane is X-Y. Normal is Z.
+        // PlaneGeometry (X, Y). Normal +Z.
+        // Rotated X=90. Normal +Z points to Global -Y (Down). Correct.
+        // So we put panels on +Z face of ceiling plane.
+
+        // Positions relative to ceiling center (0, depth/2) 
+        // Ceiling Origin is at "bottom" edge (0,0). Center is (0, depth/2).
+        const cx = 0;
+        const cy = this.depth / 2;
+
+        const offsets = [
+            { x: -this.width / 4, y: -this.depth / 4 },
+            { x: this.width / 4, y: -this.depth / 4 },
+            { x: -this.width / 4, y: this.depth / 4 },
+            { x: this.width / 4, y: this.depth / 4 }
+        ];
+
+        offsets.forEach(off => {
+            const panel = new THREE.Mesh(panelGeo, panelMat);
+            // Position on the surface
+            // Z = 0.025 (Half thickness) to sit on surface (Global Down) without sticking up (Global Up)
+            panel.position.set(off.x, cy + off.y, 0.025);
+            this.ceiling.add(panel);
+
+            // Add Powerful PointLight
+            const light = new THREE.PointLight(0xFFCC66, 0.8, 15); // Golden Sun-like (slightly cooler than FFAA33)
+            light.position.set(0, 0, 0.5); // Slightly below panel
+            // Shadows? Expensive. Maybe just one?
+            // Let's rely on global shadow for now or one main light.
+            // Enabling shadow for all 4 might kill FPS on web.
+            // light.castShadow = true; 
+            panel.add(light);
+        });
     }
 }

@@ -700,11 +700,11 @@ function animate() {
     const outdoorAmbCol = amiLight.color.clone();
     const outdoorFogCol = scene.fog.color.clone();
 
-    // Target Indoor Values
+    // Target Indoor Values (Updated for "Warm Powerful")
     const indoorDirInt = 0.0;
-    const indoorAmbInt = 0.2;
-    const indoorAmbCol = new THREE.Color(0x332211);
-    const indoorFogCol = new THREE.Color(0x050505);
+    const indoorAmbInt = 0.7;
+    const indoorAmbCol = new THREE.Color(0xFFE4C4); // Bisque/Golden (Simulated Sun Ambient)
+    const indoorFogCol = new THREE.Color(0x111111);
 
     // Apply Lerp
     // If openness is 1, we use Outdoor. If 0, we use Indoor.
