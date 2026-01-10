@@ -43,7 +43,9 @@ soundManager.load('jump', 'sounds/jump.mp3');
 soundManager.load('click', 'sounds/click.mp3');
 soundManager.load('click_mouse', 'sounds/click_mouse.mp3');
 soundManager.load('pc_start', 'sounds/pc_startup.mp3');
+soundManager.load('pc_start', 'sounds/pc_startup.mp3');
 soundManager.load('switch', 'sounds/switch.mp3');
+// Keyboard sounds are now PROCEDURAL (Standard Office)
 
 // --- JUGADOR ---
 // Pasamos las paredes para colisiones
@@ -224,6 +226,13 @@ document.addEventListener('keydown', (e) => {
         // Clear message
         const msgEl = document.getElementById('interaction-message');
         if (msgEl) msgEl.style.display = 'none';
+    }
+
+    // Keyboard Sound Logic (When PC is open)
+    const pcInterface = document.getElementById('pc-interface');
+    if (pcInterface && !pcInterface.classList.contains('hidden')) {
+        // Play procedural sound (Office style)
+        soundManager.playMechanicalClick();
     }
 });
 
