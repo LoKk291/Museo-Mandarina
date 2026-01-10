@@ -79,16 +79,90 @@ export class Sky {
     }
 
     initSunMoon() {
-        // Sun Mesh (Yellow Sphere)
-        const sunGeo = new THREE.SphereGeometry(5, 32, 32);
-        const sunMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        // --- Sun ---
+        // Create procedural texture for Sun (Glowing Gradient)
+        const sunCanvas = document.createElement('canvas');
+        sunCanvas.width = 512;
+        sunCanvas.height = 512;
+        const sunCtx = sunCanvas.getContext('2d');
+
+        // Background (Orange-Red)
+        sunCtx.fillStyle = '#ffaa33';
+        sunCtx.fillRect(0, 0, 512, 512);
+
+        // Turbulence/Noise (Simple Random Rects for "Plasma")
+        for (let i = 0; i < 500; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 512;
+            const w = 20 + Math.random() * 30;
+            const h = 10 + Math.random() * 20;
+            sunCtx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, 0, 0.2)`;
+            sunCtx.fillRect(x, y, w, h);
+        }
+
+        // Radial Glow (Bright Center)
+        const sunGrad = sunCtx.createRadialGradient(256, 256, 50, 256, 256, 250);
+        sunGrad.addColorStop(0, '#ffffdd'); // White/Yellow Core
+        sunGrad.addColorStop(0.3, '#ffcc33'); // Yellow
+        sunGrad.addColorStop(0.8, 'rgba(255, 170, 51, 0.8)'); // Orange
+        sunGrad.addColorStop(1, 'rgba(255, 100, 0, 0.5)'); // Dark Orange edge
+        sunCtx.fillStyle = sunGrad;
+        sunCtx.fillRect(0, 0, 512, 512);
+
+        const sunTex = new THREE.CanvasTexture(sunCanvas);
+        sunTex.colorSpace = THREE.SRGBColorSpace;
+
+        const sunGeo = new THREE.SphereGeometry(6, 32, 32); // Slightly larger
+        const sunMat = new THREE.MeshBasicMaterial({ map: sunTex, color: 0xffffff }); // White tint to let texture show
         this.sunMesh = new THREE.Mesh(sunGeo, sunMat);
         this.scene.add(this.sunMesh);
 
-        // Moon Mesh (White/Blue Sphere)
+        // --- Moon ---
+        // Create procedural texture for Moon (Craters)
+        const moonCanvas = document.createElement('canvas');
+        moonCanvas.width = 512;
+        moonCanvas.height = 512;
+        const moonCtx = moonCanvas.getContext('2d');
+
+        // Base Grey
+        moonCtx.fillStyle = '#dddddd';
+        moonCtx.fillRect(0, 0, 512, 512);
+
+        // Craters (Random Circles with shadow/highlight)
+        for (let i = 0; i < 60; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 512;
+            const r = 5 + Math.random() * 30;
+            const grey = 150 + Math.random() * 80; // Base crater color
+
+            // Crater base
+            moonCtx.fillStyle = `rgb(${grey},${grey},${grey})`;
+            moonCtx.beginPath();
+            moonCtx.arc(x, y, r, 0, Math.PI * 2);
+            moonCtx.fill();
+
+            // Simple shading (Darker edge)
+            moonCtx.strokeStyle = `rgba(100,100,100,0.5)`;
+            moonCtx.lineWidth = 2;
+            moonCtx.stroke();
+        }
+
+        const moonTex = new THREE.CanvasTexture(moonCanvas);
+        moonTex.colorSpace = THREE.SRGBColorSpace;
+
         const moonGeo = new THREE.SphereGeometry(4, 32, 32);
-        const moonMat = new THREE.MeshBasicMaterial({ color: 0xddddff });
-        this.moonMesh = new THREE.Mesh(moonGeo, moonMat);
+        const moonMat = new THREE.MeshStandardMaterial({
+            map: moonTex,
+            roughness: 0.9,
+            metalness: 0.1,
+            color: 0xddddff
+        }); // Standard Material for moon to react slightly to light? 
+        // Or Basic to be visible at night without light?
+        // Moon should be self-illuminated or heavily lit by sun... but Sun is off at night.
+        // Let's use Basic to ensure visibility.
+        const moonMatBasic = new THREE.MeshBasicMaterial({ map: moonTex, color: 0xffffff });
+
+        this.moonMesh = new THREE.Mesh(moonGeo, moonMatBasic);
         this.scene.add(this.moonMesh);
     }
 
