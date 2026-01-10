@@ -126,6 +126,8 @@ function checkInteraction() {
             interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOn ? "apagar" : "encender"); // Dynamic? Maybe simple "Click" is better
         } else if (hitObject.userData.type === 'lever') {
             interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOpen ? "Cerrar Techo" : "Abrir Techo");
+        } else if (hitObject.userData.type === 'double-door') {
+            interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOpen ? "Cerrar Puerta" : "Abrir Puerta");
         } else {
             interactionMsg.textContent = "Click para ver";
         }
@@ -158,6 +160,9 @@ document.addEventListener('click', () => {
                 soundManager.play('switch'); // Re-use switch sound or different one
                 const isOpen = hitObject.userData.parentObj.toggle();
                 world.toggleCeiling(isOpen);
+            } else if (hitObject.userData.type === 'double-door') {
+                soundManager.play('switch'); // Use switch sound for now, maybe load door_creak later
+                hitObject.userData.parentObj.toggle();
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
@@ -720,7 +725,8 @@ function animate() {
 
     // 3. Fog
     scene.fog.color.lerpColors(indoorFogCol, outdoorFogCol, openness);
-    scene.background = scene.fog.color; // Keep background synced
+    // REMOVED: scene.background = scene.fog.color; 
+    // Sky color should be independent of Indoor Fog. Sky.js manages background.
     // --------------------------------------
 
     if (!isModalOpen) {

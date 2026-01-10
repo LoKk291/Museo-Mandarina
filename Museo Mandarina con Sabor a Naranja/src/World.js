@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -11,6 +11,7 @@ export class World {
         this.clock = null;
         this.lever = null;
         this.chandelier = null; // Store ref
+        this.mainDoor = null; // Store main door ref
 
         // Animation State
         // 'CLOSED' (Default)
@@ -125,7 +126,19 @@ export class World {
         centralRoom.addPaintingToWall('North', 4, 3, '', 'Mona Lisa (Falsa)', 'Una copia muy convincente.', '1', 6, 0);
 
         // El otro cuadro ya estaba en Sur
-        centralRoom.addPaintingToWall('South', 3, 4, '', 'El Grito (Silencioso)', 'No hace ruido.', '2');
+        // REMOVED (Replaced by Door)
+        // centralRoom.addPaintingToWall('South', 3, 4, '', 'El Grito (Silencioso)', 'No hace ruido.', '2');
+
+        // Agregar Puerta Doble al Sur
+        centralRoom.addDoor('South', 4, 3.5);
+        this.mainDoor = new DoubleDoor(4, 3.5);
+        // Wall thickness is 0.5. Door frame depth 0.3.
+        // Center of wall is Z = depth/2 = 10.
+        this.mainDoor.setPosition(0, 0, 10);
+        // Rotate if needed? Default is aligned X. Wall South is aligned X.
+        // But South wall faces North?
+        this.scene.add(this.mainDoor.mesh);
+        this.interactables.push(this.mainDoor.interactableMesh);
 
         this.addRoom(centralRoom);
 
@@ -167,6 +180,8 @@ export class World {
         // Cuadros Este
         eastRoom.addPaintingToWall('South', 3, 3, '', 'Abstracto #1', 'Nadie lo entiende.', '6');
         eastRoom.addPaintingToWall('East', 2, 4, '', 'Retrato', 'Un señor serio.', '7');
+        // Moved "El Grito" here
+        eastRoom.addPaintingToWall('North', 3, 4, '', 'El Grito (Silencioso)', 'Moved from Main Hall.', '2');
 
         this.addRoom(eastRoom);
 
@@ -219,6 +234,7 @@ export class World {
     update(delta) {
         // Update Components
         if (this.chandelier) this.chandelier.update(delta);
+        if (this.mainDoor) this.mainDoor.update(delta);
 
         this.rooms.forEach(room => {
             room.updateCeiling(delta);

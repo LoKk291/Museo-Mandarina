@@ -810,3 +810,190 @@ export class Chandelier {
         }
     }
 }
+
+export class DoubleDoor {
+    constructor(width = 4, height = 3.5) {
+        this.width = width;
+        this.height = height;
+        this.mesh = new THREE.Group();
+        this.isOpen = false;
+        this.leftDoor = null;
+        this.rightDoor = null;
+        this.targetRotation = 0;
+        this.currentRotation = 0;
+        this.interactableMesh = null;
+        this.build();
+    }
+
+    build() {
+        const oakColor = 0x3f1d0b; // Dark Oak
+        const frameColor = 0x2a1508; // Darker frame
+        const goldColor = 0xFFD700;
+
+        const woodMat = new THREE.MeshStandardMaterial({ color: oakColor, roughness: 0.7 });
+        const frameMat = new THREE.MeshStandardMaterial({ color: frameColor, roughness: 0.8 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: goldColor, metalness: 0.8, roughness: 0.2 });
+
+        // 1. Frame (Architrave)
+        const frameThickness = 0.2;
+        const frameDepth = 0.3;
+
+        // Top Frame
+        const topFrameGeo = new THREE.BoxGeometry(this.width + frameThickness * 2, frameThickness, frameDepth);
+        const topFrame = new THREE.Mesh(topFrameGeo, frameMat);
+        topFrame.position.y = this.height + frameThickness / 2;
+        topFrame.castShadow = true;
+        this.mesh.add(topFrame);
+
+        // Side Frames
+        const sideFrameGeo = new THREE.BoxGeometry(frameThickness, this.height, frameDepth);
+
+        const leftFrame = new THREE.Mesh(sideFrameGeo, frameMat);
+        leftFrame.position.set(-this.width / 2 - frameThickness / 2, this.height / 2, 0);
+        leftFrame.castShadow = true;
+        this.mesh.add(leftFrame);
+
+        const rightFrame = leftFrame.clone();
+        rightFrame.position.set(this.width / 2 + frameThickness / 2, this.height / 2, 0);
+        rightFrame.castShadow = true;
+        this.mesh.add(rightFrame);
+
+        // 2. Decor Arch (Semi-circle on top)
+        // Reference image shows a fancy arch window above.
+        // Let's add a simple Arch Frame and Glass.
+        const archHeight = 1.0;
+        const archGeo = new THREE.CylinderGeometry(this.width / 2 + frameThickness, this.width / 2 + frameThickness, frameDepth, 32, 1, false, 0, Math.PI);
+        const arch = new THREE.Mesh(archGeo, frameMat);
+        // Cylinder is vertical. Rotate X.
+        arch.rotation.x = -Math.PI / 2; // Flat side down. Wait.
+        // Cylinder default created along Y. 
+        // We want circular face on Z plane. Rotate X = 90.
+        // And we want half cylinder (Top).
+        // Cylinder theta start 0 length PI makes half cylinder.
+        // We need to rotate Z -90 to make it an arch?
+        // Let's use Circle for glass and Box for frame segments if complex.
+        // Simplified: Just a block for now or skip arch to keep hitbox simple?
+        // Let's skip heavy geometry for arch to save time/risk, focus on door panels.
+
+        // 3. Doors
+        // Two panels. Pivot at outer edges.
+        const doorW = this.width / 2;
+        const doorH = this.height;
+        const doorD = 0.1;
+
+        // Container Groups for Pivot
+        this.leftDoor = new THREE.Group();
+        this.leftDoor.position.set(-this.width / 2, 0, 0); // Pivot at left edge
+        this.mesh.add(this.leftDoor);
+
+        this.rightDoor = new THREE.Group();
+        this.rightDoor.position.set(this.width / 2, 0, 0); // Pivot at right edge
+        this.mesh.add(this.rightDoor);
+
+        // Door Meshes (Offset so they fill the gap from pivot)
+        const doorGeo = new THREE.BoxGeometry(doorW, doorH, doorD);
+
+        // Left Mesh: shifts RIGHT from pivot
+        const leftMesh = new THREE.Mesh(doorGeo, woodMat);
+        leftMesh.position.set(doorW / 2, doorH / 2, 0);
+        leftMesh.castShadow = true;
+        leftMesh.receiveShadow = true;
+        this.leftDoor.add(leftMesh);
+
+        // Right Mesh: shifts LEFT from pivot
+        const rightMesh = new THREE.Mesh(doorGeo, woodMat);
+        rightMesh.position.set(-doorW / 2, doorH / 2, 0);
+        rightMesh.castShadow = true;
+        rightMesh.receiveShadow = true;
+        this.rightDoor.add(rightMesh);
+
+        // Panels/Decor on doors (Inset Boxes)
+        const panelGeo = new THREE.BoxGeometry(doorW * 0.6, doorH * 0.35, doorD + 0.04);
+
+        // Top Panels
+        const lTop = new THREE.Mesh(panelGeo, woodMat);
+        lTop.position.set(doorW / 2, doorH * 0.7, 0);
+        this.leftDoor.add(lTop);
+
+        const rTop = new THREE.Mesh(panelGeo, woodMat);
+        rTop.position.set(-doorW / 2, doorH * 0.7, 0);
+        this.rightDoor.add(rTop);
+
+        // Bottom Panels
+        const lBot = new THREE.Mesh(panelGeo, woodMat);
+        lBot.position.set(doorW / 2, doorH * 0.3, 0);
+        this.leftDoor.add(lBot);
+
+        const rBot = new THREE.Mesh(panelGeo, woodMat);
+        rBot.position.set(-doorW / 2, doorH * 0.3, 0);
+        this.rightDoor.add(rBot);
+
+
+        // Handles (Gold Rings)
+        const handleR = 0.15;
+        const ringGeo = new THREE.TorusGeometry(handleR, 0.02, 16, 32);
+        const holderGeo = new THREE.SphereGeometry(0.04);
+
+        // Left Handle
+        const lRing = new THREE.Mesh(ringGeo, goldMat);
+        lRing.position.set(doorW - 0.2, doorH / 2, doorD / 2 + 0.02);
+        this.leftDoor.add(lRing);
+        const lHolder = new THREE.Mesh(holderGeo, goldMat);
+        lHolder.position.set(doorW - 0.2, doorH / 2 + 0.15, doorD / 2 + 0.02);
+        this.leftDoor.add(lHolder);
+
+        // Right Handle
+        const rRing = new THREE.Mesh(ringGeo, goldMat);
+        rRing.position.set(-doorW + 0.2, doorH / 2, doorD / 2 + 0.02);
+        this.rightDoor.add(rRing);
+        const rHolder = new THREE.Mesh(holderGeo, goldMat);
+        rHolder.position.set(-doorW + 0.2, doorH / 2 + 0.15, doorD / 2 + 0.02);
+        this.rightDoor.add(rHolder);
+
+
+        // Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(this.width, this.height, 0.5);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.set(0, this.height / 2, 0);
+        hitBox.userData = { type: 'double-door', parentObj: this };
+        this.interactableMesh = hitBox;
+        this.mesh.add(hitBox);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+
+    toggle() {
+        this.isOpen = !this.isOpen;
+        // Animation handled in update
+        // Target: 90 degrees (PI/2) roughly
+        this.targetRotation = this.isOpen ? Math.PI / 2 : 0;
+        return this.isOpen;
+    }
+
+    update(delta) {
+        if (Math.abs(this.currentRotation - this.targetRotation) > 0.001) {
+            const speed = 2.0;
+            const diff = this.targetRotation - this.currentRotation;
+            const step = speed * delta * Math.sign(diff);
+
+            if (Math.abs(diff) < Math.abs(step)) {
+                this.currentRotation = this.targetRotation;
+            } else {
+                this.currentRotation += step;
+            }
+
+            // Apply rotation
+            // Left door rotates -Y (Clockwise looking from top?) -> Outward?
+            // Depends on which way is "Out".
+            // Let's rotate Left -90, Right +90 to open "In/Out" symmetrically.
+            this.leftDoor.rotation.y = -this.currentRotation;
+            this.rightDoor.rotation.y = this.currentRotation;
+        }
+    }
+}
