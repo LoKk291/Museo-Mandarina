@@ -23,6 +23,7 @@ export class Player {
         this.moveLeft = false;
         this.moveRight = false;
         this.canJump = true; // Start enabled
+        this.isSeated = false; // New sitting state
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.isLocked = false;
@@ -98,6 +99,13 @@ export class Player {
 
     update(delta) {
         if (!this.isLocked) return;
+
+        // Si está sentado, no procesar movimiento, pero permitir mirar (PointerLock sigue activo)
+        if (this.isSeated) {
+            // Reset velocity just in case
+            this.velocity.set(0, 0, 0);
+            return;
+        }
 
         // Desaceleración simple (Exponential Decay for stability)
         // Old: this.velocity.x -= this.velocity.x * 10.0 * delta; (Unstable if delta > 0.1)
@@ -192,5 +200,21 @@ export class Player {
     }
 
     lock() { this.controls.lock(); }
+    lock() { this.controls.lock(); }
     unlock() { this.controls.unlock(); }
+
+    sit(targetPosition) {
+        this.isSeated = true;
+        this.velocity.set(0, 0, 0);
+        this.camera.position.copy(targetPosition);
+        // Maybe lower height? targetPosition should include height.
+    }
+
+    standUp() {
+        if (!this.isSeated) return;
+        this.isSeated = false;
+        // Move slightly forward or side to avoid clipping/stuck
+        this.camera.position.x += 0.5;
+        this.camera.position.y = this.height; // Reset height
+    }
 }

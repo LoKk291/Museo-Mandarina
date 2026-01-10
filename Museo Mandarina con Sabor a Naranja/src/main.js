@@ -128,6 +128,8 @@ function checkInteraction() {
             interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOpen ? "Cerrar Techo" : "Abrir Techo");
         } else if (hitObject.userData.type === 'double-door') {
             interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOpen ? "Cerrar Puerta" : "Abrir Puerta");
+        } else if (hitObject.userData.type === 'chair') {
+            interactionMsg.textContent = "Click para Sentarse";
         } else {
             interactionMsg.textContent = "Click para ver";
         }
@@ -163,6 +165,23 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'double-door') {
                 soundManager.play('switch'); // Use switch sound for now, maybe load door_creak later
                 hitObject.userData.parentObj.toggle();
+            } else if (hitObject.userData.type === 'chair') {
+                // Sit Logic
+                const chairMesh = hitObject.userData.parentObj.mesh;
+                // Use built-in offset property
+                const offset = hitObject.userData.parentObj.sitHeightOffset || 1.2;
+
+                const sitPos = chairMesh.position.clone();
+                sitPos.y += offset; // Local offset (Seat Height + Body) (0.5 + 0.7)
+
+                player.sit(sitPos);
+                interactionMsg.textContent = ""; // Hide text
+                // Show hint to stand up?
+                const hint = document.getElementById('interaction-msg');
+                if (hint) {
+                    hint.textContent = "SHIFT para levantarse";
+                    hint.style.display = "block";
+                }
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
@@ -197,6 +216,16 @@ function openPc() {
     if (typeof stopSnake === 'function') stopSnake();
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
 }
+
+// Stand Up Logic
+document.addEventListener('keydown', (e) => {
+    if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && player.isSeated) {
+        player.standUp();
+        // Clear message
+        const msgEl = document.getElementById('interaction-message');
+        if (msgEl) msgEl.style.display = 'none';
+    }
+});
 
 function closePc() {
     isModalOpen = false;

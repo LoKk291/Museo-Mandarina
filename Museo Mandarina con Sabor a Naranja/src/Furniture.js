@@ -1118,3 +1118,72 @@ export class RedCarpet {
         this.mesh.position.set(x, y, z);
     }
 }
+
+export class Chair {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.interactableMesh = null;
+        this.seatHeight = 0.5; // Seat height from floor
+        this.sitHeightOffset = 1.2; // Camera height when sitting (Seat + Body)
+        this.build();
+    }
+
+    build() {
+        const darkGrey = 0x222222;
+        const chrome = 0xAAAAAA;
+
+        const fabricMat = new THREE.MeshStandardMaterial({ color: darkGrey, roughness: 0.9 });
+        const metalMat = new THREE.MeshStandardMaterial({ color: chrome, metalness: 0.8, roughness: 0.2 });
+
+        // Seat (0.5m x 0.5m)
+        const seatW = 0.5;
+        const seatD = 0.5;
+        const seatThickness = 0.1;
+        const seatGeo = new THREE.BoxGeometry(seatW, seatThickness, seatD);
+        const seat = new THREE.Mesh(seatGeo, fabricMat);
+        seat.position.y = this.seatHeight;
+        seat.castShadow = true;
+        seat.receiveShadow = true;
+        this.mesh.add(seat);
+
+        // Backrest
+        const backH = 0.6;
+        const backW = 0.5;
+        const backD = 0.05;
+        const backGeo = new THREE.BoxGeometry(backW, backH, backD);
+        const back = new THREE.Mesh(backGeo, fabricMat);
+        // Back position: centered X, up half backH plus seat height, back edge of seat
+        back.position.set(0, this.seatHeight + backH / 2 + 0.05, seatD / 2 - backD / 2);
+        back.castShadow = true;
+        back.receiveShadow = true;
+        this.mesh.add(back);
+
+        // Legs (Stem)
+        const stemGeo = new THREE.CylinderGeometry(0.05, 0.05, this.seatHeight, 8);
+        const stem = new THREE.Mesh(stemGeo, metalMat);
+        stem.position.y = this.seatHeight / 2;
+        this.mesh.add(stem);
+
+        // Base (Star/Disc)
+        const baseGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.05, 8);
+        const base = new THREE.Mesh(baseGeo, metalMat);
+        base.position.y = 0.025;
+        this.mesh.add(base);
+
+        // Hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.7, 1.5, 0.7);
+        const hitbox = new THREE.Mesh(hitboxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitbox.position.y = 0.75;
+        hitbox.userData = { type: 'chair', parentObj: this };
+        this.interactableMesh = hitbox;
+        this.mesh.add(hitbox);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}

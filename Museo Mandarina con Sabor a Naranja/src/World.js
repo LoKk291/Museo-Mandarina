@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -148,6 +148,19 @@ export class World {
         const carpet = new RedCarpet(3, 15);
         carpet.setPosition(0, 0.01, 2.5); // Slightly above floor
         this.scene.add(carpet.mesh);
+
+        // Agregar Silla (Frente al escritorio)
+        // Desk Z = -6. Depth 1. Back edge = -6.5 (North side).
+        // User wants "Other side" -> North side.
+        // Chair Z = -7.2. (About 0.7m from desk edge).
+        // Chair must look at screen.
+        // PC (Rot PI) faces North. Screen looks North.
+        // Chair (at North) must look South to see screen.
+        const chair = new Chair();
+        chair.setPosition(0, 0, -7.2);
+        chair.setRotation(Math.PI); // Face South (Towards Room/Screen)
+        this.scene.add(chair.mesh);
+        this.interactables.push(chair.interactableMesh);
 
         this.addRoom(centralRoom);
 
