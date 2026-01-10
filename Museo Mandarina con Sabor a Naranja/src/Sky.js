@@ -37,7 +37,10 @@ export class Sky {
             metalness: 0.1,
             transparent: true,
             opacity: 0.9, // More solid white
-            flatShading: true
+            opacity: 0.9, // More solid white
+            flatShading: true,
+            emissive: 0xeeeeee, // Glow to stay white
+            emissiveIntensity: 0.4 // Adjust brightness
         });
 
         // Create a few clusters of clouds
