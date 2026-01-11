@@ -72,7 +72,7 @@ export class Room {
         // Techo color cielo (Azul claro) para simular estar abierto/soleado
         // Techo Solido (Blanco/Gris) para bloquear luz y ser visible desde abajo
         const ceilingMat = new THREE.MeshStandardMaterial({
-            color: 0xeeeeee,
+            color: 0x8b5a2b, // Brownish
             side: THREE.DoubleSide,
             roughness: 0.9,
             metalness: 0.1
