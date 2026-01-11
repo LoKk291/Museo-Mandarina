@@ -173,6 +173,9 @@ function checkInteraction() {
         } else if (hitObject.userData.type === 'chair') {
             interactionMsg.textContent = "Click para Sentarse";
             interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'light-switch') {
+            interactionMsg.textContent = "Click para Luz";
+            interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'sparrow') {
             // Sparrow logic: Show label, hide standard message
             hitObject.userData.parentObj.onHover(true);
@@ -235,6 +238,24 @@ document.addEventListener('click', () => {
                 if (hint) {
                     hint.textContent = "SHIFT para levantarse";
                     hint.style.display = "block";
+                }
+            } else if (hitObject.userData.type === 'light-switch') {
+                soundManager.play('switch'); // Click sound
+                const sw = hitObject.userData.parentObj;
+                // Toggle Switch -> Logic
+                // Switch updates its visual, but we need to trigger World/Room logic
+                const roomName = sw.roomName;
+                if (roomName) {
+                    const newState = world.toggleRoomLights(roomName);
+                    // Sync UI Button
+                    const btn = document.querySelector(`.room-toggle[data-room="${roomName}"]`);
+                    if (btn) {
+                        if (newState) btn.classList.add('active');
+                        else btn.classList.remove('active');
+                    }
+                } else {
+                    // Fallback if no room assigned (shouldn't happen)
+                    sw.toggle();
                 }
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
@@ -481,6 +502,23 @@ document.getElementById('settings-close').addEventListener('click', () => {
     document.querySelector('.pc-desktop').classList.remove('hidden');
 });
 
+// --- SETTINGS TABS LOGIC ---
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabBtns.forEach(btn => {
+    btn.onclick = () => {
+        // Deactivate all
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        // Activate clicked
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        document.getElementById(targetId).classList.add('active');
+    };
+});
+
 const timeSlider = document.getElementById('time-slider');
 if (timeSlider) {
     timeSlider.addEventListener('input', (e) => {
@@ -492,6 +530,65 @@ if (timeSlider) {
         document.getElementById('time-display').textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     });
 }
+
+// --- LIGHT CONTROL SCHEMATIC ---
+const roomToggles = document.querySelectorAll('.room-toggle');
+roomToggles.forEach(btn => {
+    btn.onclick = () => {
+        const roomName = btn.getAttribute('data-room');
+        soundManager.play('switch'); // Use existing switch sound
+        // Toggle in World
+        const newState = world.toggleRoomLights(roomName);
+
+        // Update UI
+        if (newState) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    };
+});
+
+// --- CEILING CONTROL ---
+const btnCeiling = document.getElementById('btn-ceiling-toggle');
+if (btnCeiling) {
+    btnCeiling.onclick = () => {
+        soundManager.play('switch');
+        // Toggle based on current state
+        if (world.animState === 'CLOSED' || world.animState === 'CLOSING_CEILING' || world.animState === 'CLOSING_CHANDELIER') {
+            world.toggleCeiling(true); // Open it
+        } else {
+            world.toggleCeiling(false); // Close it
+        }
+        updateCeilingUI();
+    };
+}
+
+const btnLightsOff = document.getElementById('btn-lights-off');
+if (btnLightsOff) {
+    btnLightsOff.onclick = () => {
+        soundManager.play('switch');
+        world.turnOffAllLights();
+    };
+}
+
+function updateCeilingUI() {
+    if (!btnCeiling) return;
+
+    // Check if Opening or Open
+    const isOpeningOrOpen = (world.animState === 'OPEN' || world.animState === 'OPENING_CHANDELIER' || world.animState === 'OPENING_CEILING');
+
+    if (isOpeningOrOpen) {
+        btnCeiling.textContent = "CERRAR TECHO CORREDIZO";
+        btnCeiling.classList.add('active');
+    } else {
+        btnCeiling.textContent = "ABRIR TECHO CORREDIZO";
+        btnCeiling.classList.remove('active');
+    }
+}
+
+// Ensure UI stays synced (in case Lever is used)
+setInterval(updateCeilingUI, 500); // Check every 500ms
 
 // --- CALCULATOR LOGIC ---
 let calcExpression = "";
@@ -815,7 +912,7 @@ function animate() {
 
     // Target Indoor Values (Updated for "Warm Powerful")
     const indoorDirInt = 0.0;
-    const indoorAmbInt = 0.7;
+    const indoorAmbInt = 0.1; // Darker room
     const indoorAmbCol = new THREE.Color(0xFFE4C4); // Bisque/Golden (Simulated Sun Ambient)
     const indoorFogCol = new THREE.Color(0x111111);
 

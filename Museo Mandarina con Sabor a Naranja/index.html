@@ -220,16 +220,67 @@
                     <span>CONFIGURACIÓN DEL SISTEMA</span>
                     <button id="settings-close">X</button>
                 </div>
-                <div class="settings-content">
-                    <h3>CONTROL DE ENTORNO</h3>
-                    <div class="setting-row">
-                        <label>HORA DEL DÍA:</label>
-                        <span id="time-display">08:00</span>
+
+                <!-- TABS HEADER -->
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="tab-general">GENERAL</button>
+                    <button class="tab-btn" data-tab="tab-lights">ILUMINACIÓN</button>
+                </div>
+
+                <div class="settings-body">
+                    <!-- TAB GENERAL -->
+                    <div id="tab-general" class="tab-content active">
+                        <div class="group-box">
+                            <div class="group-label">Hora del Sistema</div>
+                            <div class="setting-row">
+                                <span id="time-display">08:00</span>
+                            </div>
+                            <div class="setting-row">
+                                <input type="range" id="time-slider" min="0" max="23.9" step="0.1" value="8">
+                            </div>
+                        </div>
+                        <p class="hint">Ajusta el ciclo día/noche.</p>
                     </div>
-                    <div class="setting-row">
-                        <input type="range" id="time-slider" min="0" max="23.9" step="0.1" value="8">
+
+                    <!-- TAB LIGHTS (SCHEMATIC) -->
+                    <div id="tab-lights" class="tab-content">
+                        <div class="group-box">
+                            <div class="group-label">Esquema de Planta</div>
+                            <div id="museum-schematic-grid">
+                                <!-- Top Row -->
+                                <div class="schematic-row">
+                                    <button class="room-toggle active" data-room="L3">L3</button>
+                                    <div class="room-spacer"></div>
+                                    <button class="room-toggle active" data-room="R3">R3</button>
+                                </div>
+                                <!-- Middle Row -->
+                                <div class="schematic-row">
+                                    <button class="room-toggle active" data-room="L2">L2</button>
+                                    <div class="room-spacer"></div>
+                                    <button class="room-toggle active" data-room="R2">R2</button>
+                                </div>
+                                <!-- Bottom Row -->
+                                <div class="schematic-row">
+                                    <button class="room-toggle active" data-room="L1">L1</button>
+                                    <button class="room-toggle active" data-room="CENTRAL">CEN</button>
+                                    <button class="room-toggle active" data-room="R1">R1</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="group-box">
+                            <div class="group-label">Mecanismos Globales</div>
+                            <div class="setting-row" style="flex-direction: column; gap: 5px;">
+                                <button id="btn-ceiling-toggle" class="tab-btn"
+                                    style="width: 100%; text-align: center;">ABRIR TECHO CORREDIZO</button>
+                                <button id="btn-lights-off" class="tab-btn"
+                                    style="width: 100%; text-align: center; background: #5a3333; color: white;">APAGAR
+                                    TODO</button>
+                            </div>
+                        </div>
+
+                        <p class="hint">Click para alternar energía.</p>
                     </div>
-                    <p class="hint">Ajusta el control para cambiar la hora.</p>
                 </div>
             </div>
 

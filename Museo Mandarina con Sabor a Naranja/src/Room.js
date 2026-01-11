@@ -13,6 +13,9 @@ export class Room {
 
         this.walls = []; // Array para guardar las meshes de paredes (para colisiones)
         this.paintings = [];
+        this.lights = [];
+        this.lightPanels = [];
+        this.lightsOn = true; // Default state
 
         this.group = new THREE.Group();
         this.group.position.set(x, 0, z);
@@ -517,22 +520,10 @@ export class Room {
         if (!this.ceiling) return;
 
         // 4 Light Panels
-        const panelMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF }); // Emissive look (White)
-        // Fix: Use correct dimensions relative to Local Space.
-        // Local X = Global Width.
-        // Local Y = Global Depth (Scales with ceiling).
-        // Local Z = Global Vertical (Thickness).
-        const panelGeo = new THREE.BoxGeometry(0.8, 0.8, 0.05); // Flat panel (0.05 thick)
-        // But relative to ceiling (Plane), Y is up.
-
-        // Ceiling is rotated X=90. Local Y+ is Global Z+. Local Z+ is Global Y-.
-        // Wait, Ceiling rotation:
-        // ceiling.rotation.x = Math.PI / 2;
-        // Global Y is Local Z-.
-        // So 'down' relative to ceiling mesh is +Z in local space? No, Plane is X-Y. Normal is Z.
-        // PlaneGeometry (X, Y). Normal +Z.
-        // Rotated X=90. Normal +Z points to Global -Y (Down). Correct.
-        // So we put panels on +Z face of ceiling plane.
+        // Use a shared material for panels? Or unique if we want individual control? 
+        // Shared is fine if all go on/off together.
+        // But we want to change emissive/color.
+        // Let's create distinct materials so we don't affect other rooms if we share checks (though new Material() creates unique).
 
         // Positions relative to ceiling center (0, depth/2) 
         // Ceiling Origin is at "bottom" edge (0,0). Center is (0, depth/2).
@@ -547,6 +538,13 @@ export class Room {
         ];
 
         offsets.forEach(off => {
+            const panelMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF }); // Emissive look (White)
+            // Fix: Use correct dimensions relative to Local Space.
+            // Local X = Global Width.
+            // Local Y = Global Depth (Scales with ceiling).
+            // Local Z = Global Vertical (Thickness).
+            const panelGeo = new THREE.BoxGeometry(0.8, 0.8, 0.05); // Flat panel (0.05 thick)
+
             const panel = new THREE.Mesh(panelGeo, panelMat);
             // Position on the surface
             // Z = 0.025 (Half thickness) to sit on surface (Global Down) without sticking up (Global Up)
@@ -556,12 +554,44 @@ export class Room {
             // Add Powerful PointLight
             const light = new THREE.PointLight(0xFFCC66, 0.8, 15); // Golden Sun-like (slightly cooler than FFAA33)
             light.position.set(0, 0, 0.5); // Slightly below panel
-            // Shadows? Expensive. Maybe just one?
-            // Let's rely on global shadow for now or one main light.
-            // Enabling shadow for all 4 might kill FPS on web.
-            // light.castShadow = true; 
+
             panel.add(light);
+
+            // Store refs
+            this.lights.push(light);
+            this.lightPanels.push(panelMat);
         });
+    }
+
+    setLightSwitch(switchObj) {
+        this.lightSwitch = switchObj;
+        // Sync initial state
+        this.lightSwitch.setState(this.lightsOn);
+    }
+
+    toggleLights(forceState = null) {
+        if (forceState !== null) {
+            this.lightsOn = forceState;
+        } else {
+            this.lightsOn = !this.lightsOn;
+        }
+
+        const intensity = this.lightsOn ? 0.8 : 0;
+        const color = this.lightsOn ? 0xFFFFFF : 0x333333;
+
+        this.lights.forEach(light => {
+            light.intensity = intensity;
+        });
+        this.lightPanels.forEach(mat => {
+            mat.color.setHex(color);
+        });
+
+        // Sync Switch if exists
+        if (this.lightSwitch) {
+            this.lightSwitch.setState(this.lightsOn);
+        }
+
+        return this.lightsOn;
     }
 
     generateStoneTexture() {

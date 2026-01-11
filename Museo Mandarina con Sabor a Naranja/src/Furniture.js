@@ -445,7 +445,15 @@ export class DeskLamp {
     setRotation(y) { this.mesh.rotation.y = y; }
 
     toggle() {
-        this.isOn = !this.isOn;
+        this.setState(!this.isOn);
+    }
+
+    turnOff() {
+        this.setState(false);
+    }
+
+    setState(isOn) {
+        this.isOn = isOn;
         if (this.isOn) {
             this.light.intensity = 2.0;
             this.bulbMat.color.setHex(0xffffee);
@@ -729,6 +737,7 @@ export class Chandelier {
         this.currentY = this.baseY;
         this.targetY = this.baseY;
         this.moveSpeed = 2.0;
+        this.lights = [];
 
         this.build();
     }
@@ -813,6 +822,7 @@ export class Chandelier {
                 light.shadow.bias = -0.001;
             }
             armGroup.add(light);
+            this.lights.push(light); // Store ref
 
             armGroup.rotation.y = angle;
             // Lower the arms from the body
@@ -826,6 +836,14 @@ export class Chandelier {
         const chain = new THREE.Mesh(chainGeo, goldMat);
         chain.position.y = 1.0;
         this.mesh.add(chain);
+    }
+
+    turnOff() {
+        this.lights.forEach(l => l.intensity = 0);
+    }
+
+    turnOn() {
+        this.lights.forEach(l => l.intensity = 0.5);
     }
 
     setPosition(x, y, z) {
@@ -1447,6 +1465,69 @@ export class WindowFlowerBox {
             group.add(flower);
 
             this.mesh.add(group);
+        }
+    }
+}
+
+export class LightSwitch {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.isOn = true; // Default ON
+        this.rocker = null;
+        this.interactableMesh = null;
+        this.roomName = null; // To know which room to trigger
+        this.build();
+    }
+
+    build() {
+        // Base Plate (White Rectangle)
+        const plateGeo = new THREE.BoxGeometry(0.12, 0.16, 0.01);
+        const plateMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+        const plate = new THREE.Mesh(plateGeo, plateMat);
+        this.mesh.add(plate);
+
+        // Rocker (The moving part)
+        this.rocker = new THREE.Group();
+        this.rocker.position.z = 0.005; // Slightly protruding
+        this.mesh.add(this.rocker);
+
+        const switchGeo = new THREE.BoxGeometry(0.04, 0.06, 0.015);
+        const switchMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
+        const rockerMesh = new THREE.Mesh(switchGeo, switchMat);
+        this.rocker.add(rockerMesh);
+
+        // Hitbox usually larger
+        const hitBoxGeo = new THREE.BoxGeometry(0.2, 0.25, 0.05);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.userData = { type: 'light-switch', parentObj: this };
+        this.interactableMesh = hitBox;
+        this.mesh.add(hitBox);
+    }
+
+    setPosition(x, y, z) { this.mesh.position.set(x, y, z); }
+    setRotation(y) { this.mesh.rotation.y = y; }
+
+    // Set Room Name for Logic
+    setRoomName(name) { this.roomName = name; }
+
+    toggle() {
+        this.isOn = !this.isOn;
+        this.updateVisuals();
+        return this.isOn;
+    }
+
+    setState(isOn) {
+        this.isOn = isOn;
+        this.updateVisuals();
+    }
+
+    updateVisuals() {
+        // Simple rotation to indicate state
+        const angle = Math.PI / 10;
+        if (this.isOn) {
+            this.rocker.rotation.x = -angle;
+        } else {
+            this.rocker.rotation.x = angle;
         }
     }
 }

@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
     constructor(scene) {
         this.scene = scene;
         this.rooms = [];
+        this.roomsMap = new Map();
         this.collidables = []; // Walls for collision
         this.interactables = []; // Paintings for clicking
         this.clock = null;
@@ -141,7 +142,8 @@ export class World {
 
         // Palanca (Lever)
         this.lever = new Lever();
-        this.lever.setPosition(-0.7, 0.8, -6.0);
+        // Moved to front of lamp (Lamp is at 0.7, 0.8, -6.0)
+        this.lever.setPosition(0.7, 0.8, -6.4);
         this.lever.setRotation(Math.PI);
         this.scene.add(this.lever.mesh);
         this.interactables.push(this.lever.interactableMesh);
@@ -216,7 +218,7 @@ export class World {
         this.scene.add(chair.mesh);
         this.interactables.push(chair.interactableMesh);
 
-        this.addRoom(centralRoom);
+        this.addRoom(centralRoom, 'CENTRAL');
 
 
         // --- ALA OESTE (IZQUIERDA) ---
@@ -232,13 +234,13 @@ export class World {
         roomL1.addPaintingToWall('West', 3, 3, '', 'Ocaso', 'El sol poniéndose.', '3');
         roomL1.addPaintingToWall('South', 2, 2, '', 'Manzana', 'Roja y brillante.', '4');
 
-        this.addRoom(roomL1);
+        this.addRoom(roomL1, 'L1');
 
         // Pasillo Central <-> L1
         const hallCent_L1 = new Room(this.scene, -13.75, 0, 7.5, 4, 0xF5F5DC);
         hallCent_L1.addDoor('East', 4, 4);
         hallCent_L1.addDoor('West', 4, 4);
-        this.addRoom(hallCent_L1);
+        this.addRoom(hallCent_L1, 'HALL_L1');
 
         // --- Room L2 (Norte de L1) ---
         // Pos: -25, -25     (Gap logic: L1 End Z=-7.5. L2 Start Z=-17.5. Center L2=-25)
@@ -248,7 +250,7 @@ export class World {
 
         roomL2.addPaintingToWall('West', 4, 3, '', 'Bosque', 'Árboles antiguos.', '8');
 
-        this.addRoom(roomL2);
+        this.addRoom(roomL2, 'L2');
 
         // Pasillo L1 <-> L2 (Vertical)
         // Center X = -25.
@@ -256,7 +258,7 @@ export class World {
         const hallL1_L2 = new Room(this.scene, -25, -12.5, 4, 10, 0xF5F5DC);
         hallL1_L2.addDoor('South', 4, 4);
         hallL1_L2.addDoor('North', 4, 4);
-        this.addRoom(hallL1_L2);
+        this.addRoom(hallL1_L2, 'HALL_L2');
 
         // --- Room L3 (Norte de L2) ---
         // Pos: -25, -50
@@ -266,14 +268,14 @@ export class World {
 
         roomL3.addPaintingToWall('North', 3, 4, '', 'Montaña', 'Pico nevado.', '9');
 
-        this.addRoom(roomL3);
+        this.addRoom(roomL3, 'L3');
 
         // Pasillo L2 <-> L3
         // Z Gap: -32.5 to -42.5. Center Z = -37.5.
         const hallL2_L3 = new Room(this.scene, -25, -37.5, 4, 10, 0xF5F5DC);
         hallL2_L3.addDoor('South', 4, 4);
         hallL2_L3.addDoor('North', 4, 4);
-        this.addRoom(hallL2_L3);
+        this.addRoom(hallL2_L3, 'HALL_L3');
 
 
         // --- ALA ESTE (DERECHA) ---
@@ -288,13 +290,13 @@ export class World {
         roomR1.addPaintingToWall('South', 3, 3, '', 'Abstracto', 'Formas y colores.', '6');
         roomR1.addPaintingToWall('East', 2, 4, '', 'Retrato', 'Un señor serio.', '7');
 
-        this.addRoom(roomR1);
+        this.addRoom(roomR1, 'R1');
 
         // Pasillo Central <-> R1
         const hallCent_R1 = new Room(this.scene, 13.75, 0, 7.5, 4, 0xF5F5DC);
         hallCent_R1.addDoor('West', 4, 4);
         hallCent_R1.addDoor('East', 4, 4);
-        this.addRoom(hallCent_R1);
+        this.addRoom(hallCent_R1, 'HALL_R1');
 
         // --- Room R2 (Norte de R1) ---
         // Pos: 25, -25
@@ -304,13 +306,13 @@ export class World {
 
         roomR2.addPaintingToWall('East', 4, 3, '', 'Playa', 'Arena y mar.', '10');
 
-        this.addRoom(roomR2);
+        this.addRoom(roomR2, 'R2');
 
         // Pasillo R1 <-> R2
         const hallR1_R2 = new Room(this.scene, 25, -12.5, 4, 10, 0xF5F5DC);
         hallR1_R2.addDoor('South', 4, 4);
         hallR1_R2.addDoor('North', 4, 4);
-        this.addRoom(hallR1_R2);
+        this.addRoom(hallR1_R2, 'HALL_R2');
 
         // --- Room R3 (Norte de R2) ---
         // Pos: 25, -50
@@ -320,18 +322,23 @@ export class World {
         // Movido 'El Grito' aquí
         roomR3.addPaintingToWall('North', 3, 4, '', 'El Grito (Silencioso)', 'Un clásico.', '2');
 
-        this.addRoom(roomR3);
+        this.addRoom(roomR3, 'R3');
 
         // Pasillo R2 <-> R3
         const hallR2_R3 = new Room(this.scene, 25, -37.5, 4, 10, 0xF5F5DC);
         hallR2_R3.addDoor('South', 4, 4);
         hallR2_R3.addDoor('North', 4, 4);
-        this.addRoom(hallR2_R3);
+        this.addRoom(hallR2_R3, 'HALL_R3');
 
+        // Add Light Switches
+        this.addSwitches();
     }
 
-    addRoom(room) {
+    addRoom(room, name = null) {
         this.rooms.push(room);
+        if (name) {
+            this.roomsMap.set(name, room);
+        }
         // Agregar paredes a la lista global de colisiones
         this.collidables.push(...room.getCollidables());
         // Agregar cuadros a la lista global de interactuables
@@ -340,7 +347,143 @@ export class World {
         });
     }
 
+    // Toggle logic override/extension for Central Room to include furniture
+    toggleRoomLights(name) {
+        // ... (Groups logic remains)
+        const groups = {
+            'L1': ['L1', 'HALL_L1'],
+            'L2': ['L2', 'HALL_L2'],
+            'L3': ['L3', 'HALL_L3'],
+            'R1': ['R1', 'HALL_R1'],
+            'R2': ['R2', 'HALL_R2'],
+            'R3': ['R3', 'HALL_R3'],
+            'CENTRAL': ['CENTRAL']
+        };
+
+        const targets = groups[name] || [name];
+        let primaryState = false;
+
+        const primaryRoom = this.roomsMap.get(name);
+        if (primaryRoom) {
+            primaryState = primaryRoom.toggleLights();
+        }
+
+        targets.forEach(targetName => {
+            if (targetName !== name) {
+                const r = this.roomsMap.get(targetName);
+                if (r) r.toggleLights(primaryState);
+            }
+        });
+
+        // Special handling for CENTRAL
+        if (name === 'CENTRAL') {
+            if (primaryState) {
+                // On? Maybe turn furniture on? Or leave them manual?
+                // Bequest says: "cuando las luces esten apagas... el candelabro tambien se apague"
+                // Implies OFF sync check.
+                // Let's strictly sync OFF. If turning ON, maybe leave furniture as is or turn ON?
+                // Usually "Room Switch" controls overheads. Furniture is local.
+                // BUT user said "el candelabro tambien se apague y las lamparas tambien".
+                // This implies when Room Lights go OFF -> Furniture OFF.
+                // Does Room Lights ON -> Furniture ON? Maybe not.
+                // Let's implement OFF Sync only for now to preserve manual control, 
+                // UNLESS user assumes switch is master power.
+                // Let's turn ON chanderlier with room, but maybe not desk lamp?
+                // "apague" was the keyword.
+                // Let's sync Chandelier to Room Light. DeskLamp usually independent but let's sync OFF.
+                if (this.chandelier) this.chandelier.turnOn();
+            } else {
+                if (this.chandelier) this.chandelier.turnOff();
+                if (this.deskLamp) this.deskLamp.turnOff();
+                // FloorLamp not in World logic yet (it's in Furniture but not added to World explicitly as 'this.floorLamp'?)
+                // Let's check init() in World.js.
+            }
+        }
+
+        return primaryState;
+    }
+
+    turnOffAllLights() {
+        this.rooms.forEach(r => r.toggleLights(false));
+        if (this.chandelier) this.chandelier.turnOff();
+        if (this.deskLamp) this.deskLamp.turnOff();
+
+        // Return to closed/OFF state visually for switches?
+        // We need to update setup UI manually or it reacts to state.
+        // Switches in world need update?
+        // Room.toggleLights(false) handles sync with Room Switch.
+        // So physical switches should auto-rotate down.
+
+        // Also ensure Ceiling is closed?
+        // "apagar todas las luces" usually just lights.
+    }
+
+    addSwitchToRoom(roomName, x, y, z, rotationY) {
+        const room = this.roomsMap.get(roomName);
+        if (!room) return;
+
+        const sw = new LightSwitch();
+        sw.setPosition(x, y, z);
+        sw.setRotation(rotationY);
+        sw.setRoomName(roomName); // To identify it on click
+
+        this.scene.add(sw.mesh);
+        this.interactables.push(sw.interactableMesh);
+
+        // Link to room
+        room.setLightSwitch(sw);
+    }
+
+    // Call this after all rooms are built
+    addSwitches() {
+        // Re-calibrated Positions (Inner Face Offset = 0.05 from Wall Surface)
+        // Wall Thickness 0.5. Inner Surface is Center +/- 0.25 (or more for corner cases).
+
+        // CENTRAL (0,0) - South Wall (Main Entrance)
+        // South Wall Z=7.5. Inner Z=7.25.
+        // Switch Z=7.245 (Almost touching). Faces North (PI).
+        // X=2 (Right of door).
+        this.addSwitchToRoom('CENTRAL', 2, 1.5, 7.245, Math.PI);
+
+        // L1 (-25, 0) - East Wall (Entrance from Central)
+        // East Wall X=-17.5. Inner X=-17.75.
+        // Switch X=-17.8. Faces West (-PI/2).
+        // Z=3 (Right of door which is at 0? No, room center 0. Door [2..6]? No, Door width 4 at 0).
+        // Actually door is at CENTER of wall (0). Z range [-2, 2].
+        // So Z=3 is safe right side.
+        this.addSwitchToRoom('L1', -17.8, 1.5, -3, -Math.PI / 2);
+
+        // L2 (-25, -25) - South Wall (Entrance from L1)
+        // South Wall Z=-17.5. Inner Z=-17.75.
+        // Switch Z=-17.8. Faces North (PI).
+        // X= -22 (Right of door? Door at -25).
+        this.addSwitchToRoom('L2', -22, 1.5, -17.8, Math.PI);
+
+        // L3 (-25, -50) - South Wall (Entrance from L2)
+        // South Wall Z=-42.5. Inner Z=-42.75.
+        this.addSwitchToRoom('L3', -22, 1.5, -42.8, Math.PI);
+
+
+        // R1 (25, 0) - West Wall (Entrance from Central)
+        // West Wall X=17.5. Inner X=17.75.
+        // Switch X=17.8. Faces East (PI/2).
+        this.addSwitchToRoom('R1', 17.8, 1.5, -3, Math.PI / 2);
+
+        // R2 (25, -25) - South Wall
+        // South Wall Z=-17.5. Inner Z=-17.75.
+        this.addSwitchToRoom('R2', 28, 1.5, -17.8, Math.PI);
+
+        // R3 (25, -50) - South Wall
+        // South Wall Z=-42.5. Inner Z=-42.75.
+        this.addSwitchToRoom('R3', 28, 1.5, -42.8, Math.PI);
+    }
+
     toggleCeiling(shouldBeOpen) {
+        // Sync Lever if needed
+        if (this.lever && this.lever.isOpen !== shouldBeOpen) {
+            this.lever.toggle();
+        }
+
         // Trigger the Sequence
         if (shouldBeOpen) {
             // User wants to OPEN
