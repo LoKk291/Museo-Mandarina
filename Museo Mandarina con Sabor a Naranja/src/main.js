@@ -916,53 +916,11 @@ function animate() {
     world.update(delta, camera);
 
     // --- FIX: Progressive Interior Lighting ---
-    // Update Sky first (sets default OUTDOOR lighting targets)
-    // Then blend towards INDOOR defaults based on Ceiling Openness.
-
-    const openness = world.getCeilingOpenness(); // 0.0 (Closed) to 1.0 (Open)
-
-    // Target Outdoor Values (Calculated by Sky)
-    const outdoorDirInt = dirLight.intensity;
-    const outdoorAmbInt = amiLight.intensity;
-    const outdoorAmbCol = amiLight.color.clone();
-    const outdoorFogCol = scene.fog.color.clone();
-
-    // Target Indoor Values (Updated for "Warm Powerful")
-    const indoorDirInt = 0.0;
-
-    // Dynamic Ambient: 
-    // IF ANY light is ON -> Bright (0.7). 
-    // IF ALL lights OFF -> Dark (0.1).
-    const lightsOn = world.isAnyLightOn();
-    const indoorAmbInt = (lightsOn) ? 0.7 : 0.1;
-
-    const indoorAmbCol = new THREE.Color(0xFFE4C4); // Bisque/Golden (Simulated Sun Ambient)
-    const indoorFogCol = new THREE.Color(0x111111);
-
-    // Apply Lerp
-    // Logic: 
-    // If Player is OUTSIDE -> Use Outdoor Settings (Effective Openness = 1.0)
-    // If Player is INSIDE -> Blend based on Ceiling Openness.
-
-    const isIndoors = world.isPointInside(camera.position);
-    let effectiveOpenness = 1.0; // Default to Outdoor
-
-    if (isIndoors) {
-        effectiveOpenness = world.getCeilingOpenness();
-    }
-
-    // 1. Directional Light (Sun)
-    dirLight.intensity = THREE.MathUtils.lerp(indoorDirInt, outdoorDirInt, effectiveOpenness);
-
-    // 2. Ambient Light
-    amiLight.intensity = THREE.MathUtils.lerp(indoorAmbInt, outdoorAmbInt, effectiveOpenness);
-    amiLight.color.lerpColors(indoorAmbCol, outdoorAmbCol, effectiveOpenness);
-
-    // 3. Fog
-    scene.fog.color.lerpColors(indoorFogCol, outdoorFogCol, effectiveOpenness);
-    // REMOVED: scene.background = scene.fog.color; 
-    // Sky color should be independent of Indoor Fog. Sky.js manages background.
-    // --------------------------------------
+    // REMOVED: Interior/Exterior blending logic.
+    // Reason: User requested total independence.
+    // Sky.js controls Global Ambient/Sun (Time based).
+    // World.js controls PointLights (Source based).
+    // No "Position Based" magic.
 
     if (!isModalOpen) {
         player.update(delta);
