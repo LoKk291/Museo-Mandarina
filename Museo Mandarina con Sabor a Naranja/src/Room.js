@@ -25,19 +25,26 @@ export class Room {
         // Materiales
         // Suelo: Cargar Textura
         const textureLoader = new THREE.TextureLoader();
-        const floorTexture = textureLoader.load('textures/wood_floor.jpg');
+        const floorTexture = textureLoader.load('textures/wood_tile.png');
         // Configurar repetición para que no se estire
         floorTexture.wrapS = THREE.RepeatWrapping;
         floorTexture.wrapT = THREE.RepeatWrapping;
-        // Ajustar repetición basada en tamaño (aprox 1 repetición cada 4 metros)
-        floorTexture.repeat.set(this.width / 4, this.depth / 4);
+        // Ajustar repetición. La baldosa es detallada.
+        // Room width 15-20. 
+        // Si repetimos width/2, en 20m son 10 baldosas. 2m por baldosa.
+        // Si repetimos width/4, en 20m son 5 baldosas. 4m por baldosa. Muy grande.
+        // La imagen tiene bastante detalle. El usuario quiere "un poco mas chicas".
+        // Antes era width/2 (2m). Probemos width (1m).
+        floorTexture.repeat.set(this.width, this.depth);
         // Ajustar color espacio sRGB
         floorTexture.colorSpace = THREE.SRGBColorSpace;
 
         const floorMat = new THREE.MeshStandardMaterial({
             map: floorTexture,
-            roughness: 0.8,
-            color: 0xffffff // Blanco para no tintar la textura
+            roughness: 0.1, // Shiny Ceramic
+            metalness: 0.1, // Slight reflectivity
+            envMapIntensity: 1.0,
+            color: 0xffffff
         });
 
         // Techo color cielo (Azul claro) para simular estar abierto/soleado

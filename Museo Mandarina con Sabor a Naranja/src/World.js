@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -228,6 +228,21 @@ export class World {
         orchidRight.mesh.position.set(3, 0, 11); // Right of door, outside
         orchidRight.mesh.rotation.y = Math.PI / 4; // Slight variation
         this.scene.add(orchidRight.mesh);
+
+        // Agregar Jardineras en las Ventanas (Afuera)
+        // Ventanas en X = -6 y X = 6. (Centros de segmentos de 8m desplazados)
+        // Segmento Left: Center = -6. Segment Right: Center = 6.
+        // Altura ventana: Centro 2, Alto 2.5. Base = 0.75.
+        // Pondremos la jardinera justo abajo: Y = 0.6 (Altura 0.3 -> Top 0.75)
+        // Pared Ext Z = 10.25. Center Z = 10.4.
+
+        const flowerBoxL = new WindowFlowerBox(2.2); // Slightly wider than window (2m)
+        flowerBoxL.mesh.position.set(-6, 0.6, 10.4);
+        this.scene.add(flowerBoxL.mesh);
+
+        const flowerBoxR = new WindowFlowerBox(2.2);
+        flowerBoxR.mesh.position.set(6, 0.6, 10.4);
+        this.scene.add(flowerBoxR.mesh);
 
         // Agregar Alfombra Roja (Puerta a Escritorio)
         // Puerta Z=10 (Wall). Escritorio Collision Z=-6.

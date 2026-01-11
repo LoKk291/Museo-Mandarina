@@ -826,11 +826,23 @@ export class DoubleDoor {
     }
 
     build() {
-        const oakColor = 0x3f1d0b; // Dark Oak
-        const frameColor = 0x2a1508; // Darker frame
+        const oakColor = 0xA07040; // Lighter Oak (Golden Brown)
+        const frameColor = 0x5D4037; // Darker frame (Brown)
         const goldColor = 0xFFD700;
 
-        const woodMat = new THREE.MeshStandardMaterial({ color: oakColor, roughness: 0.7 });
+        // Create Procedural Wood Texture
+        const woodTexture = this.createWoodTexture();
+        woodTexture.wrapS = THREE.RepeatWrapping;
+        woodTexture.wrapT = THREE.RepeatWrapping;
+        woodTexture.repeat.set(1, 2); // Stretch grain vertically
+
+        const woodMat = new THREE.MeshStandardMaterial({
+            map: woodTexture,
+            color: 0xffffff, // White tint to preserve texture color
+            roughness: 0.6,
+            metalness: 0.1
+        });
+
         const frameMat = new THREE.MeshStandardMaterial({ color: frameColor, roughness: 0.8 });
         const goldMat = new THREE.MeshStandardMaterial({ color: goldColor, metalness: 0.8, roughness: 0.2 });
 
@@ -995,6 +1007,52 @@ export class DoubleDoor {
             this.leftDoor.rotation.y = -this.currentRotation;
             this.rightDoor.rotation.y = this.currentRotation;
         }
+    }
+
+    createWoodTexture() {
+
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Base color (Lighter Oak)
+        ctx.fillStyle = '#A07040';
+        ctx.fillRect(0, 0, size, size);
+
+        // Grain
+        for (let i = 0; i < 3000; i++) {
+            const x = Math.random() * size;
+            const y = Math.random() * size;
+            const w = Math.random() * 2 + 1;
+            const h = Math.random() * 60 + 20; // Long vertical streaks
+            const alpha = Math.random() * 0.15;
+
+            // Darker streaks
+            ctx.fillStyle = `rgba(80, 50, 20, ${alpha})`;
+            ctx.fillRect(x, y, w, h);
+
+            // Lighter streaks
+            if (i % 3 === 0) {
+                ctx.fillStyle = `rgba(200, 160, 100, ${alpha})`;
+                ctx.fillRect(x, y, w, h);
+            }
+        }
+
+        // Noise / knots
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * size;
+            const y = Math.random() * size;
+            const r = Math.random() * 10 + 5;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(60, 40, 10, 0.3)';
+            ctx.fill();
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
     }
 }
 
@@ -1273,5 +1331,62 @@ export class OrchidPot {
         group.add(center);
 
         return group;
+    }
+}
+
+export class WindowFlowerBox {
+    constructor(width = 2) {
+        this.width = width;
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // 1. Box (Wood)
+        // Dimensions: width x 0.3 x 0.3
+        const boxMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
+        const boxGeo = new THREE.BoxGeometry(this.width, 0.3, 0.3);
+        const box = new THREE.Mesh(boxGeo, boxMat);
+        box.position.y = 0.15; // Half height
+        box.castShadow = true;
+        this.mesh.add(box);
+
+        // 2. Soil
+        const soilMat = new THREE.MeshStandardMaterial({ color: 0x2b1d0e, roughness: 1.0 });
+        const soilGeo = new THREE.BoxGeometry(this.width - 0.1, 0.05, 0.25);
+        const soil = new THREE.Mesh(soilGeo, soilMat);
+        soil.position.y = 0.28; // Just below top
+        this.mesh.add(soil);
+
+        // 3. Flowers & Foliage
+        const colors = [0xFF0000, 0xFFA500, 0xFFFF00, 0x4169E1, 0xEE82EE]; // Red, Orange, Yellow, RoyalBlue, Violet
+
+        for (let i = 0; i < 15; i++) {
+            // Random Pos relative to center
+            const x = (Math.random() - 0.5) * (this.width - 0.2);
+            const z = (Math.random() - 0.5) * 0.2;
+
+            const group = new THREE.Group();
+            group.position.set(x, 0.3, z);
+
+            // Stem/Leaves
+            const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, side: THREE.DoubleSide });
+            const leafGeo = new THREE.PlaneGeometry(0.1, 0.2);
+            const leaf = new THREE.Mesh(leafGeo, leafMat);
+            leaf.position.y = 0.1;
+            leaf.rotation.y = Math.random() * Math.PI;
+            group.add(leaf);
+
+            // Flower Head
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const flowerMat = new THREE.MeshStandardMaterial({ color: color });
+            const flowerGeo = new THREE.DodecahedronGeometry(0.05);
+            const flower = new THREE.Mesh(flowerGeo, flowerMat);
+            flower.position.y = 0.2;
+            flower.rotation.set(Math.random(), Math.random(), Math.random());
+            group.add(flower);
+
+            this.mesh.add(group);
+        }
     }
 }
