@@ -189,6 +189,42 @@ export class RetroComputer {
         this.monitorLight.position.set(0, monitorItm.position.y, 0.5);
         this.monitorLight.castShadow = false;
         this.mesh.add(this.monitorLight);
+
+        // --- 3. TECLADO ---
+        const kbW = 0.55;
+        const kbH = 0.04;
+        const kbD = 0.2;
+        const kbGeo = new THREE.BoxGeometry(kbW, kbH, kbD);
+        const keyboard = new THREE.Mesh(kbGeo, beigeMat); // beigeMat is in scope from start of build()
+
+        // Posición: Delante del case. 
+        // Case llega a Z=0.25. Teclado empieza en Z=0.3
+        keyboard.position.set(0, 0.03, 0.45);
+        keyboard.rotation.x = 0.1; // Inclinación ergonómica
+        keyboard.castShadow = true;
+        keyboard.receiveShadow = true;
+        this.mesh.add(keyboard);
+
+        // Teclas (Bloques simulados)
+        const keysGeo = new THREE.BoxGeometry(kbW - 0.05, 0.01, kbD - 0.05);
+        const keys = new THREE.Mesh(keysGeo, darkBeigeMat); // darkBeigeMat is in scope
+        keys.position.set(0, 0.03, 0); // Relativo al teclado
+        keyboard.add(keys);
+
+        // --- HITBOX DE INTERACCIÓN ---
+        // Cubre Case + Monitor + Teclado
+        const hitBoxGeo = new THREE.BoxGeometry(0.7, 0.8, 0.8);
+        const hitBoxMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+        const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+
+        // Centro aproximado de todo el conjunto
+        hitBox.position.set(0, 0.3, 0.2);
+
+        hitBox.userData.type = 'computer';
+        hitBox.userData.parentObj = this;
+
+        this.mesh.add(hitBox);
+        this.interactableMesh = hitBox;
     }
 
     createAsciiTexture() {
@@ -198,11 +234,11 @@ export class RetroComputer {
         const ctx = canvas.getContext('2d');
 
         // Background
-        ctx.fillStyle = '#000033'; // Dark Blue
+        ctx.fillStyle = '#000044'; // Slightly brighter Dark Blue for "blue glow" base
         ctx.fillRect(0, 0, 512, 512);
 
-        // Text (Bright Blue)
-        ctx.fillStyle = '#3399FF'; // Brighter Blue
+        // Text (Bright Neon Blue)
+        ctx.fillStyle = '#00FFFF'; // Cyan/Neon Blue
         ctx.font = 'bold 30px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -238,79 +274,44 @@ export class RetroComputer {
     }
 
 
-    // --- 3. TECLADO ---
-    const kbW = 0.55;
-    const kbH = 0.04;
-    const kbD = 0.2;
-    const kbGeo = new THREE.BoxGeometry(kbW, kbH, kbD);
-    const keyboard = new THREE.Mesh(kbGeo, beigeMat);
-
-        // Posición: Delante del case. 
-        // Case llega a Z=0.25. Teclado empieza en Z=0.3
-        keyboard.position.set(0, 0.03, 0.45);
-        keyboard.rotation.x = 0.1; // Inclinación ergonómica
-        keyboard.castShadow = true;
-        keyboard.receiveShadow = true;
-        this.mesh.add(keyboard);
-
-// Teclas (Bloques simulados)
-const keysGeo = new THREE.BoxGeometry(kbW - 0.05, 0.01, kbD - 0.05);
-const keys = new THREE.Mesh(keysGeo, darkBeigeMat);
-keys.position.set(0, 0.03, 0); // Relativo al teclado
-keyboard.add(keys);
 
 
-// --- HITBOX DE INTERACCIÓN ---
-// Cubre Case + Monitor + Teclado
-const hitBoxGeo = new THREE.BoxGeometry(0.7, 0.8, 0.8);
-const hitBoxMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
-
-// Centro aproximado de todo el conjunto
-hitBox.position.set(0, 0.3, 0.2);
-
-hitBox.userData.type = 'computer';
-hitBox.userData.parentObj = this;
-
-this.mesh.add(hitBox);
-this.interactableMesh = hitBox;
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
     }
 
-setPosition(x, y, z) {
-    this.mesh.position.set(x, y, z);
-}
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
 
-setRotation(y) {
-    this.mesh.rotation.y = y;
-}
+    turnOn() {
+        // Active State (Bright)
+        if (this.screenMat) {
+            this.screenMat.color.setHex(0xffffff); // Full white base
+            this.screenMat.emissive.setHex(0xffffff); // Let texture colors shine full
+            this.screenMat.emissiveIntensity = 1.2; // Bright
+        }
+        if (this.monitorLight) {
+            this.monitorLight.color.setHex(0x88ccff); // Light Blue Light
+            this.monitorLight.intensity = 3.0;
+            this.monitorLight.distance = 8;
+        }
+    }
 
-turnOn() {
-    if (this.screenMat) {
-        this.screenMat.color.setHex(0x222222);
-        this.screenMat.emissive.setHex(0x0088ff); // Bright Cyan/Blue Active
-        this.screenMat.emissiveIntensity = 3.0; // Boosted Emissive
+    turnOff() {
+        // "Off" State = Idle/Screensaver (Blue Glow + Visible Art)
+        if (this.screenMat) {
+            this.screenMat.color.setHex(0xaaaaaa); // Slightly dimmed base
+            this.screenMat.emissive.setHex(0xffffff); // White emissive to keep colors correct
+            this.screenMat.emissiveIntensity = 0.8; // Moderate glow
+        }
+        // Keep a small glow light
+        if (this.monitorLight) {
+            this.monitorLight.color.setHex(0x0033aa); // Deep Blue Light
+            this.monitorLight.intensity = 2.0;
+            this.monitorLight.distance = 5;
+        }
     }
-    if (this.monitorLight) {
-        this.monitorLight.color.setHex(0x66ccff);
-        this.monitorLight.intensity = 6.0; // Much Stronger (was 3.0)
-        this.monitorLight.distance = 10;   // Further reach
-    }
-}
-
-turnOff() {
-    // "Off" state is now "Idle/Screensaver": Faint Blue Glow
-    if (this.screenMat) {
-        this.screenMat.color.setHex(0x111111);
-        this.screenMat.emissive.setHex(0x004488); // Deep faint blue
-        this.screenMat.emissiveIntensity = 1.2; // Visible glow (was 0.8)
-    }
-    // Keep a small glow light even when "off"
-    if (this.monitorLight) {
-        this.monitorLight.color.setHex(0x004488);
-        this.monitorLight.intensity = 1.5; // Stronger dim light (was 0.5)
-        this.monitorLight.distance = 5;
-    }
-}
 }
 
 export class DeskLamp {
