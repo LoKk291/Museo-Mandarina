@@ -145,7 +145,8 @@ export class World {
         // Palanca (Lever)
         this.lever = new Lever();
         // Moved to front of lamp (Lamp is at 0.7, 0.8, -6.0)
-        this.lever.setPosition(0.7, 0.8, -6.4);
+        // User requested "more to the left" (Left from desk view is +X). Moving to 1.0
+        this.lever.setPosition(1.0, 0.8, -6.4);
         this.lever.setRotation(Math.PI);
         this.scene.add(this.lever.mesh);
         this.interactables.push(this.lever.interactableMesh);

@@ -95,25 +95,9 @@ export class Desk {
         modestyPanel.receiveShadow = true;
         this.mesh.add(modestyPanel);
 
-        // Detalles: Tiradores de cajones en gabinetes (Simulados)
-        // 3 Cajones por lado
+        // Detalles: Tiradores de cajones MOVIDOS a las extensiones (Wings)
+        // Se eliminan de aquí para no quedar tapados.
         const handleGeo = new THREE.BoxGeometry(0.12, 0.02, 0.02);
-
-        for (let i = 0; i < 3; i++) {
-            // Y positions
-            const y = cabinetHeight * 0.8 - (i * 0.2);
-
-            // Left Handles
-            const hL = new THREE.Mesh(handleGeo, metalMat);
-            // Position on Front Face of Cabinet (Z+)
-            hL.position.set(leftCab.position.x, y, cabinetDepth / 2 + 0.01);
-            this.mesh.add(hL);
-
-            // Right Handles
-            const hR = new THREE.Mesh(handleGeo, metalMat);
-            hR.position.set(rightCab.position.x, y, cabinetDepth / 2 + 0.01);
-            this.mesh.add(hR);
-        }
 
         // --- 3. U-Shape Wings (Extensiones Laterales) ---
         // Extend backwards (Local +Z)
@@ -158,6 +142,37 @@ export class Desk {
         rightWingCab.castShadow = true;
         rightWingCab.receiveShadow = true;
         this.mesh.add(rightWingCab);
+
+        // --- Cajones en Wings (Accesibles desde adentro) ---
+        // Inner Face of Left Wing is +X direction relative to Left Wing center.
+        // Inner Face of Right Wing is -X direction relative to Right Wing center.
+        // Rotation Y to align handle with face.
+
+        for (let i = 0; i < 3; i++) {
+            const y = cabinetHeight * 0.8 - (i * 0.2);
+
+            // Left Wing Drawers (Inner Face = +X)
+            const hL = new THREE.Mesh(handleGeo, metalMat);
+            // x = center + width/2 + offset
+            hL.position.set(
+                wingX_Left + wingWidth / 2 + 0.01,
+                y,
+                wingZ
+            );
+            hL.rotation.y = Math.PI / 2; // Face inside
+            this.mesh.add(hL);
+
+            // Right Wing Drawers (Inner Face = -X)
+            const hR = new THREE.Mesh(handleGeo, metalMat);
+            // x = center - width/2 - offset
+            hR.position.set(
+                wingX_Right - wingWidth / 2 - 0.01,
+                y,
+                wingZ
+            );
+            hR.rotation.y = -Math.PI / 2; // Face inside
+            this.mesh.add(hR);
+        }
     }
 
     setPosition(x, y, z) {
