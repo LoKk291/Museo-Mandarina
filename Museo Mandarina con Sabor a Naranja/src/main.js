@@ -727,6 +727,12 @@ window.addEventListener('keydown', (e) => {
         closeModal();
         closePc();
     }
+    // Toggle Stats
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const panel = document.getElementById('stats-panel');
+        if (panel) panel.classList.toggle('hidden');
+    }
 });
 
 
@@ -750,7 +756,7 @@ function animate() {
     }
 
     // World Animations (Ceiling, etc)
-    world.update(delta);
+    world.update(delta, camera);
 
     // --- FIX: Progressive Interior Lighting ---
     // Update Sky first (sets default OUTDOOR lighting targets)
@@ -789,6 +795,14 @@ function animate() {
     if (!isModalOpen) {
         player.update(delta);
         checkInteraction(); // Actualizar UI de "Click para ver"
+
+        // Update Stats if visible
+        const statsPanel = document.getElementById('stats-panel');
+        if (statsPanel && !statsPanel.classList.contains('hidden')) {
+            const dist = camera.position.distanceTo(new THREE.Vector3(0, 0, 0));
+            const distEl = document.getElementById('dist-center');
+            if (distEl) distEl.textContent = dist.toFixed(2);
+        }
     }
 
     renderer.render(scene, camera);

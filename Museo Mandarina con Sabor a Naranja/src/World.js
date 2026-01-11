@@ -367,11 +367,11 @@ export class World {
         return 0;
     }
 
-    update(delta) {
+    update(delta, camera) {
         // Update Components
         if (this.chandelier) this.chandelier.update(delta);
         if (this.mainDoor) this.mainDoor.update(delta);
-        if (this.sparrow) this.sparrow.update(delta);
+        if (this.sparrow) this.sparrow.update(delta, camera);
 
 
         this.rooms.forEach(room => {

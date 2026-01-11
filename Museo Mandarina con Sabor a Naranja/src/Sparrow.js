@@ -177,13 +177,19 @@ export class Sparrow {
         return steer;
     }
 
-    update(delta) {
+    update(delta, camera) {
         const now = performance.now() / 1000;
         this.wingPhase += delta * 15;
 
+        // Calc distance to camera (listener)
+        let distToListener = 0;
+        if (camera) {
+            distToListener = this.mesh.position.distanceTo(camera.position);
+        }
+
         // 1. Audio Logic
         if (now > this.nextChirpTime) {
-            this.chirp();
+            this.chirp(distToListener);
             this.nextChirpTime = now + Math.random() * 3 + 2;
         }
 
@@ -239,15 +245,29 @@ export class Sparrow {
         }
     }
 
-    chirp() {
+    chirp(dist) {
         if (this.ctx.state === 'suspended') this.ctx.resume();
+
+        // Spatial Volume Calculation
+        // Adjusted Max hearing distance: 20 meters
+        const maxDist = 20.0;
+        let volume = 0;
+
+        if (dist < maxDist) {
+            // Linear falloff 1.0 -> 0.0
+            const factor = (maxDist - dist) / maxDist;
+            // Squared for more natural falloff, base volume of 0.6
+            volume = factor * factor * 0.6;
+        } else {
+            return; // Too far, don't play
+        }
 
         // Pick random sound
         const sound = this.chirpSounds[Math.floor(Math.random() * this.chirpSounds.length)];
         if (sound) {
             // Reset to 0 if playing
             sound.currentTime = 0;
-            // Play
+            sound.volume = volume;
             sound.play().catch(e => {
                 // Auto-play blocked likely
             });
