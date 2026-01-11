@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 
 export class Desk {
     constructor(width = 3.5, depth = 1.2, height = 0.8) {
@@ -96,7 +96,7 @@ export class Desk {
         this.mesh.add(modestyPanel);
 
         // Detalles: Tiradores de cajones MOVIDOS a las extensiones (Wings)
-        // Se eliminan de aquí para no quedar tapados.
+        // Se eliminan de aquÃ­ para no quedar tapados.
         const handleGeo = new THREE.BoxGeometry(0.12, 0.02, 0.02);
 
         // --- 3. U-Shape Wings (Extensiones Laterales) ---
@@ -222,7 +222,7 @@ export class RetroComputer {
         floppy2.position.set(0.15, 0.02, 0.251); // Abajo
         this.mesh.add(floppy2);
 
-        // Ventilación (Izquierda)
+        // VentilaciÃ³n (Izquierda)
         const ventGeo = new THREE.BoxGeometry(0.15, 0.08, 0.02);
         const vent = new THREE.Mesh(ventGeo, darkBeigeMat);
         vent.position.set(-0.15, 0.05, 0.251);
@@ -302,10 +302,10 @@ export class RetroComputer {
         const kbGeo = new THREE.BoxGeometry(kbW, kbH, kbD);
         const keyboard = new THREE.Mesh(kbGeo, beigeMat); // beigeMat is in scope from start of build()
 
-        // Posición: Delante del case. 
+        // PosiciÃ³n: Delante del case. 
         // Case llega a Z=0.25. Teclado empieza en Z=0.3
         keyboard.position.set(0, 0.03, 0.45);
-        keyboard.rotation.x = 0.1; // Inclinación ergonómica
+        keyboard.rotation.x = 0.1; // InclinaciÃ³n ergonÃ³mica
         keyboard.castShadow = true;
         keyboard.receiveShadow = true;
         this.mesh.add(keyboard);
@@ -316,7 +316,7 @@ export class RetroComputer {
         keys.position.set(0, 0.03, 0); // Relativo al teclado
         keyboard.add(keys);
 
-        // --- HITBOX DE INTERACCIÓN ---
+        // --- HITBOX DE INTERACCIÃ“N ---
         // Cubre Case + Monitor + Teclado
         const hitBoxGeo = new THREE.BoxGeometry(0.7, 0.8, 0.8);
         const hitBoxMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
@@ -1914,5 +1914,79 @@ export class LightSwitch {
         } else {
             this.rocker.rotation.x = angle;
         }
+    }
+}
+
+
+export class PaperStack {
+    constructor(count = 120) {
+        this.count = count;
+        this.mesh = null;
+        this.build();
+    }
+
+    build() {
+        // A4 Paper Size: 0.21 x 0.297 (meters)
+        // Visually thicker for stack effect
+        const geo = new THREE.BoxGeometry(0.21, 0.0015, 0.297);
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0xfdfbf7, // Off-white / Cream paper
+            roughness: 0.9,
+            metalness: 0.05
+        });
+
+        this.mesh = new THREE.InstancedMesh(geo, mat, this.count);
+        this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); // Static is fine mostly but good practice
+
+        const dummy = new THREE.Object3D();
+        const rand = () => (Math.random() - 0.5); // -0.5 to 0.5
+
+        // Simulating the messy stack
+        for (let i = 0; i < this.count; i++) {
+            // Position
+            // Y: Stack up (offset by half thickness to start at 0 if origin is center, but geometry is centered)
+            // If box height is 0.002, center is at 0.001. Stack starts at y=0.
+            // i=0 -> y=0.
+            const y = i * 0.0015;
+
+            // Jitter increases slightly as we go up? Or just random.
+            // Let's make it more messy near the top or just random throughout.
+            // Random throughout matches the image.
+            const x = rand() * 0.05; // +/- 2.5cm
+            const z = rand() * 0.05;
+
+            dummy.position.set(x, y, z);
+
+            // Rotation
+            // Y: Random messy rotation
+            dummy.rotation.y = rand() * 0.5; // +/- 0.25 rads (~14 deg)
+
+            // X, Z: Very slight tilt for realism (paper isn't perfectly flat)
+            dummy.rotation.x = rand() * 0.02;
+            dummy.rotation.z = rand() * 0.02;
+
+            dummy.updateMatrix();
+            this.mesh.setMatrixAt(i, dummy.matrix);
+        }
+
+        this.mesh.receiveShadow = true;
+        this.mesh.castShadow = true;
+
+        // Hitbox for interaction
+        const hitBoxGeo = new THREE.BoxGeometry(0.3, 0.2, 0.4); // Slightly larger than stack
+        const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+        const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+        hitBox.position.y = 0.1; // Center of stack approx
+        hitBox.userData = { type: 'paper-stack', parentObj: this };
+        this.mesh.add(hitBox);
+        this.interactableMesh = hitBox;
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
     }
 }

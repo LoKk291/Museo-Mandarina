@@ -138,6 +138,17 @@ const pcTerminal = document.getElementById('pc-terminal');
 const cmdInput = document.getElementById('cmd-input');
 const termOutput = document.getElementById('terminal-output');
 
+// Letter Refs
+const letterOverlay = document.getElementById('letter-overlay');
+const closeLetterBtn = document.getElementById('close-letter');
+
+// Close Letter Logic
+closeLetterBtn.onclick = () => {
+    letterOverlay.classList.add('hidden');
+    isModalOpen = false;
+    player.lock();
+};
+
 // GLOBAL CLICK SOUND FOR PC
 document.addEventListener('mousedown', (e) => {
     // Check if PC Interface is visible
@@ -189,6 +200,11 @@ function checkInteraction() {
             lastHoveredSparrow = hitObject.userData.parentObj;
             interactionMsg.style.display = 'none'; // Label is enough
             return hitObject;
+            interactionMsg.style.display = 'none'; // Label is enough
+            return hitObject;
+        } else if (hitObject.userData.type === 'paper-stack') {
+            interactionMsg.textContent = "Click para leer";
+            interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
             interactionMsg.style.display = 'block';
@@ -270,8 +286,6 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'desk-lamp') {
                 soundManager.play('switch');
                 hitObject.userData.parentObj.toggle();
-            } else if (hitObject.userData.type === 'sparrow') {
-                // Sparrow Dialog
                 soundManager.play('click');
                 const sparrow = hitObject.userData.parentObj;
                 if (sparrow.chirp) sparrow.chirp(0); // Play chirp locally
@@ -287,6 +301,12 @@ document.addEventListener('click', () => {
                 window.sparrowTimeout = setTimeout(() => {
                     dialogEl.classList.add('hidden');
                 }, 8000);
+            } else if (hitObject.userData.type === 'paper-stack') {
+                soundManager.play('click'); // Paper sound would be better, using click for now
+                isModalOpen = true;
+                player.unlock();
+                instructions.style.display = 'none';
+                letterOverlay.classList.remove('hidden');
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -181,6 +181,19 @@ export class World {
         phone.setRotation(Math.PI); // Face user
         this.scene.add(phone.mesh);
         this.interactables.push(phone.interactableMesh);
+
+        // Pila de Papeles (Messy Stack)
+        const paperStack = new PaperStack(120); // 120 papers
+        // Position: Desk Extension (Left Wing).
+        // Left Wing Center X (Global) = 1.85. Z = -7.35.
+        // Corner of extension? Extension Width 0.8, Depth 1.5.
+        // Let's put it slightly offset from center of wing.
+        // X = 1.6 (Towards desk). Z = -7.0 (Towards visitor).
+        paperStack.setPosition(1.7, 0.8, -7.0);
+        paperStack.setRotation(Math.random() * Math.PI / 4); // Slight rotation
+        this.scene.add(paperStack.mesh);
+        this.interactables.push(paperStack.interactableMesh);
+
 
         // Reloj de Pared
         this.clock = new Clock();
