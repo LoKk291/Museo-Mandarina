@@ -265,11 +265,6 @@ export class World {
 
         // Agregar Silla (Frente al escritorio)
         // Desk Z = -6. Depth 1. Back edge = -6.5 (North side).
-        // User wants "Other side" -> North side.
-        // Chair Z = -7.2. (About 0.7m from desk edge).
-        // Chair must look at screen.
-        // PC (Rot PI) faces North. Screen looks North.
-        // Chair (at North) must look South to see screen.
         const chair = new Chair();
         chair.setPosition(0, 0, -7.2);
         chair.setRotation(Math.PI); // Face South (Towards Room/Screen)

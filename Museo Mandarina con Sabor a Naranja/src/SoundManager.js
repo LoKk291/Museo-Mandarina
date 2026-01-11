@@ -9,6 +9,18 @@ export class SoundManager {
         this.sounds[key] = audio;
     }
 
+    setVolume(key, vol) {
+        if (this.sounds[key]) this.sounds[key].volume = Math.max(0, Math.min(1, vol));
+    }
+
+    setPlaybackRate(key, rate) {
+        if (this.sounds[key]) this.sounds[key].playbackRate = rate;
+    }
+
+    setLoop(key, loop) {
+        if (this.sounds[key]) this.sounds[key].loop = loop;
+    }
+
     play(key, clone = true) {
         if (!this.enabled) return;
         const sound = this.sounds[key];
@@ -17,19 +29,17 @@ export class SoundManager {
                 // Allow overlapping sounds (e.g. rapid shooting, typing)
                 const cloneAudio = sound.cloneNode();
                 cloneAudio.volume = sound.volume;
+                cloneAudio.playbackRate = sound.playbackRate || 1.0; // Apply rate
                 cloneAudio.play().catch(e => console.warn("Audio play blocked (user interac needed?)", e));
             } else {
                 // Restart same instance
                 sound.currentTime = 0;
+                sound.playbackRate = sound.playbackRate || 1.0; // Apply rate for non-clones too
                 sound.play().catch(e => console.warn("Audio play blocked", e));
             }
         } else {
             console.warn(`Sound '${key}' not loaded.`);
         }
-    }
-
-    setVolume(key, vol) {
-        if (this.sounds[key]) this.sounds[key].volume = Math.max(0, Math.min(1, vol));
     }
 
     stop(key) {

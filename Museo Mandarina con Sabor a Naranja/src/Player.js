@@ -178,6 +178,13 @@ export class Player {
             wallBox.copy(wall.geometry.boundingBox).applyMatrix4(wall.matrixWorld);
 
             if (playerBox.intersectsBox(wallBox)) {
+                // FEATURE: Check Door State
+                // If it's a door and it's OPEN, ignore collision
+                if (wall.userData && wall.userData.type === 'double-door') {
+                    if (wall.userData.parentObj && wall.userData.parentObj.isOpen) {
+                        return false; // Pass through
+                    }
+                }
                 return true;
             }
         }

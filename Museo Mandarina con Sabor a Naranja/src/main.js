@@ -41,10 +41,28 @@ const soundManager = new SoundManager();
 // Let's rely on standard formats.
 soundManager.load('jump', 'sounds/jump.mp3');
 soundManager.load('click', 'sounds/click.mp3');
-soundManager.load('click_mouse', 'sounds/click_mouse.mp3');
-soundManager.load('pc_start', 'sounds/pc_startup.mp3');
+soundManager.load('click_mouse', 'sounds/computadora/click_mouse.mp3');
 soundManager.load('pc_start', 'sounds/pc_startup.mp3');
 soundManager.load('switch', 'sounds/switch.mp3');
+soundManager.load('interruptor', 'sounds/interruptor.mp3');
+soundManager.load('door_open', 'sounds/abrir.mp3');
+soundManager.load('door_close', 'sounds/cerrar.mp3');
+// Tunning Door Sounds
+
+// Tunning Door Sounds
+soundManager.setVolume('door_open', 0.5);
+soundManager.setPlaybackRate('door_open', 1.5);
+soundManager.setVolume('door_close', 0.5);
+soundManager.setPlaybackRate('door_close', 1.5);
+
+// PC Ambient Setup
+soundManager.setLoop('pc_ambient', true);
+soundManager.setVolume('pc_ambient', 0.5); // Louder volume
+
+// Chair Sound
+soundManager.load('chair_action', 'sounds/sentarseopararse.mp3');
+soundManager.setPlaybackRate('chair_action', 2.5); // Much faster
+
 // Keyboard sounds are now PROCEDURAL (Standard Office)
 
 // --- JUGADOR ---
@@ -113,6 +131,16 @@ const pcTerminal = document.getElementById('pc-terminal');
 const cmdInput = document.getElementById('cmd-input');
 const termOutput = document.getElementById('terminal-output');
 
+// GLOBAL CLICK SOUND FOR PC
+document.addEventListener('mousedown', (e) => {
+    // Check if PC Interface is visible
+    if (!pcInterface.classList.contains('hidden')) {
+        // Only if interaction is within the PC interface (optional, but good practice)
+        // For now, just play it.
+        soundManager.play('click_mouse');
+    }
+});
+
 let isModalOpen = false;
 let lastHoveredSparrow = null;
 
@@ -177,17 +205,22 @@ document.addEventListener('click', () => {
                 soundManager.play('click_mouse'); // Specific mouse click sound
                 openPc();
             } else if (hitObject.userData.type === 'desk-lamp') {
-                soundManager.play('switch');
+                soundManager.play('interruptor'); // New sound
                 hitObject.userData.parentObj.toggle();
             } else if (hitObject.userData.type === 'lever') {
-                soundManager.play('switch'); // Re-use switch sound or different one
+                soundManager.play('interruptor'); // Changed to light switch sound
                 const isOpen = hitObject.userData.parentObj.toggle();
                 world.toggleCeiling(isOpen);
             } else if (hitObject.userData.type === 'double-door') {
-                soundManager.play('switch'); // Use switch sound for now, maybe load door_creak later
-                hitObject.userData.parentObj.toggle();
+                const isOpen = hitObject.userData.parentObj.toggle();
+                if (isOpen) {
+                    soundManager.play('door_open');
+                } else {
+                    soundManager.play('door_close');
+                }
             } else if (hitObject.userData.type === 'chair') {
                 // Sit Logic
+                soundManager.play('chair_action');
                 const chairMesh = hitObject.userData.parentObj.mesh;
                 // Use built-in offset property
                 const offset = hitObject.userData.parentObj.sitHeightOffset || 1.2;
@@ -228,6 +261,10 @@ function openPc() {
     if (world.pc) world.pc.turnOn(); // Turn ON screen
     soundManager.play('pc_start');
     pcInterface.classList.remove('hidden');
+
+    // Start Ambient Sound (loop)
+    soundManager.play('pc_ambient', false);
+
     // Reset terminal state
     pcTerminal.classList.add('hidden');
     document.getElementById('pc-browser').classList.add('hidden');
@@ -241,6 +278,7 @@ function openPc() {
 // Stand Up Logic
 document.addEventListener('keydown', (e) => {
     if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && player.isSeated) {
+        soundManager.play('chair_action');
         player.standUp();
         // Clear message
         const msgEl = document.getElementById('interaction-message');
@@ -259,6 +297,10 @@ function closePc() {
     isModalOpen = false;
     if (world.pc) world.pc.turnOff(); // Turn OFF screen
     pcInterface.classList.add('hidden');
+
+    // Stop Ambient Sound
+    soundManager.stop('pc_ambient');
+
     // Stop any playing video
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
     if (typeof stopSnake === 'function') stopSnake();
@@ -462,7 +504,6 @@ iconCalc.onclick = () => {
     pcSnake.classList.add('hidden');
     stopSnake();
     if (ponyIframe) ponyIframe.src = "";
-    soundManager.play('click_mouse');
     calcExpression = "0";
     updateCalcDisplay();
 };
@@ -718,6 +759,8 @@ function closeModal() {
     // Volver a capturar mouse
     player.lock();
 }
+
+
 
 closeModalBtn.onclick = closeModal;
 
