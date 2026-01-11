@@ -1187,3 +1187,91 @@ export class Chair {
         this.mesh.rotation.y = y;
     }
 }
+
+export class OrchidPot {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // 1. The Pot (White Ceramic) - Elegant flared shape
+        const potMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2, metalness: 0.1 });
+        // Cylinder: radiusTop, radiusBottom, height, segments
+        const potGeo = new THREE.CylinderGeometry(0.25, 0.15, 0.4, 16);
+        const pot = new THREE.Mesh(potGeo, potMat);
+        pot.position.y = 0.2; // Sit on floor
+        pot.castShadow = true;
+        this.mesh.add(pot);
+
+        // 2. Soil
+        const soilGeo = new THREE.CircleGeometry(0.23, 16);
+        const soilMat = new THREE.MeshStandardMaterial({ color: 0x3d2817, roughness: 1.0 }); // Dark Soil
+        const soil = new THREE.Mesh(soilGeo, soilMat);
+        soil.rotation.x = -Math.PI / 2;
+        soil.position.y = 0.38; // Just below rim
+        this.mesh.add(soil);
+
+        // 3. Leaves (Broad, fleshy green leaves at base)
+        const leafMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, roughness: 0.6, side: THREE.DoubleSide });
+        for (let i = 0; i < 4; i++) {
+            const leafGeo = new THREE.PlaneGeometry(0.15, 0.4);
+            const leaf = new THREE.Mesh(leafGeo, leafMat);
+            leaf.position.y = 0.4;
+            // Fan them out
+            leaf.rotation.y = (i / 4) * Math.PI * 2;
+            leaf.rotation.x = 0.5; // Tilt out
+            leaf.position.x = Math.cos(leaf.rotation.y) * 0.1;
+            leaf.position.z = Math.sin(leaf.rotation.y) * 0.1;
+            this.mesh.add(leaf);
+        }
+
+        // 4. Stem (Curved Tube)
+        // High quality curve
+        const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(0, 0.4, 0),
+            new THREE.Vector3(0.05, 0.8, 0),
+            new THREE.Vector3(-0.05, 1.2, 0.1),
+            new THREE.Vector3(0.1, 1.5, 0.2) // Drooping top
+        ]);
+        const stemGeo = new THREE.TubeGeometry(curve, 20, 0.015, 8, false);
+        const stemMat = new THREE.MeshStandardMaterial({ color: 0x4a6e3a, roughness: 0.7 });
+        const stem = new THREE.Mesh(stemGeo, stemMat);
+        this.mesh.add(stem);
+
+        // 5. Flowers (Orchids) - Add 3 flowers along the stem
+        const flowerPositions = [0.6, 0.8, 1.0]; // Along curve path (0-1)
+        const flowerColor = 0xDA70D6; // Orchid Purple
+
+        flowerPositions.forEach(t => {
+            const point = curve.getPoint(t);
+            const flowerGroup = this.createFlower(flowerColor);
+            flowerGroup.position.copy(point);
+            // Randomize rotation slightly
+            flowerGroup.rotation.set(Math.random(), Math.random(), Math.random());
+            this.mesh.add(flowerGroup);
+        });
+    }
+
+    createFlower(color) {
+        const group = new THREE.Group();
+        const petalMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5, side: THREE.DoubleSide });
+        const centerMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, roughness: 0.4 }); // Yellow center
+
+        // 3 Petals
+        for (let i = 0; i < 3; i++) {
+            const petalGeo = new THREE.CircleGeometry(0.08, 5);
+            const petal = new THREE.Mesh(petalGeo, petalMat);
+            petal.rotation.z = (i / 3) * Math.PI * 2;
+            group.add(petal);
+        }
+
+        // Center
+        const centerGeo = new THREE.SphereGeometry(0.03, 8, 8);
+        const center = new THREE.Mesh(centerGeo, centerMat);
+        center.position.z = 0.02;
+        group.add(center);
+
+        return group;
+    }
+}

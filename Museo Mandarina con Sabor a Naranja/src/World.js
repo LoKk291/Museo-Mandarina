@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot } from './Furniture.js';
 
 export class World {
     constructor(scene) {
@@ -25,6 +25,77 @@ export class World {
         this.isCeilingOpen = false; // Logical state for main.js lighting check
 
         this.init();
+        this.createGarden(); // Add external environment
+    }
+
+    createGarden() {
+        // --- 0. Geometry ---
+        // Huge plane
+        const groundGeo = new THREE.PlaneGeometry(1000, 1000);
+
+        // --- 1. Procedural Texture (Canvas) ---
+        const size = 1024;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // A. Base Grass (Noise)
+        ctx.fillStyle = '#2d4c1e'; // Dark green base
+        ctx.fillRect(0, 0, size, size);
+
+        // Add 50000 blades of grass (noise)
+        for (let i = 0; i < 50000; i++) {
+            const x = Math.random() * size;
+            const y = Math.random() * size;
+            const w = Math.random() * 2 + 1;
+            const h = Math.random() * 4 + 2;
+            // Mix of lighter greens
+            const hue = 80 + Math.random() * 40; // 80-120 (Yellow-Green)
+            const light = 20 + Math.random() * 30; // 20-50% Lightness
+            ctx.fillStyle = `hsl(${hue}, 60%, ${light}%)`;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        // B. Flowers
+        const flowerColors = ['#FF0000', '#FFFF00', '#FFFFFF', '#9932CC']; // Red, Yellow, White, Purple
+        for (let i = 0; i < 500; i++) {
+            const x = Math.random() * size;
+            const y = Math.random() * size;
+            const r = Math.random() * 4 + 2; // Radius
+            const color = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // Flower center
+            ctx.beginPath();
+            ctx.arc(x, y, r / 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#4B3621'; // Brown center
+            ctx.fill();
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        // Tile it heavily so it looks detailed up close
+        texture.repeat.set(100, 100);
+
+        // --- 2. Material ---
+        const groundMat = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 1.0,
+            metalness: 0.0
+        });
+
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.05; // Slightly below floor
+        ground.receiveShadow = true;
+
+        this.scene.add(ground);
     }
 
     init() {
@@ -138,7 +209,25 @@ export class World {
         // Rotate if needed? Default is aligned X. Wall South is aligned X.
         // But South wall faces North?
         this.scene.add(this.mainDoor.mesh);
+        this.scene.add(this.mainDoor.mesh);
         this.interactables.push(this.mainDoor.interactableMesh);
+
+        // Agregar Ventanas (Lado Sur, flanqueando la puerta)
+        // La pared "South" original fue reemplazada por "South_L" y "South_R" al agregar la puerta.
+        // Agregamos una ventana a cada segmento restante.
+        // Ventana: 2m ancho, 2.5m alto, Y=2.
+        centralRoom.addCenteredWindow('South_L', 2, 2.5, 2);
+        centralRoom.addCenteredWindow('South_R', 2, 2.5, 2);
+
+        // Agregar Macetas con Orquideas (Afuera)
+        const orchidLeft = new OrchidPot();
+        orchidLeft.mesh.position.set(-3, 0, 11); // Left of door, outside
+        this.scene.add(orchidLeft.mesh);
+
+        const orchidRight = new OrchidPot();
+        orchidRight.mesh.position.set(3, 0, 11); // Right of door, outside
+        orchidRight.mesh.rotation.y = Math.PI / 4; // Slight variation
+        this.scene.add(orchidRight.mesh);
 
         // Agregar Alfombra Roja (Puerta a Escritorio)
         // Puerta Z=10 (Wall). Escritorio Collision Z=-6.

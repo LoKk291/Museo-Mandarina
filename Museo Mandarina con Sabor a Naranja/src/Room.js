@@ -186,6 +186,114 @@ export class Room {
         }
     }
 
+
+    addCenteredWindow(wallName, winW, winH, winY) {
+        // Find Wall
+        const wallIndex = this.walls.findIndex(w => w.userData.wallName === wallName);
+        if (wallIndex === -1) {
+            console.warn(`Wall ${wallName} not found for window.`);
+            return;
+        }
+        const oldWall = this.walls[wallIndex];
+        const mat = oldWall.material;
+
+        // Dimensions
+        // BoxGeometry params: width, height, depth
+        // If rotated (East/West side segments), 'width' param is thickness, 'depth' param is width.
+        // But createWall uses helper logic.
+        // Let's inspect oldWall geometry to be sure.
+        const geoParams = oldWall.geometry.parameters;
+
+        // Determine orientation based on Thickness
+        // If width is approx thickness (0.5), it is rotated? No.
+        // createWall logic: 
+        // rotated=true -> Box(thickness, height, width).
+        // rotated=false -> Box(width, height, thickness).
+
+        const isRotated = (Math.abs(geoParams.width - this.wallThickness) < 0.01);
+
+        const fullW = isRotated ? geoParams.depth : geoParams.width;
+        const fullH = geoParams.height;
+        const thickness = this.wallThickness;
+
+        const px = oldWall.position.x;
+        const py = oldWall.position.y;
+        const pz = oldWall.position.z;
+
+        // Remove old wall
+        this.group.remove(oldWall);
+        this.walls.splice(wallIndex, 1);
+
+        // Calculate Segments
+        // Left/Right Width
+        const sideW = (fullW - winW) / 2;
+        // Top/Bottom Height
+        // winY is center of window.
+        // Floor is 0. Wall center is py.
+        // Coordinates logic:
+        // Window Top edge Y: winY + winH/2
+        // Window Bottom edge Y: winY - winH/2
+        // Wall Top edge Y: py + fullH/2
+        // Wall Bottom edge Y: py - fullH/2
+
+        const topH = (py + fullH / 2) - (winY + winH / 2);
+        const botH = (winY - winH / 2) - (py - fullH / 2);
+
+        // Segments relative to Wall Center (px, py, pz)
+        // If Rotated (Along Z): X is constant (thickness). Z varies.
+        // If Not Rotated (Along X): Z is constant. X varies.
+
+        if (!isRotated) {
+            // ALONG X (North/South Segments)
+            // Left (Negative X relative to center): Center is px - winW/2 - sideW/2
+            this.createWall(px - winW / 2 - sideW / 2, py, pz, sideW, fullH, mat, wallName + '_L');
+            // Right
+            this.createWall(px + winW / 2 + sideW / 2, py, pz, sideW, fullH, mat, wallName + '_R');
+            // Top (Above Window): Center X px. Center Y: (winY + winH/2) + topH/2
+            this.createWall(px, (winY + winH / 2) + topH / 2, pz, winW, topH, mat, wallName + '_Top');
+            // Bottom
+            this.createWall(px, (winY - winH / 2) - botH / 2, pz, winW, botH, mat, wallName + '_Bot');
+
+            // WINDOW GLASS
+            const glassGeo = new THREE.BoxGeometry(winW, winH, 0.05);
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: 0x88CCFF,
+                metalness: 0,
+                roughness: 0,
+                transmission: 0.9, // Glass
+                transparent: true,
+                opacity: 0.3
+            });
+            const glass = new THREE.Mesh(glassGeo, glassMat);
+            glass.position.set(px, winY, pz);
+            this.group.add(glass);
+
+        } else {
+            // ALONG Z (East/West Segments)
+            // Left (Negative Z ... wait. 'Left' depends on perspective. Let's say MINUS Z)
+            this.createWall(px, py, pz - winW / 2 - sideW / 2, sideW, fullH, mat, wallName + '_L', true);
+            this.createWall(px, py, pz + winW / 2 + sideW / 2, sideW, fullH, mat, wallName + '_R', true);
+            // Top
+            this.createWall(px, (winY + winH / 2) + topH / 2, pz, winW, topH, mat, wallName + '_Top', true);
+            // Bottom
+            this.createWall(px, (winY - winH / 2) - botH / 2, pz, winW, botH, mat, wallName + '_Bot', true);
+
+            // WINDOW GLASS
+            const glassGeo = new THREE.BoxGeometry(0.05, winH, winW);
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: 0x88CCFF,
+                metalness: 0,
+                roughness: 0,
+                transmission: 0.9,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glass = new THREE.Mesh(glassGeo, glassMat);
+            glass.position.set(px, winY, pz);
+            this.group.add(glass);
+        }
+    }
+
     addPaintingToWall(wallSide, sizeW, sizeH, imagePath, title, desc, id, shiftH = 0, shiftV = 0) {
         // wallSide: 'North', 'South', etc.
         // id: Numero/ID para mostrar
