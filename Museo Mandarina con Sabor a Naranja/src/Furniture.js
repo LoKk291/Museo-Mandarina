@@ -167,7 +167,19 @@ export class RetroComputer {
 
         // Pantalla (Inset)
         const screenGeo = new THREE.PlaneGeometry(0.3, 0.22);
-        const screen = new THREE.Mesh(screenGeo, this.screenMat); // Use member mat
+
+        // Dynamic Texture (ASCII Pony)
+        const screenTexture = this.createAsciiTexture();
+        this.screenMat = new THREE.MeshStandardMaterial({
+            map: screenTexture,
+            emissive: 0xffffff, // White so the texture colors show through? Or control color via map
+            emissiveMap: screenTexture,
+            emissiveIntensity: 0.8,
+            roughness: 0.2,
+            metalness: 0.5
+        });
+
+        const screen = new THREE.Mesh(screenGeo, this.screenMat);
         // Posicionada en la cara frontal del monitor
         screen.position.set(0, monitorItm.position.y, monitorD / 2 + 0.005);
         this.mesh.add(screen);
@@ -177,14 +189,61 @@ export class RetroComputer {
         this.monitorLight.position.set(0, monitorItm.position.y, 0.5);
         this.monitorLight.castShadow = false;
         this.mesh.add(this.monitorLight);
+    }
+
+    createAsciiTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = '#000033'; // Dark Blue
+        ctx.fillRect(0, 0, 512, 512);
+
+        // Text (Bright Blue)
+        ctx.fillStyle = '#3399FF'; // Brighter Blue
+        ctx.font = 'bold 30px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // ASCII Pony (Simple)
+        const ascii = [
+            "  \\^___/^/  ",
+            " /       \\  ",
+            "|   o   o | ",
+            "|   \\_Y_/ | ",
+            " \\       /  ",
+            "  \\_____/   ",
+            "   |   |    ",
+            "  /     \\   "
+        ];
+
+        let startY = 150;
+        const lineHeight = 35;
+
+        // Draw "MANDARINA OS" header
+        ctx.font = 'bold 40px monospace';
+        ctx.fillText("MANDARINA OS", 256, 80);
+
+        // Draw Art
+        ctx.font = 'bold 30px monospace';
+        ascii.forEach((line, i) => {
+            ctx.fillText(line, 256, startY + (i * lineHeight));
+        });
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return texture;
+    }
 
 
-        // --- 3. TECLADO ---
-        const kbW = 0.55;
-        const kbH = 0.04;
-        const kbD = 0.2;
-        const kbGeo = new THREE.BoxGeometry(kbW, kbH, kbD);
-        const keyboard = new THREE.Mesh(kbGeo, beigeMat);
+    // --- 3. TECLADO ---
+    const kbW = 0.55;
+    const kbH = 0.04;
+    const kbD = 0.2;
+    const kbGeo = new THREE.BoxGeometry(kbW, kbH, kbD);
+    const keyboard = new THREE.Mesh(kbGeo, beigeMat);
 
         // Posición: Delante del case. 
         // Case llega a Z=0.25. Teclado empieza en Z=0.3
@@ -194,64 +253,64 @@ export class RetroComputer {
         keyboard.receiveShadow = true;
         this.mesh.add(keyboard);
 
-        // Teclas (Bloques simulados)
-        const keysGeo = new THREE.BoxGeometry(kbW - 0.05, 0.01, kbD - 0.05);
-        const keys = new THREE.Mesh(keysGeo, darkBeigeMat);
-        keys.position.set(0, 0.03, 0); // Relativo al teclado
-        keyboard.add(keys);
+// Teclas (Bloques simulados)
+const keysGeo = new THREE.BoxGeometry(kbW - 0.05, 0.01, kbD - 0.05);
+const keys = new THREE.Mesh(keysGeo, darkBeigeMat);
+keys.position.set(0, 0.03, 0); // Relativo al teclado
+keyboard.add(keys);
 
 
-        // --- HITBOX DE INTERACCIÓN ---
-        // Cubre Case + Monitor + Teclado
-        const hitBoxGeo = new THREE.BoxGeometry(0.7, 0.8, 0.8);
-        const hitBoxMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-        const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+// --- HITBOX DE INTERACCIÓN ---
+// Cubre Case + Monitor + Teclado
+const hitBoxGeo = new THREE.BoxGeometry(0.7, 0.8, 0.8);
+const hitBoxMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
 
-        // Centro aproximado de todo el conjunto
-        hitBox.position.set(0, 0.3, 0.2);
+// Centro aproximado de todo el conjunto
+hitBox.position.set(0, 0.3, 0.2);
 
-        hitBox.userData.type = 'computer';
-        hitBox.userData.parentObj = this;
+hitBox.userData.type = 'computer';
+hitBox.userData.parentObj = this;
 
-        this.mesh.add(hitBox);
-        this.interactableMesh = hitBox;
+this.mesh.add(hitBox);
+this.interactableMesh = hitBox;
     }
 
-    setPosition(x, y, z) {
-        this.mesh.position.set(x, y, z);
-    }
+setPosition(x, y, z) {
+    this.mesh.position.set(x, y, z);
+}
 
-    setRotation(y) {
-        this.mesh.rotation.y = y;
-    }
+setRotation(y) {
+    this.mesh.rotation.y = y;
+}
 
-    turnOn() {
-        if (this.screenMat) {
-            this.screenMat.color.setHex(0x222222);
-            this.screenMat.emissive.setHex(0x0088ff); // Bright Cyan/Blue Active
-            this.screenMat.emissiveIntensity = 3.0; // Boosted Emissive
-        }
-        if (this.monitorLight) {
-            this.monitorLight.color.setHex(0x66ccff);
-            this.monitorLight.intensity = 6.0; // Much Stronger (was 3.0)
-            this.monitorLight.distance = 10;   // Further reach
-        }
+turnOn() {
+    if (this.screenMat) {
+        this.screenMat.color.setHex(0x222222);
+        this.screenMat.emissive.setHex(0x0088ff); // Bright Cyan/Blue Active
+        this.screenMat.emissiveIntensity = 3.0; // Boosted Emissive
     }
+    if (this.monitorLight) {
+        this.monitorLight.color.setHex(0x66ccff);
+        this.monitorLight.intensity = 6.0; // Much Stronger (was 3.0)
+        this.monitorLight.distance = 10;   // Further reach
+    }
+}
 
-    turnOff() {
-        // "Off" state is now "Idle/Screensaver": Faint Blue Glow
-        if (this.screenMat) {
-            this.screenMat.color.setHex(0x111111);
-            this.screenMat.emissive.setHex(0x004488); // Deep faint blue
-            this.screenMat.emissiveIntensity = 1.2; // Visible glow (was 0.8)
-        }
-        // Keep a small glow light even when "off"
-        if (this.monitorLight) {
-            this.monitorLight.color.setHex(0x004488);
-            this.monitorLight.intensity = 1.5; // Stronger dim light (was 0.5)
-            this.monitorLight.distance = 5;
-        }
+turnOff() {
+    // "Off" state is now "Idle/Screensaver": Faint Blue Glow
+    if (this.screenMat) {
+        this.screenMat.color.setHex(0x111111);
+        this.screenMat.emissive.setHex(0x004488); // Deep faint blue
+        this.screenMat.emissiveIntensity = 1.2; // Visible glow (was 0.8)
     }
+    // Keep a small glow light even when "off"
+    if (this.monitorLight) {
+        this.monitorLight.color.setHex(0x004488);
+        this.monitorLight.intensity = 1.5; // Stronger dim light (was 0.5)
+        this.monitorLight.distance = 5;
+    }
+}
 }
 
 export class DeskLamp {
