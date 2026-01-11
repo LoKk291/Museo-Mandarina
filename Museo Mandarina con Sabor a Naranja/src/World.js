@@ -122,7 +122,7 @@ export class World {
         // -- MOBILIARIO RECEPCIÓN --
 
         // Escritorio
-        const desk = new Desk(2.6, 1.3, 0.8);
+        const desk = new Desk(4.5, 1.3, 0.8);
         desk.setPosition(0, 0, -6.0);
         desk.setRotation(Math.PI);
         this.scene.add(desk.mesh);
@@ -155,12 +155,37 @@ export class World {
         this.clock.mesh.position.set(0, 2.0, -9.8);
         this.scene.add(this.clock.mesh);
 
-        // Colisión Escritorio
-        const deskCollisionGeo = new THREE.BoxGeometry(3.5, 2, 1.3);
-        const deskCollision = new THREE.Mesh(deskCollisionGeo, new THREE.MeshBasicMaterial({ visible: false }));
-        deskCollision.position.set(0, 1, -6.0);
-        this.scene.add(deskCollision);
-        this.collidables.push(deskCollision);
+        // Colisión Escritorio (U-Shape)
+        // 1. Main Desk
+        // Desk Pos: 0, 0, -6. Rot: PI (180).
+        // Main Desk Width: 4.5.
+        const deskCollMainGeo = new THREE.BoxGeometry(4.5, 2, 1.3);
+        const deskMainColl = new THREE.Mesh(deskCollMainGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        deskMainColl.position.set(0, 1, -6.0);
+        this.scene.add(deskMainColl);
+        this.collidables.push(deskMainColl);
+
+        // 2. Wings (Extensions)
+        // Wing Size: 0.8 width, 1.5 depth.
+        // Desk Width 4.5.
+        // Wing Center X (Global reflected): +/- 1.85.
+        // Wing Z: -7.35.
+
+        const wingCollGeo = new THREE.BoxGeometry(0.8, 2, 1.5);
+
+        // Left Wing (Global Right)
+        const wingL_Coll = new THREE.Mesh(wingCollGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        // Global X = +1.85
+        wingL_Coll.position.set(1.85, 1, -7.35);
+        this.scene.add(wingL_Coll);
+        this.collidables.push(wingL_Coll);
+
+        // Right Wing (Global Left)
+        const wingR_Coll = new THREE.Mesh(wingCollGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        // Global X = -1.85
+        wingR_Coll.position.set(-1.85, 1, -7.35);
+        this.scene.add(wingR_Coll);
+        this.collidables.push(wingR_Coll);
 
         // Lamparas de Pie
         const lamp1 = new FloorLamp();

@@ -114,6 +114,50 @@ export class Desk {
             hR.position.set(rightCab.position.x, y, cabinetDepth / 2 + 0.01);
             this.mesh.add(hR);
         }
+
+        // --- 3. U-Shape Wings (Extensiones Laterales) ---
+        // Extend backwards (Local +Z)
+        const wingWidth = 0.8;
+        const wingDepth = 1.5;
+        const wingGeo = new THREE.BoxGeometry(wingWidth, topThickness, wingDepth);
+        const wingCabinetGeo = new THREE.BoxGeometry(wingWidth, cabinetHeight, wingDepth - 0.2);
+
+        // Common Z position: Starts at half depth of main desk + half depth of wing
+        // Main Desk Z range: [-depth/2, depth/2]
+        // We want to attach at +depth/2 and go +Z.
+        // Center Z = depth/2 + wingDepth/2.
+        const wingZ = this.depth / 2 + wingDepth / 2 - 0.01; // -0.01 overlap
+
+        // Left Wing (at -X edge)
+        // Center X = -this.width/2 + wingWidth/2
+        const wingX_Left = -this.width / 2 + wingWidth / 2;
+
+        const leftWingTop = new THREE.Mesh(wingGeo, woodMat);
+        leftWingTop.position.set(wingX_Left, this.height - topThickness / 2, wingZ);
+        leftWingTop.castShadow = true;
+        leftWingTop.receiveShadow = true;
+        this.mesh.add(leftWingTop);
+
+        const leftWingCab = new THREE.Mesh(wingCabinetGeo, woodMat);
+        leftWingCab.position.set(wingX_Left, cabinetHeight / 2, wingZ);
+        leftWingCab.castShadow = true;
+        leftWingCab.receiveShadow = true;
+        this.mesh.add(leftWingCab);
+
+        // Right Wing (at +X edge)
+        const wingX_Right = this.width / 2 - wingWidth / 2;
+
+        const rightWingTop = new THREE.Mesh(wingGeo, woodMat);
+        rightWingTop.position.set(wingX_Right, this.height - topThickness / 2, wingZ);
+        rightWingTop.castShadow = true;
+        rightWingTop.receiveShadow = true;
+        this.mesh.add(rightWingTop);
+
+        const rightWingCab = new THREE.Mesh(wingCabinetGeo, woodMat);
+        rightWingCab.position.set(wingX_Right, cabinetHeight / 2, wingZ);
+        rightWingCab.castShadow = true;
+        rightWingCab.receiveShadow = true;
+        this.mesh.add(rightWingCab);
     }
 
     setPosition(x, y, z) {
