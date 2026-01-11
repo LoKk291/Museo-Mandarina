@@ -109,144 +109,94 @@ export class World {
     }
 
     init() {
-        // --- 1. Habitación Central (Grande) ---
+        // --- 1. Habitación Central (Recepción) ---
         // Pos: 0,0 | Size: 20x20 | Color: Cream (0xF5F5DC)
         const centralRoom = new Room(this.scene, 0, 0, 20, 20, 0xF5F5DC);
-        // Abrir puertas en lados Este y Oeste para conectar pasillos
+        // Abrir puertas en lados Este y Oeste para conectar pasillos laterales
         centralRoom.addDoor('East', 4, 3.5);
         centralRoom.addDoor('West', 4, 3.5);
 
-        // Agregar Mobiliario: Escritorio
-        const desk = new Desk(2.6, 1.3, 0.8); // Larger Desk
-        desk.setPosition(0, 0, -6.0); // Further from wall
-        desk.setRotation(Math.PI); // Drawers on other side?
+        // -- MOBILIARIO RECEPCIÓN --
+
+        // Escritorio
+        const desk = new Desk(2.6, 1.3, 0.8);
+        desk.setPosition(0, 0, -6.0);
+        desk.setRotation(Math.PI);
         this.scene.add(desk.mesh);
 
-        // Agregar Mobiliario: Computadora Retro
+        // Computadora Retro
         const pc = new RetroComputer();
-        // El escritorio esta en y=0, altura 0.8. La PC debe ir encima (y=0.8)
         pc.setPosition(0, 0.8, -6.0);
-        // Rotar para mirar hacia el Norte (Wall). Back to user entering room.
         pc.setRotation(Math.PI);
         this.scene.add(pc.mesh);
-        this.scene.add(pc.mesh);
         this.interactables.push(pc.interactableMesh);
-        this.pc = pc; // Store ref for main.js
+        this.pc = pc;
 
-        // Agregar Mobiliario: Lámpara de Escritorio
+        // Lámpara de Escritorio
         const deskLamp = new DeskLamp();
-        // Desk at 0, 0, -6.0.
-        // Lamp to the right of sitting person (facing North) -> East (+X)
         deskLamp.setPosition(0.7, 0.8, -6.0);
-        // Point Towards Back Wall (North / -Z).
-        // "Opposite" of towards user.
-        // Towards user was ~0 (South).
-        // Towards wall is PI (North).
-        deskLamp.setRotation(Math.PI - 0.2); // Slight angle still to face center-ish if needed, or straight back.
-        // actually PI points straight North. -0.2 makes it point North-North-West (tilted left).
-        // To aim at center of desk back from right side, we probably want North-West.
-        // Math.PI + 0.2 would be North-North-East (Right).
-        // Math.PI - 0.2 is North-North-West (Left). Correct.
+        deskLamp.setRotation(Math.PI - 0.2);
         this.scene.add(deskLamp.mesh);
         this.interactables.push(deskLamp.interactableMesh);
 
-        // Agregar Palanca (Lever) para el techo
+        // Palanca (Lever)
         this.lever = new Lever();
-        // Colocar en el escritorio, lado izquierdo
         this.lever.setPosition(-0.7, 0.8, -6.0);
-        this.lever.setRotation(Math.PI); // Mirando hacia usuario?? O hacia pared.
-        // Desk rotation is PI.
+        this.lever.setRotation(Math.PI);
         this.scene.add(this.lever.mesh);
         this.interactables.push(this.lever.interactableMesh);
 
-        // Agregar Reloj de Pared (En lugar del cuadro 1 - Norte)
+        // Reloj de Pared
         this.clock = new Clock();
-        // Pared Norte está en Z = -10. 
-        // addPaintingToWall en Norte pone Z = -depth/2 + dist + thickness/2.
-        // -10 + 0.1 + 0.25 = -9.65 approx.
-        // ShiftH era 0.
-        // Altura cuadro era por defecto (height/2 = 2) + shiftV (0) = 2.
-        // Clock queremos un poco mas alto quizas, o igual. 
-        // Painting 1 size was 4x3. Center at Y=2.
         this.clock.mesh.position.set(0, 2.0, -9.8);
         this.scene.add(this.clock.mesh);
 
-        // Agregar colisión simple para el escritorio (Caja invisible)
-        // Agregar colisión simple para el escritorio (Caja invisible)
+        // Colisión Escritorio
         const deskCollisionGeo = new THREE.BoxGeometry(2.6, 2, 1.3);
         const deskCollision = new THREE.Mesh(deskCollisionGeo, new THREE.MeshBasicMaterial({ visible: false }));
         deskCollision.position.set(0, 1, -6.0);
         this.scene.add(deskCollision);
         this.collidables.push(deskCollision);
 
-        // Agregar Lamparas de Pie (Luz Calida)
+        // Lamparas de Pie
         const lamp1 = new FloorLamp();
-        lamp1.setPosition(-9, 0, -9); // Esquina Noroeste (Mas cerca esquina)
+        lamp1.setPosition(-9, 0, -9);
         this.scene.add(lamp1.mesh);
 
         const lamp2 = new FloorLamp();
-        lamp2.setPosition(9, 0, 9); // Esquina Sureste (Mas cerca esquina)
+        lamp2.setPosition(9, 0, 9);
         this.scene.add(lamp2.mesh);
 
-        // Agregar Candelabro Central
+        // Candelabro
         this.chandelier = new Chandelier();
-        // Height: Room is 4. Hang it from center (0,0). 
-        // Chain goes up 1m from body. Main body at 0. Top of chain at +1.5 from center?
-        // Ceiling is at 4.
-        // If we put it at y=3, top chain will be at ~3.5-4.
         this.chandelier.setPosition(0, 3, 0);
         this.scene.add(this.chandelier.mesh);
 
-        // Agregar Cuadros a Central
-        // Mover Cuadro 1 "Mona Lisa" a otro lado.
-        // Pared Sur tiene "El Grito".
-        // Pared Este tiene puerta centrada.
-        // Pared Oeste tiene puerta centrada.
-        // Movemos Mona Lisa al SUR, desplazada? O al Norte desplazada?
-        // Hagamos Norte desplazada a la derecha
+        // Cuadros Central
         centralRoom.addPaintingToWall('North', 4, 3, '', 'Mona Lisa (Falsa)', 'Una copia muy convincente.', '1', 6, 0);
 
-        // El otro cuadro ya estaba en Sur
-        // REMOVED (Replaced by Door)
-        // centralRoom.addPaintingToWall('South', 3, 4, '', 'El Grito (Silencioso)', 'No hace ruido.', '2');
-
-        // Agregar Puerta Doble al Sur
+        // Puerta Principal (Sur)
         centralRoom.addDoor('South', 4, 3.5);
         this.mainDoor = new DoubleDoor(4, 3.5);
-        // Wall thickness is 0.5. Door frame depth 0.3.
-        // Center of wall is Z = depth/2 = 10.
         this.mainDoor.setPosition(0, 0, 10);
-        // Rotate if needed? Default is aligned X. Wall South is aligned X.
-        // But South wall faces North?
-        this.scene.add(this.mainDoor.mesh);
         this.scene.add(this.mainDoor.mesh);
         this.interactables.push(this.mainDoor.interactableMesh);
 
-        // Agregar Ventanas (Lado Sur, flanqueando la puerta)
-        // La pared "South" original fue reemplazada por "South_L" y "South_R" al agregar la puerta.
-        // Agregamos una ventana a cada segmento restante.
-        // Ventana: 2m ancho, 2.5m alto, Y=2.
+        // Ventanas Sur
         centralRoom.addCenteredWindow('South_L', 2, 2.5, 2);
         centralRoom.addCenteredWindow('South_R', 2, 2.5, 2);
 
-        // Agregar Macetas con Orquideas (Afuera)
+        // Decoración Exterior
         const orchidLeft = new OrchidPot();
-        orchidLeft.mesh.position.set(-3, 0, 11); // Left of door, outside
+        orchidLeft.mesh.position.set(-3, 0, 11);
         this.scene.add(orchidLeft.mesh);
 
         const orchidRight = new OrchidPot();
-        orchidRight.mesh.position.set(3, 0, 11); // Right of door, outside
-        orchidRight.mesh.rotation.y = Math.PI / 4; // Slight variation
+        orchidRight.mesh.position.set(3, 0, 11);
+        orchidRight.mesh.rotation.y = Math.PI / 4;
         this.scene.add(orchidRight.mesh);
 
-        // Agregar Jardineras en las Ventanas (Afuera)
-        // Ventanas en X = -6 y X = 6. (Centros de segmentos de 8m desplazados)
-        // Segmento Left: Center = -6. Segment Right: Center = 6.
-        // Altura ventana: Centro 2, Alto 2.5. Base = 0.75.
-        // Pondremos la jardinera justo abajo: Y = 0.6 (Altura 0.3 -> Top 0.75)
-        // Pared Ext Z = 10.25. Center Z = 10.4.
-
-        const flowerBoxL = new WindowFlowerBox(2.2); // Slightly wider than window (2m)
+        const flowerBoxL = new WindowFlowerBox(2.2);
         flowerBoxL.mesh.position.set(-6, 0.6, 10.4);
         this.scene.add(flowerBoxL.mesh);
 
@@ -254,74 +204,130 @@ export class World {
         flowerBoxR.mesh.position.set(6, 0.6, 10.4);
         this.scene.add(flowerBoxR.mesh);
 
-        // Agregar Alfombra Roja (Puerta a Escritorio)
-        // Puerta Z=10 (Wall). Escritorio Collision Z=-6.
-        // Carpet Z start: 10. Carpet Z end: -5.
-        // Length = 15.
-        // Center = (10 + -5) / 2 = 2.5
+        // Alfombra Roja
         const carpet = new RedCarpet(3, 15);
-        carpet.setPosition(0, 0.01, 2.5); // Slightly above floor
+        carpet.setPosition(0, 0.01, 2.5);
         this.scene.add(carpet.mesh);
 
-        // Agregar Silla (Frente al escritorio)
-        // Desk Z = -6. Depth 1. Back edge = -6.5 (North side).
+        // Silla
         const chair = new Chair();
         chair.setPosition(0, 0, -7.2);
-        chair.setRotation(Math.PI); // Face South (Towards Room/Screen)
+        chair.setRotation(Math.PI);
         this.scene.add(chair.mesh);
         this.interactables.push(chair.interactableMesh);
 
         this.addRoom(centralRoom);
 
-        // --- 2. Habitación Oeste (Izquierda) ---
-        // Color: Cream
 
-        const westRoomX = -25;
-        const westRoom = new Room(this.scene, westRoomX, 0, 15, 15, 0xF5F5DC);
-        westRoom.addDoor('East', 4, 3.5); // Puerta hacia Central
+        // --- ALA OESTE (IZQUIERDA) ---
+        // L1 -> L2 -> L3 (Hacia el Norte, axis -Z)
 
-        // Cuadros Oeste
-        westRoom.addPaintingToWall('North', 2, 2, '', 'Naturaleza', 'Arboles y cosas.', '3', -3);
-        westRoom.addPaintingToWall('North', 2, 2, '', 'Manzana', 'Una fruta roja.', '4', 3);
-        westRoom.addPaintingToWall('West', 5, 3, '', 'Paisaje Largo', 'Muy panorámico.', '5');
+        // --- Room L1 (Oeste Inmediato) ---
+        // Pos: -25, 0
+        const roomL1 = new Room(this.scene, -25, 0, 15, 15, 0xF5F5DC);
+        roomL1.addDoor('East', 4, 3.5); // Conecta con Recepción
+        roomL1.addDoor('North', 4, 3.5); // Conecta con L2
 
-        this.addRoom(westRoom);
+        // Cuadros L1
+        roomL1.addPaintingToWall('West', 3, 3, '', 'Ocaso', 'El sol poniéndose.', '3');
+        roomL1.addPaintingToWall('South', 2, 2, '', 'Manzana', 'Roja y brillante.', '4');
 
-        // Pasillo Oeste
-        // Conecta x=-10 (Central) con x=-17.5 (Oeste)
-        // Posición centro: (-10 + -17.5)/2 = -13.75
-        // Largo (Ancho geométrico X): 7.5
-        // Profundidad ("Ancho" del pasillo Z): 4
-        // NOTA: Para Room, width es X, depth es Z.
-        // Pasillo con mismo color o ligeramente diferente? Usaremos Cream también para continuidad.
-        const westHall = new Room(this.scene, -13.75, 0, 7.5, 4, 0xF5F5DC);
-        // El pasillo es abierto por los dos lados, así que "quitamos" las paredes Este y Oeste completas
-        // O usamos addDoor con el ancho total del pasillo para abrirlo entero.
-        westHall.addDoor('East', 3.8, 3.5); // Casi todo el ancho
-        westHall.addDoor('West', 3.8, 3.5);
-        this.addRoom(westHall);
+        this.addRoom(roomL1);
+
+        // Pasillo Central <-> L1
+        const hallCent_L1 = new Room(this.scene, -13.75, 0, 7.5, 4, 0xF5F5DC);
+        hallCent_L1.addDoor('East', 3.8, 3.5);
+        hallCent_L1.addDoor('West', 3.8, 3.5);
+        this.addRoom(hallCent_L1);
+
+        // --- Room L2 (Norte de L1) ---
+        // Pos: -25, -25     (Gap logic: L1 End Z=-7.5. L2 Start Z=-17.5. Center L2=-25)
+        const roomL2 = new Room(this.scene, -25, -25, 15, 15, 0xF5F5DC);
+        roomL2.addDoor('South', 4, 3.5); // Conecta con L1
+        roomL2.addDoor('North', 4, 3.5); // Conecta con L3
+
+        roomL2.addPaintingToWall('West', 4, 3, '', 'Bosque', 'Árboles antiguos.', '8');
+
+        this.addRoom(roomL2);
+
+        // Pasillo L1 <-> L2 (Vertical)
+        // Center X = -25.
+        // Z Gap: -7.5 to -17.5. Center Z = -12.5. Length 10. Width 4.
+        const hallL1_L2 = new Room(this.scene, -25, -12.5, 4, 10, 0xF5F5DC);
+        hallL1_L2.addDoor('South', 3.8, 3.5);
+        hallL1_L2.addDoor('North', 3.8, 3.5);
+        this.addRoom(hallL1_L2);
+
+        // --- Room L3 (Norte de L2) ---
+        // Pos: -25, -50
+        const roomL3 = new Room(this.scene, -25, -50, 15, 15, 0xF5F5DC);
+        roomL3.addDoor('South', 4, 3.5); // Conecta con L2
+        // Room final, sin puerta norte
+
+        roomL3.addPaintingToWall('North', 3, 4, '', 'Montaña', 'Pico nevado.', '9');
+
+        this.addRoom(roomL3);
+
+        // Pasillo L2 <-> L3
+        // Z Gap: -32.5 to -42.5. Center Z = -37.5.
+        const hallL2_L3 = new Room(this.scene, -25, -37.5, 4, 10, 0xF5F5DC);
+        hallL2_L3.addDoor('South', 3.8, 3.5);
+        hallL2_L3.addDoor('North', 3.8, 3.5);
+        this.addRoom(hallL2_L3);
 
 
-        // --- 3. Habitación Este (Derecha) ---
-        // Simétrico al Oeste
-        const eastRoomX = 25;
-        const eastRoom = new Room(this.scene, eastRoomX, 0, 15, 15, 0xF5F5DC);
-        eastRoom.addDoor('West', 4, 3.5); // Connect to hall
+        // --- ALA ESTE (DERECHA) ---
+        // R1 -> R2 -> R3 (Hacia el Norte)
 
-        // Cuadros Este
-        eastRoom.addPaintingToWall('South', 3, 3, '', 'Abstracto #1', 'Nadie lo entiende.', '6');
-        eastRoom.addPaintingToWall('East', 2, 4, '', 'Retrato', 'Un señor serio.', '7');
-        // Moved "El Grito" here
-        eastRoom.addPaintingToWall('North', 3, 4, '', 'El Grito (Silencioso)', 'Moved from Main Hall.', '2');
+        // --- Room R1 (Este Inmediato) ---
+        // Pos: 25, 0
+        const roomR1 = new Room(this.scene, 25, 0, 15, 15, 0xF5F5DC);
+        roomR1.addDoor('West', 4, 3.5); // Conecta con Recepción
+        roomR1.addDoor('North', 4, 3.5); // Conecta con R2
 
-        this.addRoom(eastRoom);
+        roomR1.addPaintingToWall('South', 3, 3, '', 'Abstracto', 'Formas y colores.', '6');
+        roomR1.addPaintingToWall('East', 2, 4, '', 'Retrato', 'Un señor serio.', '7');
 
-        // Pasillo Este
-        // Conecta x=10 con x=17.5. Centro: 13.75
-        const eastHall = new Room(this.scene, 13.75, 0, 7.5, 4, 0xF5F5DC);
-        eastHall.addDoor('West', 3.8, 3.5);
-        eastHall.addDoor('East', 3.8, 3.5);
-        this.addRoom(eastHall);
+        this.addRoom(roomR1);
+
+        // Pasillo Central <-> R1
+        const hallCent_R1 = new Room(this.scene, 13.75, 0, 7.5, 4, 0xF5F5DC);
+        hallCent_R1.addDoor('West', 3.8, 3.5);
+        hallCent_R1.addDoor('East', 3.8, 3.5);
+        this.addRoom(hallCent_R1);
+
+        // --- Room R2 (Norte de R1) ---
+        // Pos: 25, -25
+        const roomR2 = new Room(this.scene, 25, -25, 15, 15, 0xF5F5DC);
+        roomR2.addDoor('South', 4, 3.5); // Conecta con R1
+        roomR2.addDoor('North', 4, 3.5); // Conecta con R3
+
+        roomR2.addPaintingToWall('East', 4, 3, '', 'Playa', 'Arena y mar.', '10');
+
+        this.addRoom(roomR2);
+
+        // Pasillo R1 <-> R2
+        const hallR1_R2 = new Room(this.scene, 25, -12.5, 4, 10, 0xF5F5DC);
+        hallR1_R2.addDoor('South', 3.8, 3.5);
+        hallR1_R2.addDoor('North', 3.8, 3.5);
+        this.addRoom(hallR1_R2);
+
+        // --- Room R3 (Norte de R2) ---
+        // Pos: 25, -50
+        const roomR3 = new Room(this.scene, 25, -50, 15, 15, 0xF5F5DC);
+        roomR3.addDoor('South', 4, 3.5); // Conecta con R2
+
+        // Movido 'El Grito' aquí
+        roomR3.addPaintingToWall('North', 3, 4, '', 'El Grito (Silencioso)', 'Un clásico.', '2');
+
+        this.addRoom(roomR3);
+
+        // Pasillo R2 <-> R3
+        const hallR2_R3 = new Room(this.scene, 25, -37.5, 4, 10, 0xF5F5DC);
+        hallR2_R3.addDoor('South', 3.8, 3.5);
+        hallR2_R3.addDoor('North', 3.8, 3.5);
+        this.addRoom(hallR2_R3);
+
     }
 
     addRoom(room) {
