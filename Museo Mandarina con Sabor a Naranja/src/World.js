@@ -10,7 +10,9 @@ export class World {
         this.roomsMap = new Map();
         this.collidables = []; // Walls for collision
         this.interactables = []; // Paintings for clicking
+        this.floorLamps = []; // Track floor lamps
         this.clock = null;
+        this.globalLightState = true;
         this.lever = null;
         this.chandelier = null; // Store ref
         this.mainDoor = null; // Store main door ref
@@ -164,10 +166,14 @@ export class World {
         const lamp1 = new FloorLamp();
         lamp1.setPosition(-9, 0, -9);
         this.scene.add(lamp1.mesh);
+        this.floorLamps.push(lamp1);
+        this.interactables.push(lamp1.interactableMesh);
 
         const lamp2 = new FloorLamp();
         lamp2.setPosition(9, 0, 9);
         this.scene.add(lamp2.mesh);
+        this.floorLamps.push(lamp2);
+        this.interactables.push(lamp2.interactableMesh);
 
         // Candelabro
         this.chandelier = new Chandelier();
@@ -403,19 +409,53 @@ export class World {
         return primaryState;
     }
 
-    turnOffAllLights() {
-        this.rooms.forEach(r => r.toggleLights(false));
-        if (this.chandelier) this.chandelier.turnOff();
-        if (this.deskLamp) this.deskLamp.turnOff();
+    toggleGlobalLights() {
+        this.globalLightState = !this.globalLightState;
 
-        // Return to closed/OFF state visually for switches?
-        // We need to update setup UI manually or it reacts to state.
-        // Switches in world need update?
-        // Room.toggleLights(false) handles sync with Room Switch.
-        // So physical switches should auto-rotate down.
+        // Toggle Room Lights
+        this.rooms.forEach(r => r.toggleLights(this.globalLightState));
 
-        // Also ensure Ceiling is closed?
-        // "apagar todas las luces" usually just lights.
+        // Toggle Furniture
+        if (this.globalLightState) {
+            if (this.chandelier) this.chandelier.turnOn();
+            if (this.deskLamp) this.deskLamp.setState(true);
+            this.floorLamps.forEach(l => l.setState(true));
+        } else {
+            if (this.chandelier) this.chandelier.turnOff();
+            if (this.deskLamp) this.deskLamp.turnOff();
+            this.floorLamps.forEach(l => l.turnOff());
+        }
+    }
+
+    isAnyLightOn() {
+        // Check Rooms
+        for (const room of this.rooms) {
+            if (room.lightsOn) return true;
+        }
+        // Check Furniture
+        if (this.chandelier && this.chandelier.isOn) return true;
+        if (this.deskLamp && this.deskLamp.isOn) return true;
+        for (const lamp of this.floorLamps) {
+            if (lamp.isOn) return true;
+        }
+        return false;
+    }
+
+    isPointInside(point) {
+        for (const room of this.rooms) {
+            // Simple AABB check
+            // Room pos is center. Width is X size, Depth is Z size.
+            const minX = room.position.x - room.width / 2;
+            const maxX = room.position.x + room.width / 2;
+            const minZ = room.position.z - room.depth / 2;
+            const maxZ = room.position.z + room.depth / 2;
+
+            if (point.x >= minX && point.x <= maxX &&
+                point.z >= minZ && point.z <= maxZ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     addSwitchToRoom(roomName, x, y, z, rotationY) {

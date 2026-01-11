@@ -43,7 +43,9 @@ soundManager.load('jump', 'sounds/jump.mp3');
 soundManager.load('click', 'sounds/click.mp3');
 soundManager.load('click_mouse', 'sounds/computadora/click_mouse.mp3');
 soundManager.load('pc_start', 'sounds/pc_startup.mp3');
-soundManager.load('switch', 'sounds/switch.mp3');
+soundManager.load('pc_start', 'sounds/pc_startup.mp3');
+soundManager.load('switch', 'sounds/interruptor.mp3'); // Fixed: switch.mp3 did not exist
+soundManager.load('interruptor', 'sounds/interruptor.mp3');
 soundManager.load('interruptor', 'sounds/interruptor.mp3');
 soundManager.load('door_open', 'sounds/abrir.mp3');
 soundManager.load('door_close', 'sounds/cerrar.mp3');
@@ -257,6 +259,12 @@ document.addEventListener('click', () => {
                     // Fallback if no room assigned (shouldn't happen)
                     sw.toggle();
                 }
+            } else if (hitObject.userData.type === 'floor-lamp') {
+                soundManager.play('switch');
+                hitObject.userData.parentObj.toggle();
+            } else if (hitObject.userData.type === 'desk-lamp') {
+                soundManager.play('switch');
+                hitObject.userData.parentObj.toggle();
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
@@ -568,7 +576,16 @@ const btnLightsOff = document.getElementById('btn-lights-off');
 if (btnLightsOff) {
     btnLightsOff.onclick = () => {
         soundManager.play('switch');
-        world.turnOffAllLights();
+        world.toggleGlobalLights();
+
+        // Update Button Text
+        if (world.globalLightState) {
+            btnLightsOff.textContent = "APAGAR TODO";
+            btnLightsOff.style.background = "#5a3333"; // Redish
+        } else {
+            btnLightsOff.textContent = "ENCENDER TODO";
+            btnLightsOff.style.background = "#335a33"; // Greenish
+        }
     };
 }
 
@@ -912,22 +929,37 @@ function animate() {
 
     // Target Indoor Values (Updated for "Warm Powerful")
     const indoorDirInt = 0.0;
-    const indoorAmbInt = 0.1; // Darker room
+
+    // Dynamic Ambient: 
+    // IF ANY light is ON -> Bright (0.7). 
+    // IF ALL lights OFF -> Dark (0.1).
+    const lightsOn = world.isAnyLightOn();
+    const indoorAmbInt = (lightsOn) ? 0.7 : 0.1;
+
     const indoorAmbCol = new THREE.Color(0xFFE4C4); // Bisque/Golden (Simulated Sun Ambient)
     const indoorFogCol = new THREE.Color(0x111111);
 
     // Apply Lerp
-    // If openness is 1, we use Outdoor. If 0, we use Indoor.
+    // Logic: 
+    // If Player is OUTSIDE -> Use Outdoor Settings (Effective Openness = 1.0)
+    // If Player is INSIDE -> Blend based on Ceiling Openness.
+
+    const isIndoors = world.isPointInside(camera.position);
+    let effectiveOpenness = 1.0; // Default to Outdoor
+
+    if (isIndoors) {
+        effectiveOpenness = world.getCeilingOpenness();
+    }
 
     // 1. Directional Light (Sun)
-    dirLight.intensity = THREE.MathUtils.lerp(indoorDirInt, outdoorDirInt, openness);
+    dirLight.intensity = THREE.MathUtils.lerp(indoorDirInt, outdoorDirInt, effectiveOpenness);
 
     // 2. Ambient Light
-    amiLight.intensity = THREE.MathUtils.lerp(indoorAmbInt, outdoorAmbInt, openness);
-    amiLight.color.lerpColors(indoorAmbCol, outdoorAmbCol, openness);
+    amiLight.intensity = THREE.MathUtils.lerp(indoorAmbInt, outdoorAmbInt, effectiveOpenness);
+    amiLight.color.lerpColors(indoorAmbCol, outdoorAmbCol, effectiveOpenness);
 
     // 3. Fog
-    scene.fog.color.lerpColors(indoorFogCol, outdoorFogCol, openness);
+    scene.fog.color.lerpColors(indoorFogCol, outdoorFogCol, effectiveOpenness);
     // REMOVED: scene.background = scene.fog.color; 
     // Sky color should be independent of Indoor Fog. Sky.js manages background.
     // --------------------------------------

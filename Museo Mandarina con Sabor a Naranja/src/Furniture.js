@@ -441,8 +441,13 @@ export class DeskLamp {
         this.interactableMesh = hitBox;
     }
 
-    setPosition(x, y, z) { this.mesh.position.set(x, y, z); }
-    setRotation(y) { this.mesh.rotation.y = y; }
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
 
     toggle() {
         this.setState(!this.isOn);
@@ -654,10 +659,43 @@ export class FloorLamp {
         this.light.position.y = centerHeight + 0.3 + (shadeHeight / 2);
         this.light.castShadow = true;
         this.mesh.add(this.light);
+
+        // State
+        this.isOn = true; // Default ON?
+        this.shadeMat = shadeMat; // Store ref for color change
+
+        // Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.y = 0.9;
+        hitBox.userData = { type: 'floor-lamp', parentObj: this };
+        this.mesh.add(hitBox);
+        this.interactableMesh = hitBox;
     }
 
     setPosition(x, y, z) {
         this.mesh.position.set(x, y, z);
+    }
+
+    turnOff() {
+        this.setState(false);
+    }
+
+    toggle() {
+        this.setState(!this.isOn);
+    }
+
+    setState(isOn) {
+        this.isOn = isOn;
+        if (this.isOn) {
+            this.light.intensity = 0.8;
+            this.shadeMat.color.setHex(0xffffee);
+            this.shadeMat.emissive.setHex(0x554433);
+        } else {
+            this.light.intensity = 0;
+            this.shadeMat.color.setHex(0x888888); // Dimmed look
+            this.shadeMat.emissive.setHex(0x000000);
+        }
     }
 }
 
@@ -839,10 +877,12 @@ export class Chandelier {
     }
 
     turnOff() {
+        this.isOn = false;
         this.lights.forEach(l => l.intensity = 0);
     }
 
     turnOn() {
+        this.isOn = true;
         this.lights.forEach(l => l.intensity = 0.5);
     }
 
