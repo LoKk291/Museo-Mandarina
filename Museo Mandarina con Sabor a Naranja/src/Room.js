@@ -70,7 +70,13 @@ export class Room {
         this.exteriorMat = exteriorMat;
 
         // Techo color cielo (Azul claro) para simular estar abierto/soleado
-        const ceilingMat = new THREE.MeshBasicMaterial({ color: 0x87CEEB });
+        // Techo Solido (Blanco/Gris) para bloquear luz y ser visible desde abajo
+        const ceilingMat = new THREE.MeshStandardMaterial({
+            color: 0xeeeeee,
+            side: THREE.DoubleSide,
+            roughness: 0.9,
+            metalness: 0.1
+        });
         const wallMat = new THREE.MeshStandardMaterial({ color: this.wallColor });
         this.wallMat = wallMat; // Store for reuse
 
@@ -90,18 +96,44 @@ export class Room {
         // Translate Y by +depth/2.
         // Original range Y: [-depth/2, depth/2]
         // Techo (Mesh)
-        const ceilingGeoBox = new THREE.BoxGeometry(this.width, this.depth, this.wallThickness);
-        // Pivot at edge 0
-        ceilingGeoBox.translate(0, this.depth / 2, 0);
+        // Reverting to PlaneGeometry to avoid "Black Bar" artifact when scaled.
+        // Plane casts shadows fine.
+        // Pivot Logic:
+        // Rot X -90 maps Local Y to Global -Z.
+        // We want pivot at North (-Z edge).
+        // Room Z range: [-depth/2, depth/2].
+        // Pivot at -depth/2.
+        // Geometry needs to extend from 0 to +Z relative to pivot? No.
+        // If Pivot is at -depth/2. We want to extend to +depth/2 (South). Distance 'depth'.
+        // Direction is +Z.
+        // Local Y maps to -Z. So we need Local Y to be NEGATIVE to map to +Z?
+        // Wait. Map Y -> -Z. 
+        // We want Global Z increase (North to South).
+        // So we need Local Y decrease (0 to -d).
+        // Plane centered at 0. Y range [-d/2, d/2].
+        // Translate(0, -d/2, 0) -> Range [-d, 0].
+        // Rot X -90 -> Maps range [-d, 0] to -[-d, 0] = [0, d]. in Z?
+        // Let's verify: Vector(0, -10, 0) rotated -90 around X.
+        // y' = y*cos(-90) - z*sin(-90) = 0 - 0 = 0? No.
+        // y' = y*0 - z*-1 = z.
+        // z' = y*sin(-90) + z*cos(-90) = y*-1 + 0 = -y.
+        // So Local Y(-10) -> Global Z(10). Positive Z!
+        // Yes! Range [-d, 0] in Y becomes [0, d] in Z.
+        // Mesh Pos Z = -depth/2.
+        // Final Z Range = [-depth/2 + 0, -depth/2 + d] = [-depth/2, depth/2]. PERFECT.
 
-        const ceiling = new THREE.Mesh(ceilingGeoBox, wallMat); // Changed to wallMat as per original logic
+        ceilingGeo.translate(0, -this.depth / 2, 0);
+
+        const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+
         ceiling.rotation.x = -Math.PI / 2;
-        ceiling.position.y = this.height;
+        ceiling.position.set(0, this.height, -this.depth / 2); // Pivot at North Wall
+
         // Shadow Fix: Ceiling MUST block light
         ceiling.castShadow = true;
         ceiling.receiveShadow = true;
 
-        ceiling.scale.set(1, 0, 1); // Start Open (Scale 0) or Closed? Default Closed in logic.
+        ceiling.scale.set(1, 1, 1); // Start Closed (Scale 1)
         // Actually init sets scale based on anim state, but let's default to visible for shadows if closed.
 
         this.group.add(ceiling);
@@ -131,133 +163,6 @@ export class Room {
         this.createWall(-this.width / 2, this.height / 2, 0, this.depth, this.height, wallMat, 'West', true);
     }
 
-    createWall(x, y, z, width, height, material, name, rotated = false) {
-        // material param is acting as the "interior" material.
-        // We will construct a multi-material array for exterior walls.
-
-        const thickness = this.wallThickness;
-        // Si está rotada (Este/Oeste), el ancho geométrico es thickness, y la profundidad es 'width' (que es depth de habitación)
-        let geo;
-
-        // Multi-material setup
-        // Indices: 0:Right(X+), 1:Left(X-), 2:Top(Y+), 3:Bottom(Y-), 4:Front(Z+), 5:Back(Z-)
-        // We need to determine which face is the "Exterior".
-
-        let materials = [
-            material, // 0 Right
-            material, // 1 Left
-            material, // 2 Top
-            material, // 3 Bottom
-            material, // 4 Front
-            material // 5 Back
-        ];
-
-        // Clone/Use Exterior Mat for outside faces
-        // const extMat = this.exteriorMat ? this.exteriorMat : material; // Old simple assignment
-
-        // Helper to Create Smart Textured Material
-        const getSmartMaterial = (faceWidth, faceHeight, axisOffset) => {
-            if (!this.exteriorMat) return material;
-
-            const newMat = this.exteriorMat.clone();
-            const newMap = this.exteriorMat.map.clone();
-
-            // Base Scale: 1 unit = 2.5 meters approx? Scale = Size / 4.
-            // If we want 1 tile per 4 units.
-            const scaleX = faceWidth / 4;
-            const scaleY = faceHeight / 4;
-
-            newMap.repeat.set(scaleX, scaleY);
-
-            // Officet to align world space
-            // We use axisOffset (x or z position of the wall center)
-            // We need to shift texture so it aligns with 0.
-            // Texture start is at 0. Wall starts at axisOffset - faceWidth/2.
-            // We want texture coordinate 0 to match World 0.
-            // UV 0 maps to (axisOffset - faceWidth/2).
-            // We want UV at "World 0" to be... 0.
-
-            // If we do offset.x. Texture is shifted.
-            // newMap.offset.x = (axisOffset - faceWidth/2) / 4;
-            // Let's try this.
-            newMap.offset.x = (axisOffset - faceWidth / 2) / 4;
-
-            newMat.map = newMap;
-            // If bumpMap is same texture
-            newMat.bumpMap = newMap;
-
-            return newMat;
-        }
-
-
-        // Logic based on Wall Name/Orientation
-        // We match strictly by name base to avoid issues with segments (North_L, North_R etc start with North)
-        const threshold = 0.1; // Tolerance for position check
-
-        if (name.startsWith('North')) {
-            // North Wall is at -Z. Exterior is pointing -Z (Back face). Index 5.
-            materials[5] = getSmartMaterial(width, height, x);
-
-            // Check Ends (Left/Right along X)
-            // Left End: x - width/2 approx -roomWidth/2. Face 1 (Left).
-            if (Math.abs((x - width / 2) - (-this.width / 2)) < threshold) {
-                materials[1] = getSmartMaterial(thickness, height, z); // Use Z for offset alignment? Or just X pos? Side face is in Z plane? No.
-                // Side face is in Y-Z plane. Its normal is X-.
-                // Texture mapping: U along Z, V along Y.
-                // Width of face is thickness (Z size of wall... wait. thickness is Z size).
-                materials[1] = getSmartMaterial(thickness, height, z);
-            }
-            // Right End: x + width/2 approx roomWidth/2. Face 0 (Right).
-            if (Math.abs((x + width / 2) - (this.width / 2)) < threshold) {
-                materials[0] = getSmartMaterial(thickness, height, z);
-            }
-
-        } else if (name.startsWith('South')) {
-            // South Wall is at +Z. Exterior is +Z (Front face). Index 4.
-            materials[4] = getSmartMaterial(width, height, x);
-
-            // Check Ends
-            // Left End (relative to camera facing North... wait. Global Left is -X).
-            // Wall Left (x-) is Index 1.
-            if (Math.abs((x - width / 2) - (-this.width / 2)) < threshold) {
-                materials[1] = getSmartMaterial(thickness, height, z);
-            }
-            // Right End (x+) is Index 0.
-            if (Math.abs((x + width / 2) - (this.width / 2)) < threshold) {
-                materials[0] = getSmartMaterial(thickness, height, z);
-            }
-
-        } else if (name.startsWith('East')) {
-            // East Wall is at +X. Rotated Box.
-            // Rotated: X size=thickness, Z size=width.
-            // Exterior +X. Index 0.
-            materials[0] = getSmartMaterial(width, height, z);
-
-            // Ends are at Z+ and Z-.
-            // North End (Z-) is Face 5 (Back).
-            if (Math.abs((z - width / 2) - (-this.depth / 2)) < threshold) {
-                materials[5] = getSmartMaterial(thickness, height, x);
-            }
-            // South End (Z+) is Face 4 (Front).
-            if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) {
-                materials[4] = getSmartMaterial(thickness, height, x);
-            }
-
-        } else if (name.startsWith('West')) {
-            // West Wall at -X. Exterior -X. Index 1.
-            materials[1] = getSmartMaterial(width, height, z);
-
-            // Ends
-            // North End (Z-) is Face 5.
-            materials[5] = getSmartMaterial(thickness, height, x);
-        }
-        // South End (Z+) is Face 4.
-        if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) {
-            materials[4] = getSmartMaterial(thickness, height, x);
-        }
-
-    }
-
     createWall(x, y, z, width, height, mat, wallName = '', rotated = false) {
         // Prepare Multi-Material for edges if needed
         let materials;
@@ -268,26 +173,63 @@ export class Room {
             materials = [mat, mat, mat, mat, mat, mat];
         }
 
-        // Logic to apply "Smart Material" (Brick edges) to sides of the wall
-        // that are exposed (corners of the building).
-        // Thickness side textures.
-
-        // Helper to get smart material or default
-        const getSmartMaterial = (w, h, posFactor) => {
-            // Return a cloned material with correct UVs if we were doing complex mapping
-            // For now, just return the exterior material or default
-            // If using the stone texture, we want it on the edges too.
-            return mat;
-        };
+        // Logic based on Wall Orientation for exterior texturing
+        // We need to apply the texture to the specific faces that are on the outside.
+        // BoxGeometry Faces: 0:Right(X+), 1:Left(X-), 2:Top(Y+), 3:Bottom(Y-), 4:Front(Z+), 5:Back(Z-)
 
         const threshold = 0.1;
         const name = wallName || '';
 
-        // Determine exposed edges based on position/wallName
-        if (this.walls.length > 0) { // Only do this check if walls exist (room context)
-            // Simple logic: If it's a "North" wall, its Left/Right ends might be exposed
-            // checking against room bounds can happen here if needed.
-            // But for now, let's just stick to the basic geometry creation to fix the error.
+        // Helper to fix texture mapping (Smart UVs)
+        const getSmartMaterial = (faceWidth, faceHeight, axisOffset) => {
+            if (!this.exteriorMat || !this.exteriorMat.map) return this.exteriorMat || mat;
+
+            const newMat = this.exteriorMat.clone();
+            const newMap = this.exteriorMat.map.clone();
+
+            // Scale: 1 unit = 2.5 meters approx. We want tiles to be uniform.
+            // Let's divide dimension by 4 to get repeat count (adjustable).
+            const scaleX = faceWidth / 4;
+            const scaleY = faceHeight / 4;
+
+            newMap.repeat.set(scaleX, scaleY);
+
+            // Offset to align texture in world space
+            // Offset logic: (position - size/2) / 4
+            newMap.offset.x = (axisOffset - faceWidth / 2) / 4;
+
+            newMat.map = newMap;
+            // Stone texture doesn't usually use bumpMap in this simple setup, but if we added it:
+            if (newMat.bumpMap) {
+                newMat.bumpMap = newMap; // Reuse scaled texture
+            }
+
+            return newMat;
+        };
+
+        if (name.startsWith('North')) {
+            // North Wall is at -Z. Exterior is Back (-Z) -> Face 5.
+            materials[5] = getSmartMaterial(width, height, x);
+            // Exposed Edges
+            if (Math.abs((x - width / 2) - (-this.width / 2)) < threshold) materials[1] = getSmartMaterial(this.wallThickness, height, z); // Left
+            if (Math.abs((x + width / 2) - (this.width / 2)) < threshold) materials[0] = getSmartMaterial(this.wallThickness, height, z); // Right
+
+        } else if (name.startsWith('South')) {
+            // South Wall is at +Z. Exterior is Front (+Z) -> Face 4.
+            materials[4] = getSmartMaterial(width, height, x);
+            if (Math.abs((x - width / 2) - (-this.width / 2)) < threshold) materials[1] = getSmartMaterial(this.wallThickness, height, z);
+            if (Math.abs((x + width / 2) - (this.width / 2)) < threshold) materials[0] = getSmartMaterial(this.wallThickness, height, z);
+
+        } else if (name.startsWith('East')) {
+            // East Wall is at +X. Rotated. Exterior is Right (+X) -> Face 0.
+            materials[0] = getSmartMaterial(width, height, z); // Width param is Depth here
+            if (Math.abs((z - width / 2) - (-this.depth / 2)) < threshold) materials[5] = getSmartMaterial(this.wallThickness, height, x);
+            if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) materials[4] = getSmartMaterial(this.wallThickness, height, x);
+
+        } else if (name.startsWith('West')) {
+            materials[1] = getSmartMaterial(width, height, z);
+            if (Math.abs((z - width / 2) - (-this.depth / 2)) < threshold) materials[5] = getSmartMaterial(this.wallThickness, height, x);
+            if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) materials[4] = getSmartMaterial(this.wallThickness, height, x);
         }
 
         // Geometry Logic
@@ -547,11 +489,13 @@ export class Room {
                 this.ceilingScale += Math.sign(diff) * step;
             }
 
-            this.ceiling.scale.y = Math.max(0.001, this.ceilingScale); // Evitar 0 absoluto por warnings de matriz
+            this.ceiling.scale.y = Math.max(0.001, this.ceilingScale);
 
-            // Opcional: Ajustar visibilidad si está muy pequeño para ahorrar draw calls?
-            // Pero scale 0 ya es invisible practicamente.
-            this.ceiling.visible = this.ceilingScale > 0.01;
+            // Visibility Threshold
+            const visible = this.ceilingScale > 0.1;
+            this.ceiling.visible = visible;
+            this.ceiling.castShadow = visible;
+            this.ceiling.receiveShadow = visible;
         }
     }
     createCeilingLights() {
@@ -564,9 +508,11 @@ export class Room {
         // Let's create distinct materials so we don't affect other rooms if we share checks (though new Material() creates unique).
 
         // Positions relative to ceiling center (0, depth/2) 
-        // Ceiling Origin is at "bottom" edge (0,0). Center is (0, depth/2).
+        // Ceiling Origin is at "bottom" edge (0,0) in Local Space.
+        // Local Y goes from 0 to -depth (as per new geometry logic).
+        // Center is -depth/2.
         const cx = 0;
-        const cy = this.depth / 2;
+        const cy = -this.depth / 2;
 
         const offsets = [
             { x: -this.width / 4, y: -this.depth / 4 },
@@ -585,8 +531,8 @@ export class Room {
 
             const panel = new THREE.Mesh(panelGeo, panelMat);
             // Position on the surface
-            // Z = 0.025 (Half thickness) to sit on surface (Global Down) without sticking up (Global Up)
-            panel.position.set(off.x, cy + off.y, 0.025);
+            // Z = -0.05 to appear on the underside (Interior)
+            panel.position.set(off.x, cy + off.y, -0.05);
             this.ceiling.add(panel);
 
             // Add Powerful PointLight

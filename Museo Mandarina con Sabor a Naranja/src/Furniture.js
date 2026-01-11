@@ -956,7 +956,7 @@ export class DoubleDoor {
 
         const woodMat = new THREE.MeshStandardMaterial({
             map: woodTexture,
-            color: 0x888888, // Darken the texture further with tint
+            color: 0xAAAAAA, // Was 0x888888 (Darker) -> Now Lighter to show texture
             roughness: 0.6,
             metalness: 0.1
         });
@@ -1135,6 +1135,22 @@ export class DoubleDoor {
         canvas.height = size;
         const ctx = canvas.getContext('2d');
 
+        // Base color (Lighter Mahogany)
+        ctx.fillStyle = '#5D4037'; // Was #3D2B1F
+        ctx.fillRect(0, 0, size, size);
+
+        // Grain
+        for (let i = 0; i < 3000; i++) {
+            const x = Math.random() * size;
+            const y = Math.random() * size;
+            const length = Math.random() * 20 + 5;
+            const width = Math.random() * 2 + 0.5;
+            const alpha = Math.random() * 0.3 + 0.1;
+
+            // Darker streaks (Less intense contrast)
+            ctx.fillStyle = `rgba(60, 40, 30, ${alpha})`; // Was 40,30,20
+            ctx.fill();
+        }
 
         // Noise / knots
         for (let i = 0; i < 20; i++) {
