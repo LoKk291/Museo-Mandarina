@@ -236,8 +236,8 @@ export class World {
 
         // Pasillo Central <-> L1
         const hallCent_L1 = new Room(this.scene, -13.75, 0, 7.5, 4, 0xF5F5DC);
-        hallCent_L1.addDoor('East', 3.8, 3.5);
-        hallCent_L1.addDoor('West', 3.8, 3.5);
+        hallCent_L1.addDoor('East', 4, 4);
+        hallCent_L1.addDoor('West', 4, 4);
         this.addRoom(hallCent_L1);
 
         // --- Room L2 (Norte de L1) ---
@@ -254,8 +254,8 @@ export class World {
         // Center X = -25.
         // Z Gap: -7.5 to -17.5. Center Z = -12.5. Length 10. Width 4.
         const hallL1_L2 = new Room(this.scene, -25, -12.5, 4, 10, 0xF5F5DC);
-        hallL1_L2.addDoor('South', 3.8, 3.5);
-        hallL1_L2.addDoor('North', 3.8, 3.5);
+        hallL1_L2.addDoor('South', 4, 4);
+        hallL1_L2.addDoor('North', 4, 4);
         this.addRoom(hallL1_L2);
 
         // --- Room L3 (Norte de L2) ---
@@ -271,8 +271,8 @@ export class World {
         // Pasillo L2 <-> L3
         // Z Gap: -32.5 to -42.5. Center Z = -37.5.
         const hallL2_L3 = new Room(this.scene, -25, -37.5, 4, 10, 0xF5F5DC);
-        hallL2_L3.addDoor('South', 3.8, 3.5);
-        hallL2_L3.addDoor('North', 3.8, 3.5);
+        hallL2_L3.addDoor('South', 4, 4);
+        hallL2_L3.addDoor('North', 4, 4);
         this.addRoom(hallL2_L3);
 
 
@@ -292,8 +292,8 @@ export class World {
 
         // Pasillo Central <-> R1
         const hallCent_R1 = new Room(this.scene, 13.75, 0, 7.5, 4, 0xF5F5DC);
-        hallCent_R1.addDoor('West', 3.8, 3.5);
-        hallCent_R1.addDoor('East', 3.8, 3.5);
+        hallCent_R1.addDoor('West', 4, 4);
+        hallCent_R1.addDoor('East', 4, 4);
         this.addRoom(hallCent_R1);
 
         // --- Room R2 (Norte de R1) ---
@@ -308,8 +308,8 @@ export class World {
 
         // Pasillo R1 <-> R2
         const hallR1_R2 = new Room(this.scene, 25, -12.5, 4, 10, 0xF5F5DC);
-        hallR1_R2.addDoor('South', 3.8, 3.5);
-        hallR1_R2.addDoor('North', 3.8, 3.5);
+        hallR1_R2.addDoor('South', 4, 4);
+        hallR1_R2.addDoor('North', 4, 4);
         this.addRoom(hallR1_R2);
 
         // --- Room R3 (Norte de R2) ---
@@ -324,8 +324,8 @@ export class World {
 
         // Pasillo R2 <-> R3
         const hallR2_R3 = new Room(this.scene, 25, -37.5, 4, 10, 0xF5F5DC);
-        hallR2_R3.addDoor('South', 3.8, 3.5);
-        hallR2_R3.addDoor('North', 3.8, 3.5);
+        hallR2_R3.addDoor('South', 4, 4);
+        hallR2_R3.addDoor('North', 4, 4);
         this.addRoom(hallR2_R3);
 
     }

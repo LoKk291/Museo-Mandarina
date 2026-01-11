@@ -47,9 +47,29 @@ export class Room {
             color: 0xffffff
         });
 
+        // Load Exterior Wall Texture (Procedural)
+        const stoneTexture = this.generateStoneTexture();
+
+        stoneTexture.wrapS = THREE.RepeatWrapping;
+        stoneTexture.wrapT = THREE.RepeatWrapping;
+        stoneTexture.repeat.set(this.width / 4, this.height / 4);
+        stoneTexture.colorSpace = THREE.SRGBColorSpace;
+
+        const exteriorMat = new THREE.MeshStandardMaterial({
+            map: stoneTexture,
+            bumpMap: stoneTexture, // Use same texture for relief
+            bumpScale: 0.3, // Depth of relief
+            roughness: 0.9,
+            metalness: 0.1
+        });
+
+        // Store for reuse in createWall
+        this.exteriorMat = exteriorMat;
+
         // Techo color cielo (Azul claro) para simular estar abierto/soleado
         const ceilingMat = new THREE.MeshBasicMaterial({ color: 0x87CEEB });
         const wallMat = new THREE.MeshStandardMaterial({ color: this.wallColor });
+        this.wallMat = wallMat; // Store for reuse
 
         // Suelo
         const floorGeo = new THREE.PlaneGeometry(this.width, this.depth);
@@ -110,21 +130,139 @@ export class Room {
     }
 
     createWall(x, y, z, width, height, material, name, rotated = false) {
-        // Aquí podríamos añadir lógica para "saltar" creación si hay una puerta GRANDE,
-        // o crear 2 segmentos si la puerta está en medio.
-        // Por ahora, creamos la pared sólida.
-        // Si quisiéramos huecos, modificaríamos la geometría.
+        // material param is acting as the "interior" material.
+        // We will construct a multi-material array for exterior walls.
 
         const thickness = this.wallThickness;
         // Si está rotada (Este/Oeste), el ancho geométrico es thickness, y la profundidad es 'width' (que es depth de habitación)
         let geo;
+
+        // Multi-material setup
+        // Indices: 0:Right(X+), 1:Left(X-), 2:Top(Y+), 3:Bottom(Y-), 4:Front(Z+), 5:Back(Z-)
+        // We need to determine which face is the "Exterior".
+
+        let materials = [
+            material, // 0 Right
+            material, // 1 Left
+            material, // 2 Top
+            material, // 3 Bottom
+            material, // 4 Front
+            material // 5 Back
+        ];
+
+        // Clone/Use Exterior Mat for outside faces
+        // const extMat = this.exteriorMat ? this.exteriorMat : material; // Old simple assignment
+
+        // Helper to Create Smart Textured Material
+        const getSmartMaterial = (faceWidth, faceHeight, axisOffset) => {
+            if (!this.exteriorMat) return material;
+
+            const newMat = this.exteriorMat.clone();
+            const newMap = this.exteriorMat.map.clone();
+
+            // Base Scale: 1 unit = 2.5 meters approx? Scale = Size / 4.
+            // If we want 1 tile per 4 units.
+            const scaleX = faceWidth / 4;
+            const scaleY = faceHeight / 4;
+
+            newMap.repeat.set(scaleX, scaleY);
+
+            // Officet to align world space
+            // We use axisOffset (x or z position of the wall center)
+            // We need to shift texture so it aligns with 0.
+            // Texture start is at 0. Wall starts at axisOffset - faceWidth/2.
+            // We want texture coordinate 0 to match World 0.
+            // UV 0 maps to (axisOffset - faceWidth/2).
+            // We want UV at "World 0" to be... 0.
+
+            // If we do offset.x. Texture is shifted.
+            // newMap.offset.x = (axisOffset - faceWidth/2) / 4;
+            // Let's try this.
+            newMap.offset.x = (axisOffset - faceWidth / 2) / 4;
+
+            newMat.map = newMap;
+            // If bumpMap is same texture
+            newMat.bumpMap = newMap;
+
+            return newMat;
+        }
+
+
+        // Logic based on Wall Name/Orientation
+        // We match strictly by name base to avoid issues with segments (North_L, North_R etc start with North)
+        const threshold = 0.1; // Tolerance for position check
+
+        if (name.startsWith('North')) {
+            // North Wall is at -Z. Exterior is pointing -Z (Back face). Index 5.
+            materials[5] = getSmartMaterial(width, height, x);
+
+            // Check Ends (Left/Right along X)
+            // Left End: x - width/2 approx -roomWidth/2. Face 1 (Left).
+            if (Math.abs((x - width / 2) - (-this.width / 2)) < threshold) {
+                materials[1] = getSmartMaterial(thickness, height, z); // Use Z for offset alignment? Or just X pos? Side face is in Z plane? No.
+                // Side face is in Y-Z plane. Its normal is X-.
+                // Texture mapping: U along Z, V along Y.
+                // Width of face is thickness (Z size of wall... wait. thickness is Z size).
+                materials[1] = getSmartMaterial(thickness, height, z);
+            }
+            // Right End: x + width/2 approx roomWidth/2. Face 0 (Right).
+            if (Math.abs((x + width / 2) - (this.width / 2)) < threshold) {
+                materials[0] = getSmartMaterial(thickness, height, z);
+            }
+
+        } else if (name.startsWith('South')) {
+            // South Wall is at +Z. Exterior is +Z (Front face). Index 4.
+            materials[4] = getSmartMaterial(width, height, x);
+
+            // Check Ends
+            // Left End (relative to camera facing North... wait. Global Left is -X).
+            // Wall Left (x-) is Index 1.
+            if (Math.abs((x - width / 2) - (-this.width / 2)) < threshold) {
+                materials[1] = getSmartMaterial(thickness, height, z);
+            }
+            // Right End (x+) is Index 0.
+            if (Math.abs((x + width / 2) - (this.width / 2)) < threshold) {
+                materials[0] = getSmartMaterial(thickness, height, z);
+            }
+
+        } else if (name.startsWith('East')) {
+            // East Wall is at +X. Rotated Box.
+            // Rotated: X size=thickness, Z size=width.
+            // Exterior +X. Index 0.
+            materials[0] = getSmartMaterial(width, height, z);
+
+            // Ends are at Z+ and Z-.
+            // North End (Z-) is Face 5 (Back).
+            if (Math.abs((z - width / 2) - (-this.depth / 2)) < threshold) {
+                materials[5] = getSmartMaterial(thickness, height, x);
+            }
+            // South End (Z+) is Face 4 (Front).
+            if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) {
+                materials[4] = getSmartMaterial(thickness, height, x);
+            }
+
+        } else if (name.startsWith('West')) {
+            // West Wall at -X. Exterior -X. Index 1.
+            materials[1] = getSmartMaterial(width, height, z);
+
+            // Ends
+            // North End (Z-) is Face 5.
+            if (Math.abs((z - width / 2) - (-this.depth / 2)) < threshold) {
+                materials[5] = getSmartMaterial(thickness, height, x);
+            }
+            // South End (Z+) is Face 4.
+            if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) {
+                materials[4] = getSmartMaterial(thickness, height, x);
+            }
+        }
+
         if (rotated) {
             geo = new THREE.BoxGeometry(thickness, height, width);
         } else {
             geo = new THREE.BoxGeometry(width, height, thickness);
         }
 
-        const wall = new THREE.Mesh(geo, material);
+        const wall = new THREE.Mesh(geo, materials);
         wall.position.set(x, y, z);
         wall.castShadow = true;
         wall.receiveShadow = true;
@@ -150,7 +288,10 @@ export class Room {
 
         // Crear 2 nuevos segmentos
         // Ejemplo simple: Puerta siempre centrada
-        const mat = oldWall.material;
+
+        // We use this.wallMat stored earlier so we pass the correct base material
+        // createWall will handle the exterior logic again based on name.
+        const mat = this.wallMat;
 
         const fullLength = (wallSide === 'North' || wallSide === 'South') ? this.width : this.depth;
         const segmentLength = (fullLength - doorWidth) / 2;
@@ -202,7 +343,8 @@ export class Room {
             return;
         }
         const oldWall = this.walls[wallIndex];
-        const mat = oldWall.material;
+        // Reuse base material logic
+        const mat = this.wallMat;
 
         // Dimensions
         // BoxGeometry params: width, height, depth
@@ -269,7 +411,7 @@ export class Room {
                 roughness: 0,
                 transmission: 0.9, // Glass
                 transparent: true,
-                opacity: 0.3
+                opacity: 0.6 // INCREASED FROM 0.3
             });
             const glass = new THREE.Mesh(glassGeo, glassMat);
             glass.position.set(px, winY, pz);
@@ -293,7 +435,7 @@ export class Room {
                 roughness: 0,
                 transmission: 0.9,
                 transparent: true,
-                opacity: 0.3
+                opacity: 0.6 // INCREASED FROM 0.3
             });
             const glass = new THREE.Mesh(glassGeo, glassMat);
             glass.position.set(px, winY, pz);
@@ -420,5 +562,56 @@ export class Room {
             // light.castShadow = true; 
             panel.add(light);
         });
+    }
+
+    generateStoneTexture() {
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Background (Mortar)
+        ctx.fillStyle = '#8f887e'; // Greyish brown
+        ctx.fillRect(0, 0, size, size);
+
+        // Stone params
+        const rows = 10;
+        const cols = 10;
+        const cellW = size / cols;
+        const cellH = size / rows;
+
+        // Colors for stones (Earth tones)
+        const colors = [
+            '#a69c90', '#b8aea2', '#c7c0b5', '#8c8276', '#a3998d'
+        ];
+
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                // Randomize stone size and position slightly
+                const w = cellW * 0.9;
+                const h = cellH * 0.85;
+                const x = j * cellW + (cellW - w) / 2 + (Math.random() - 0.5) * 5;
+                const y = i * cellH + (cellH - h) / 2 + (Math.random() - 0.5) * 5;
+
+                // Pick random color
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                ctx.fillStyle = color;
+
+                // Draw Rounded Rect (Stone)
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, [10]);
+                ctx.fill();
+
+                // Add some noise/detail to stone
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                for (let k = 0; k < 20; k++) {
+                    ctx.fillRect(x + Math.random() * w, y + Math.random() * h, 2, 2);
+                }
+            }
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
     }
 }
