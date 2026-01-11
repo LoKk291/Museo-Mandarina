@@ -156,7 +156,7 @@ export class World {
         this.scene.add(this.clock.mesh);
 
         // Colisión Escritorio
-        const deskCollisionGeo = new THREE.BoxGeometry(2.6, 2, 1.3);
+        const deskCollisionGeo = new THREE.BoxGeometry(3.5, 2, 1.3);
         const deskCollision = new THREE.Mesh(deskCollisionGeo, new THREE.MeshBasicMaterial({ visible: false }));
         deskCollision.position.set(0, 1, -6.0);
         this.scene.add(deskCollision);

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class Desk {
-    constructor(width = 2, depth = 1, height = 0.8) {
+    constructor(width = 3.5, depth = 1.2, height = 0.8) {
         this.width = width;
         this.depth = depth;
         this.height = height;
@@ -12,21 +12,29 @@ export class Desk {
 
     build() {
         // Materiales
-        // Madera oscura para el escritorio
+        // Madera oscura (Mahogany)
         const woodMat = new THREE.MeshStandardMaterial({
-            color: 0x5c4033, // Dark Wood color
-            roughness: 0.6,
+            color: 0x4a1810, // Rich Dark Mahogany
+            roughness: 0.5,
+            metalness: 0.1
+        });
+
+        // Metal Oscuro para tiradores
+        const metalMat = new THREE.MeshStandardMaterial({
+            color: 0x222222,
+            roughness: 0.4,
+            metalness: 0.6
+        });
+
+        // Writing Pad (Leather)
+        const padMat = new THREE.MeshStandardMaterial({
+            color: 0x112211, // Dark Green Leather
+            roughness: 0.8,
             metalness: 0
         });
 
-        const metalMat = new THREE.MeshStandardMaterial({
-            color: 0x333333,
-            roughness: 0.2,
-            metalness: 0.8
-        });
-
-        // 1. Tablero
-        const topThickness = 0.05;
+        // 1. Tablero Principal (Thick Slab)
+        const topThickness = 0.08;
         const topGeo = new THREE.BoxGeometry(this.width, topThickness, this.depth);
         const top = new THREE.Mesh(topGeo, woodMat);
         top.position.y = this.height - topThickness / 2;
@@ -34,40 +42,78 @@ export class Desk {
         top.receiveShadow = true;
         this.mesh.add(top);
 
-        // 2. Patas (4)
-        const legSize = 0.08;
-        const legHeight = this.height - topThickness;
-        const legGeo = new THREE.BoxGeometry(legSize, legHeight, legSize);
+        // Writing Pad (Inset on top)
+        const padW = 1.2;
+        const padD = 0.8;
+        const padGeo = new THREE.BoxGeometry(padW, 0.01, padD);
+        const pad = new THREE.Mesh(padGeo, padMat);
+        pad.position.set(0, this.height, 0.1); // Slightly forward
+        pad.receiveShadow = true;
+        this.mesh.add(pad);
 
-        const positions = [
-            { x: -this.width / 2 + legSize, z: -this.depth / 2 + legSize }, // Trasera Izq
-            { x: this.width / 2 - legSize, z: -this.depth / 2 + legSize },  // Trasera Der
-            { x: -this.width / 2 + legSize, z: this.depth / 2 - legSize },  // Delantera Izq
-            { x: this.width / 2 - legSize, z: this.depth / 2 - legSize }    // Delantera Der
-        ];
+        // 2. Estructura Inferior (Tres bloques: Izq, Der, Panel Modestia)
+        const cabinetWidth = 0.8;
+        const cabinetHeight = this.height - topThickness;
+        const cabinetDepth = this.depth - 0.2; // Slightly recessed
 
-        positions.forEach(pos => {
-            const leg = new THREE.Mesh(legGeo, metalMat);
-            leg.position.set(pos.x, legHeight / 2, pos.z);
-            leg.castShadow = true;
-            leg.receiveShadow = true;
-            this.mesh.add(leg);
-        });
+        const cabinetGeo = new THREE.BoxGeometry(cabinetWidth, cabinetHeight, cabinetDepth);
 
-        // 3. Detalles extra (Cajonera lateral)
-        // Cajonera al lado derecho
-        const drawerWidth = 0.5;
-        const drawerHeight = 0.4;
-        const drawerGeo = new THREE.BoxGeometry(drawerWidth, drawerHeight, this.depth - 0.2);
-        const drawer = new THREE.Mesh(drawerGeo, woodMat);
-        drawer.position.set(
-            this.width / 2 - drawerWidth / 2 - 0.05,
-            this.height - topThickness - drawerHeight / 2,
+        // Gabinete Izquierdo
+        const leftCab = new THREE.Mesh(cabinetGeo, woodMat);
+        leftCab.position.set(
+            -this.width / 2 + cabinetWidth / 2 + 0.1, // Offset from edge
+            cabinetHeight / 2,
             0
         );
-        drawer.castShadow = true;
-        drawer.receiveShadow = true;
-        this.mesh.add(drawer);
+        leftCab.castShadow = true;
+        leftCab.receiveShadow = true;
+        this.mesh.add(leftCab);
+
+        // Gabinete Derecho
+        const rightCab = new THREE.Mesh(cabinetGeo, woodMat);
+        rightCab.position.set(
+            this.width / 2 - cabinetWidth / 2 - 0.1,
+            cabinetHeight / 2,
+            0
+        );
+        rightCab.castShadow = true;
+        rightCab.receiveShadow = true;
+        this.mesh.add(rightCab);
+
+        // Panel de Modestia (Fondo) - Recedido
+        const modestyThickness = 0.05;
+        // Width = space between cabinets? Na, let's make it almost full width behind cabinets or between.
+        // Between cabinets:
+        const innerSpace = this.width - (2 * (cabinetWidth + 0.1));
+        const modestyGeo = new THREE.BoxGeometry(innerSpace + 0.2, cabinetHeight, modestyThickness); // +0.2 overlap
+        const modestyPanel = new THREE.Mesh(modestyGeo, woodMat);
+        // Position: Z recessed to front (visitor side)
+        // Desk Center Z=0. Visitor side is -depth/2?
+        // Let's put it at Z = -cabinetDepth/2 + thickness
+        modestyPanel.position.set(0, cabinetHeight / 2, -cabinetDepth / 2 + modestyThickness / 2);
+        modestyPanel.castShadow = true;
+        modestyPanel.receiveShadow = true;
+        this.mesh.add(modestyPanel);
+
+        // Detalles: Tiradores de cajones en gabinetes (Simulados)
+        // 3 Cajones por lado
+        const handleGeo = new THREE.BoxGeometry(0.12, 0.02, 0.02);
+
+        for (let i = 0; i < 3; i++) {
+            // Y positions
+            const y = cabinetHeight * 0.8 - (i * 0.2);
+
+            // Left Handles
+            const hL = new THREE.Mesh(handleGeo, metalMat);
+            // Position on Front Face of Cabinet (Z+)
+            hL.position.set(leftCab.position.x, y, cabinetDepth / 2 + 0.01);
+            this.mesh.add(hL);
+
+            // Right Handles
+            const hR = new THREE.Mesh(handleGeo, metalMat);
+            hR.position.set(rightCab.position.x, y, cabinetDepth / 2 + 0.01);
+            this.mesh.add(hR);
+        }
     }
 
     setPosition(x, y, z) {
