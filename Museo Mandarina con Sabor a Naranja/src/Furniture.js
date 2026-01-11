@@ -944,8 +944,8 @@ export class DoubleDoor {
     }
 
     build() {
-        const oakColor = 0xA07040; // Lighter Oak (Golden Brown)
-        const frameColor = 0x5D4037; // Darker frame (Brown)
+        const oakColor = 0x3D2B1F; // Darker Wood (Mahogany/Dark Oak) - Was 0xA07040
+        const frameColor = 0x302010; // Darker frame
         const goldColor = 0xFFD700;
 
         // Create Procedural Wood Texture
@@ -956,7 +956,7 @@ export class DoubleDoor {
 
         const woodMat = new THREE.MeshStandardMaterial({
             map: woodTexture,
-            color: 0xffffff, // White tint to preserve texture color
+            color: 0x888888, // Darken the texture further with tint
             roughness: 0.6,
             metalness: 0.1
         });
@@ -1135,28 +1135,6 @@ export class DoubleDoor {
         canvas.height = size;
         const ctx = canvas.getContext('2d');
 
-        // Base color (Lighter Oak)
-        ctx.fillStyle = '#A07040';
-        ctx.fillRect(0, 0, size, size);
-
-        // Grain
-        for (let i = 0; i < 3000; i++) {
-            const x = Math.random() * size;
-            const y = Math.random() * size;
-            const w = Math.random() * 2 + 1;
-            const h = Math.random() * 60 + 20; // Long vertical streaks
-            const alpha = Math.random() * 0.15;
-
-            // Darker streaks
-            ctx.fillStyle = `rgba(80, 50, 20, ${alpha})`;
-            ctx.fillRect(x, y, w, h);
-
-            // Lighter streaks
-            if (i % 3 === 0) {
-                ctx.fillStyle = `rgba(200, 160, 100, ${alpha})`;
-                ctx.fillRect(x, y, w, h);
-            }
-        }
 
         // Noise / knots
         for (let i = 0; i < 20; i++) {

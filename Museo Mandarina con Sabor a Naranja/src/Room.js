@@ -89,21 +89,20 @@ export class Room {
         const ceilingGeo = new THREE.PlaneGeometry(this.width, this.depth);
         // Translate Y by +depth/2.
         // Original range Y: [-depth/2, depth/2]
-        // New range Y: [0, depth]
-        // Local Origin (0,0) is now at the start of the plane.
-        ceilingGeo.translate(0, this.depth / 2, 0);
+        // Techo (Mesh)
+        const ceilingGeoBox = new THREE.BoxGeometry(this.width, this.depth, this.wallThickness);
+        // Pivot at edge 0
+        ceilingGeoBox.translate(0, this.depth / 2, 0);
 
-        const ceiling = new THREE.Mesh(ceilingGeo, wallMat);
-        ceiling.rotation.x = Math.PI / 2; // Local Y+ points to Global Z+
-        // Position at North Wall (Z = -depth/2)
-        ceiling.position.set(0, this.height, -this.depth / 2);
-
-        // Initial State: Closed (Scale 1)
-        ceiling.scale.set(1, 1, 1);
-
-        // Shadow propertires
+        const ceiling = new THREE.Mesh(ceilingGeoBox, wallMat); // Changed to wallMat as per original logic
+        ceiling.rotation.x = -Math.PI / 2;
+        ceiling.position.y = this.height;
+        // Shadow Fix: Ceiling MUST block light
         ceiling.castShadow = true;
         ceiling.receiveShadow = true;
+
+        ceiling.scale.set(1, 0, 1); // Start Open (Scale 0) or Closed? Default Closed in logic.
+        // Actually init sets scale based on anim state, but let's default to visible for shadows if closed.
 
         this.group.add(ceiling);
         this.ceiling = ceiling;
@@ -250,27 +249,66 @@ export class Room {
 
             // Ends
             // North End (Z-) is Face 5.
-            if (Math.abs((z - width / 2) - (-this.depth / 2)) < threshold) {
-                materials[5] = getSmartMaterial(thickness, height, x);
-            }
-            // South End (Z+) is Face 4.
-            if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) {
-                materials[4] = getSmartMaterial(thickness, height, x);
-            }
+            materials[5] = getSmartMaterial(thickness, height, x);
+        }
+        // South End (Z+) is Face 4.
+        if (Math.abs((z + width / 2) - (this.depth / 2)) < threshold) {
+            materials[4] = getSmartMaterial(thickness, height, x);
         }
 
-        if (rotated) {
-            geo = new THREE.BoxGeometry(thickness, height, width);
+    }
+
+    createWall(x, y, z, width, height, mat, wallName = '', rotated = false) {
+        // Prepare Multi-Material for edges if needed
+        let materials;
+        if (Array.isArray(mat)) {
+            materials = mat.slice(); // Clone array
         } else {
-            geo = new THREE.BoxGeometry(width, height, thickness);
+            // [Right, Left, Top, Bottom, Front, Back]
+            materials = [mat, mat, mat, mat, mat, mat];
+        }
+
+        // Logic to apply "Smart Material" (Brick edges) to sides of the wall
+        // that are exposed (corners of the building).
+        // Thickness side textures.
+
+        // Helper to get smart material or default
+        const getSmartMaterial = (w, h, posFactor) => {
+            // Return a cloned material with correct UVs if we were doing complex mapping
+            // For now, just return the exterior material or default
+            // If using the stone texture, we want it on the edges too.
+            return mat;
+        };
+
+        const threshold = 0.1;
+        const name = wallName || '';
+
+        // Determine exposed edges based on position/wallName
+        if (this.walls.length > 0) { // Only do this check if walls exist (room context)
+            // Simple logic: If it's a "North" wall, its Left/Right ends might be exposed
+            // checking against room bounds can happen here if needed.
+            // But for now, let's just stick to the basic geometry creation to fix the error.
+        }
+
+        // Geometry Logic
+        let geo;
+        if (rotated) {
+            geo = new THREE.BoxGeometry(this.wallThickness, height, width);
+        } else {
+            geo = new THREE.BoxGeometry(width, height, this.wallThickness);
         }
 
         const wall = new THREE.Mesh(geo, materials);
         wall.position.set(x, y, z);
+
+        // SHADOW LOGIC
         wall.castShadow = true;
         wall.receiveShadow = true;
-        wall.userData.isWall = true; // Flag para colisiones
-        wall.userData.wallName = name; // Para identificar
+
+        if (wallName) {
+            wall.name = wallName;
+            wall.userData = { wallName: wallName };
+        }
 
         this.group.add(wall);
         this.walls.push(wall);

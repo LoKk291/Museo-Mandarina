@@ -800,6 +800,46 @@ body {
     display: none;
 }
 
+/* Sparrow Dialog */
+#sparrow-dialog {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    max-width: 800px;
+    background: rgba(0, 0, 0, 0.6);
+    /* Semi-transparent black */
+    color: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid rgba(255, 165, 0, 0.5);
+    /* Orange tint border */
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    text-align: center;
+    z-index: 3000;
+    pointer-events: none;
+    /* Let clicks pass through if needed, or better: none to not block game */
+    animation: fadeIn 0.5s ease-out;
+}
+
+#sparrow-dialog.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
 .calc-header {
     background-color: #000080;
     color: white;

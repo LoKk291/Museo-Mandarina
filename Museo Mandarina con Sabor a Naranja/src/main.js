@@ -265,6 +265,23 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'desk-lamp') {
                 soundManager.play('switch');
                 hitObject.userData.parentObj.toggle();
+            } else if (hitObject.userData.type === 'sparrow') {
+                // Sparrow Dialog
+                soundManager.play('click');
+                const sparrow = hitObject.userData.parentObj;
+                if (sparrow.chirp) sparrow.chirp(0); // Play chirp locally
+
+                const dialogEl = document.getElementById('sparrow-dialog');
+                const textEl = document.getElementById('dialog-text');
+
+                textEl.textContent = "Hola Giovy, como estas? David me dijo que busques en el cajon del escritorio";
+                dialogEl.classList.remove('hidden');
+
+                // Auto hide after 8 seconds
+                if (window.sparrowTimeout) clearTimeout(window.sparrowTimeout);
+                window.sparrowTimeout = setTimeout(() => {
+                    dialogEl.classList.add('hidden');
+                }, 8000);
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
