@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
 import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox } from './Furniture.js';
+import { Sparrow } from './Sparrow.js';
 
 export class World {
     constructor(scene) {
@@ -26,6 +27,15 @@ export class World {
 
         this.init();
         this.createGarden(); // Add external environment
+
+        // Create Sparrow
+        this.sparrow = new Sparrow(this.scene, this.interactables);
+        this.scene.add(this.sparrow.mesh);
+        this.sparrow.mesh.position.set(0, 3, 0); // Start high
+        if (this.sparrow.interactableMesh) {
+            this.interactables.push(this.sparrow.interactableMesh);
+        }
+
     }
 
     createGarden() {
@@ -361,6 +371,8 @@ export class World {
         // Update Components
         if (this.chandelier) this.chandelier.update(delta);
         if (this.mainDoor) this.mainDoor.update(delta);
+        if (this.sparrow) this.sparrow.update(delta);
+
 
         this.rooms.forEach(room => {
             room.updateCeiling(delta);

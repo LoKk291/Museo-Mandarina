@@ -114,28 +114,47 @@ const cmdInput = document.getElementById('cmd-input');
 const termOutput = document.getElementById('terminal-output');
 
 let isModalOpen = false;
+let lastHoveredSparrow = null;
 
 // Loop de Raycast para mostrar mensaje "Click para ver"
 function checkInteraction() {
     if (isModalOpen) return;
 
     const hitObject = player.getInteractableObject(world.interactables);
+
+    // Clear previous sparrow hover if changed
+    if (lastHoveredSparrow && (!hitObject || hitObject.userData.type !== 'sparrow')) {
+        lastHoveredSparrow.onHover(false);
+        lastHoveredSparrow = null;
+    }
+
     if (hitObject) {
         // Personalizar mensaje según objeto
         if (hitObject.userData.type === 'computer') {
             interactionMsg.textContent = "Click para usar PC";
+            interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'desk-lamp') {
-            interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOn ? "apagar" : "encender"); // Dynamic? Maybe simple "Click" is better
+            interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOn ? "apagar" : "encender");
+            interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'lever') {
             interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOpen ? "Cerrar Techo" : "Abrir Techo");
+            interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'double-door') {
             interactionMsg.textContent = "Click para " + (hitObject.userData.parentObj.isOpen ? "Cerrar Puerta" : "Abrir Puerta");
+            interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'chair') {
             interactionMsg.textContent = "Click para Sentarse";
+            interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'sparrow') {
+            // Sparrow logic: Show label, hide standard message
+            hitObject.userData.parentObj.onHover(true);
+            lastHoveredSparrow = hitObject.userData.parentObj;
+            interactionMsg.style.display = 'none'; // Label is enough
+            return hitObject;
         } else {
             interactionMsg.textContent = "Click para ver";
+            interactionMsg.style.display = 'block';
         }
-        interactionMsg.style.display = 'block';
         return hitObject;
     } else {
         interactionMsg.style.display = 'none';
