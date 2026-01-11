@@ -1569,12 +1569,14 @@ export class Phone {
         const cycleDuration = 900;
         const currentCycleTime = gameTime % cycleDuration;
 
-        if (currentCycleTime < 600) {
+        // Reset Logic: Allow re-test if time is before 3 AM trigger (e.g. < 805)
+        // Original was < 600 (Day). This was annoying for testing 3AM.
+        if (currentCycleTime < 805) {
             this.dailyRingDone = false;
         }
 
         if (!this.dailyRingDone && this.state === 'IDLE') {
-            // Widen window to cover 3:00 to 4:00 (approx 810 to 840) to ensure manual time set hits it.
+            // Widen window to cover 3:00 to 4:00 (approx 810 to 840)
             if (currentCycleTime >= 810 && currentCycleTime < 840) {
                 this.startRinging();
             }
@@ -1582,15 +1584,32 @@ export class Phone {
 
         if (this.state === 'RINGING') {
             this.ringTimer += delta;
+
+            // Show "RING!" Message
+            const msgEl = document.getElementById('interaction-message');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.innerText = "RING! RING! RING!";
+                msgEl.style.color = 'red';
+                msgEl.style.fontSize = '2em';
+
+                // Blink effect
+                if (Math.floor(Date.now() / 200) % 2 === 0) {
+                    msgEl.style.opacity = '1';
+                } else {
+                    msgEl.style.opacity = '0.5';
+                }
+            }
+
             if (this.ringTimer > 3.0) {
                 this.ringTimer = 0;
                 this.ringCount++;
                 if (this.ringCount < 4) {
+                    console.log("PLAYING RING SOUND");
                     this.soundManager.play('phone_ring');
                 } else {
                     this.stopRinging();
                     this.dailyRingDone = true;
-                    // 6 AM trigger handled by dailyRingDone reset at < 600
                 }
             }
         }
@@ -1608,6 +1627,16 @@ export class Phone {
         this.state = 'IDLE';
         this.ringCount = 0;
         this.soundManager.stop('phone_ring');
+
+        // Hide/Reset Message
+        const msgEl = document.getElementById('interaction-message');
+        if (msgEl) {
+            msgEl.style.display = 'none';
+            msgEl.innerText = "Click para ver"; // Reset default
+            msgEl.style.color = '';
+            msgEl.style.fontSize = '';
+            msgEl.style.opacity = '1';
+        }
     }
 }
 
