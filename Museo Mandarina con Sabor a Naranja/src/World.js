@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
-    constructor(scene) {
+    constructor(scene, soundManager) {
         this.scene = scene;
+        this.soundManager = soundManager;
         this.rooms = [];
         this.roomsMap = new Map();
         this.collidables = []; // Walls for collision
@@ -150,6 +151,36 @@ export class World {
         this.lever.setRotation(Math.PI);
         this.scene.add(this.lever.mesh);
         this.interactables.push(this.lever.interactableMesh);
+
+        // Phone (Retro Style)
+        // Right side of desk.
+        // Desk Width 4.5. Center 0.
+        // Right side is +X (Global -X is Right Wing? No, let's re-verify).
+        // Desk Rotation.y = PI.
+        // Desk Local +X is Global -X.
+        // Desk Local Right is -X? No.
+        // Desk is facing +Z (Visitor). User sits at -Z side?
+        // Wait. Desk.build():
+        // top.position.y = height.
+        // Desk is at 0,0,-6. Rot PI.
+        // So Local +Z points into the room (South).
+        // User sits "behind" it (North side).
+        // User view: Global +Z (South).
+        // "Right side" from user perspective (sitting behind desk) is Global West (-X).
+        // Or Global East (+X)?
+        // If I sit at 0,0,-7 facing South (0,0,-5):
+        // Right is West (-X). Left is East (+X).
+        // Lever is at 1.0 (East/Left) which user said "move closer to left".
+        // Phone needs to be on "Right side". So West (-X)?
+        // User said "del lado derecho agrga un telfono".
+        // Let's put it at X = -1.0 (West).
+
+        const phone = new Phone(this.soundManager);
+        // Symmetrical with Lamp (0.7, 0.8, -6.0)
+        phone.setPosition(-0.7, 0.8, -6.0);
+        phone.setRotation(Math.PI); // Face user
+        this.scene.add(phone.mesh);
+        this.interactables.push(phone.interactableMesh);
 
         // Reloj de Pared
         this.clock = new Clock();
@@ -577,7 +608,7 @@ export class World {
         return 0;
     }
 
-    update(delta, camera) {
+    update(delta, time, camera) {
         // Update Components
         if (this.chandelier) this.chandelier.update(delta);
         if (this.mainDoor) this.mainDoor.update(delta);
@@ -587,6 +618,12 @@ export class World {
         this.rooms.forEach(room => {
             room.updateCeiling(delta);
         });
+
+        // Update Phone (Pass Game Time)
+        // 3AM Trigger Logic inside Phone
+        if (this.phone) {
+            this.phone.update(delta, time);
+        }
 
         // --- Sequence Logic ---
         switch (this.animState) {

@@ -31,9 +31,6 @@ scene.add(dirLight);
 // --- CLIMA / CIELO ---
 const sky = new Sky(scene, { dirLight, amiLight });
 
-// --- MUNDO ---
-const world = new World(scene);
-
 // --- SONIDO ---
 const soundManager = new SoundManager();
 // Load default sounds from placeholders if not present user can replace
@@ -49,6 +46,11 @@ soundManager.load('interruptor', 'sounds/interruptor.mp3');
 soundManager.load('interruptor', 'sounds/interruptor.mp3');
 soundManager.load('door_open', 'sounds/abrir.mp3');
 soundManager.load('door_close', 'sounds/cerrar.mp3');
+
+// Phone Sounds
+soundManager.load('phone_ring', 'sounds/phone/ring.mp3');
+soundManager.load('phone_takeoff', 'sounds/phone/takeoff.mp3');
+soundManager.load('phone_guy', 'sounds/phone/phone%20guy.mp3');
 // Tunning Door Sounds
 
 // Tunning Door Sounds
@@ -66,6 +68,9 @@ soundManager.load('chair_action', 'sounds/sentarseopararse.mp3');
 soundManager.setPlaybackRate('chair_action', 2.5); // Much faster
 
 // Keyboard sounds are now PROCEDURAL (Standard Office)
+
+// --- MUNDO ---
+const world = new World(scene, soundManager);
 
 // --- JUGADOR ---
 // Pasamos las paredes para colisiones
@@ -929,8 +934,8 @@ function animate() {
         world.clock.setTime(time.hours, time.minutes);
     }
 
-    // World Animations (Ceiling, etc)
-    world.update(delta, camera);
+    // World Update (Pass delta and GameTime)
+    world.update(delta, sky.time, camera);
 
     // --- FIX: Progressive Interior Lighting ---
     // REMOVED: Interior/Exterior blending logic.

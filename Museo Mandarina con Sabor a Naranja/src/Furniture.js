@@ -1394,6 +1394,223 @@ export class RedCarpet {
     }
 }
 
+// End of FloorLamp class
+
+export class Phone {
+    constructor(soundManager) {
+        this.soundManager = soundManager;
+        this.mesh = new THREE.Group();
+        this.interactableMesh = null;
+
+        // State
+        this.state = 'IDLE'; // IDLE, RINGING, ACTIVE, COOLDOWN
+        this.ringCount = 0;
+        this.ringTimer = 0;
+        this.dailyRingDone = false; // To prevent multiple rings per day
+        this.lastDay = -1;
+
+        this.build();
+    }
+
+    build() {
+        // Materials
+        // User requested: "Cream Light" (Claro).
+        const bodyMat = new THREE.MeshStandardMaterial({
+            color: 0xF5E6D3, // Cream/Beige
+            roughness: 0.6,
+            metalness: 0.1
+        });
+
+        const darkMat = new THREE.MeshStandardMaterial({
+            color: 0x222222, // Dark Grey/Black for handset cord/details
+            roughness: 0.8
+        });
+
+        const buttonMat = new THREE.MeshStandardMaterial({
+            color: 0x333333,
+            roughness: 0.5
+        });
+
+        // 1. Base Unit (Sloped Trapezoid-ish)
+        const baseWidth = 0.25;
+        const baseDepth = 0.3;
+        const baseHeight = 0.08;
+
+        // Use a group to rotate the shape easily
+        const baseGeo = new THREE.BoxGeometry(baseWidth, baseHeight, baseDepth);
+        // We want a slope. Let's just rotate a box slightly or use custom geometry.
+        // Simple way: Rotate box X slightly.
+        const base = new THREE.Mesh(baseGeo, bodyMat);
+        base.rotation.x = 0.2; // Slope up towards back
+        base.position.y = baseHeight / 2;
+        base.castShadow = true;
+        base.receiveShadow = true;
+        this.mesh.add(base);
+
+        // 2. Handset Area (Left side depression?)
+        // Just add the handset on top left.
+
+        // Handset
+        const handleGroup = new THREE.Group();
+        // Position it on the left side, slightly raised
+        handleGroup.position.set(-0.08, baseHeight + 0.05, 0);
+        handleGroup.rotation.x = 0.2; // Match slope
+        this.mesh.add(handleGroup);
+
+        const handleGeo = new THREE.BoxGeometry(0.08, 0.04, 0.35); // Long rect
+        const handle = new THREE.Mesh(handleGeo, bodyMat);
+        handle.castShadow = true;
+        handleGroup.add(handle);
+
+        // Cord (Spiral? Simple curved tube for now)
+        // Curve from Handle to Base
+        const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(-0.08, baseHeight + 0.05, 0.1), // Handle End
+            new THREE.Vector3(-0.15, baseHeight, 0.15), // Loop out
+            new THREE.Vector3(-0.12, 0.02, -0.1) // Base connection
+        ]);
+        const cordGeo = new THREE.TubeGeometry(curve, 20, 0.005, 8, false);
+        const cord = new THREE.Mesh(cordGeo, darkMat);
+        this.mesh.add(cord);
+
+
+        // 3. Dial Pad (Right Side)
+        // 3x4 Grid of buttons
+        const btnSize = 0.03;
+        const btnGap = 0.01;
+        const startX = 0.02; // Right side
+        const startZ = 0.05; // Top part
+
+        const keyGroup = new THREE.Group();
+        keyGroup.rotation.x = 0.2; // Match slope
+        keyGroup.position.y = baseHeight / 2 + 0.045; // On surface
+        this.mesh.add(keyGroup);
+
+        const keyGeo = new THREE.BoxGeometry(btnSize, 0.01, btnSize);
+
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 3; col++) {
+                const btn = new THREE.Mesh(keyGeo, buttonMat);
+                btn.position.set(
+                    startX + col * (btnSize + btnGap),
+                    0,
+                    startZ - row * (btnSize + btnGap)
+                );
+                keyGroup.add(btn);
+            }
+        }
+
+        // 4. Lights (Red/Green Bar at bottom)
+        const lightGeo = new THREE.BoxGeometry(0.04, 0.01, 0.015);
+
+        // Green Light
+        const greenMat = new THREE.MeshStandardMaterial({
+            color: 0x00FF00,
+            emissive: 0x00FF00,
+            emissiveIntensity: 2.0
+        });
+        const greenLight = new THREE.Mesh(lightGeo, greenMat);
+        greenLight.position.set(0.02, 0, 0.12); // Bottom area
+        keyGroup.add(greenLight);
+
+        // Orange/Red Light
+        const redMat = new THREE.MeshStandardMaterial({
+            color: 0xFF4400,
+            emissive: 0xFF4400,
+            emissiveIntensity: 2.0
+        });
+        const redLight = new THREE.Mesh(lightGeo, redMat);
+        redLight.position.set(0.08, 0, 0.12); // Next to green
+        keyGroup.add(redLight);
+
+        // 5. Speaker Slots (Top)
+        const slotGeo = new THREE.BoxGeometry(0.1, 0.005, 0.005);
+        for (let i = 0; i < 3; i++) {
+            const slot = new THREE.Mesh(slotGeo, darkMat);
+            slot.position.set(0.05, 0, -0.1 - (i * 0.01));
+            keyGroup.add(slot);
+        }
+
+        // Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(0.3, 0.2, 0.35);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.y = 0.1;
+        hitBox.userData = { type: 'phone', parentObj: this };
+        this.interactableMesh = hitBox;
+        this.mesh.add(hitBox);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+
+    interact() {
+        if (this.state === 'RINGING') {
+            console.log("Phone Answered!");
+            this.state = 'ACTIVE';
+            this.soundManager.stop('phone_ring');
+            this.soundManager.play('phone_takeoff');
+            setTimeout(() => {
+                if (this.state === 'ACTIVE') {
+                    this.soundManager.play('phone_guy');
+                }
+            }, 1000);
+        } else if (this.state === 'ACTIVE') {
+            this.state = 'IDLE';
+            this.soundManager.stop('phone_guy');
+        }
+    }
+
+    update(delta, gameTime) {
+        const cycleDuration = 900;
+        const currentCycleTime = gameTime % cycleDuration;
+
+        if (currentCycleTime < 600) {
+            this.dailyRingDone = false;
+        }
+
+        if (!this.dailyRingDone && this.state === 'IDLE') {
+            // Widen window to cover 3:00 to 4:00 (approx 810 to 840) to ensure manual time set hits it.
+            if (currentCycleTime >= 810 && currentCycleTime < 840) {
+                this.startRinging();
+            }
+        }
+
+        if (this.state === 'RINGING') {
+            this.ringTimer += delta;
+            if (this.ringTimer > 3.0) {
+                this.ringTimer = 0;
+                this.ringCount++;
+                if (this.ringCount < 4) {
+                    this.soundManager.play('phone_ring');
+                } else {
+                    this.stopRinging();
+                    this.dailyRingDone = true;
+                    // 6 AM trigger handled by dailyRingDone reset at < 600
+                }
+            }
+        }
+    }
+
+    startRinging() {
+        this.state = 'RINGING';
+        this.ringCount = 0;
+        this.ringTimer = 0;
+        this.soundManager.play('phone_ring');
+        this.dailyRingDone = true;
+    }
+
+    stopRinging() {
+        this.state = 'IDLE';
+        this.ringCount = 0;
+        this.soundManager.stop('phone_ring');
+    }
+}
+
 export class Chair {
     constructor() {
         this.mesh = new THREE.Group();
