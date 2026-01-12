@@ -398,6 +398,15 @@ export class World {
             0xFFFF00, 0xFF00FF, 0x00FFFF  // Yellow, Magenta, Cyan
         ];
 
+        const vinylTitles = [
+            "Her",
+            "Contigo",
+            "La Gloria Eres Tu",
+            "Every Breath You Take",
+            "Labios Rotos",
+            "Is This Love"
+        ];
+
         let vIndex = 0;
 
         for (let r = 0; r < 2; r++) {
@@ -409,7 +418,8 @@ export class World {
                 // Initialize Vinyl
                 const vID = vIndex + 1;
                 const color = vinylColors[vIndex];
-                vf.setVinyl(vID, color);
+                const title = vinylTitles[vIndex];
+                vf.setVinyl(vID, color, title);
 
                 this.scene.add(vf.mesh);
 
