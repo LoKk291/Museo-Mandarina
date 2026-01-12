@@ -428,8 +428,6 @@ export class World {
         this.scene.add(recordTable.mesh);
 
         this.recordPlayer = recordTable; // Access for main.js
-
-        this.recordPlayer = recordTable; // Access for main.js
         // this.interactables.push(recordTable.mesh); // Future interaction
 
         this.addRoom(roomL1, 'L1');

@@ -354,6 +354,7 @@ document.addEventListener('click', () => {
 
                 const frame = hitObject.userData.instance;
                 const id = hitObject.userData.id;
+                const color = hitObject.userData.color; // Get color from vinyl
 
                 // Restore previous if exists
                 if (activeVinylFrame && activeVinylFrame !== frame) {
@@ -364,12 +365,23 @@ document.addEventListener('click', () => {
                 activeVinylFrame = frame;
                 frame.hideVinyl();
 
+                // Place on Record Player
+                if (world.recordPlayer) {
+                    world.recordPlayer.setVinyl(color);
+                }
+
                 // Logic: ID 1-6 map to "1.mp3" ... "6.mp3"
                 soundManager.playVinyl(id, () => {
                     // On Ended
+                    // Verify if this is still the active vinyl (user might have clicked another one)
                     if (activeVinylFrame === frame) {
                         frame.showVinyl();
                         activeVinylFrame = null;
+
+                        // Clear Record Player
+                        if (world.recordPlayer) {
+                            world.recordPlayer.clearVinyl();
+                        }
                     }
                 });
             } else if (hitObject.userData.painting) {
