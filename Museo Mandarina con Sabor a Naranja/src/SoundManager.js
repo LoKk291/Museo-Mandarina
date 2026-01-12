@@ -160,4 +160,28 @@ export class SoundManager {
             osc.stop(t + duration);
         });
     }
+
+    playVinyl(id) {
+        if (!this.enabled) return;
+
+        // Stop currently playing vinyl if any
+        if (this.currentVinyl) {
+            this.currentVinyl.pause();
+            this.currentVinyl.currentTime = 0;
+        }
+
+        const path = `sounds/vinilos/${id}.mp3`;
+        const audio = new Audio(path);
+        audio.volume = 0.5; // Reasonable volume
+        audio.play().catch(e => console.warn("Vinyl play blocked", e));
+
+        this.currentVinyl = audio;
+    }
+
+    stopVinyl() {
+        if (this.currentVinyl) {
+            this.currentVinyl.pause();
+            this.currentVinyl = null;
+        }
+    }
 }

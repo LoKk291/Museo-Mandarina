@@ -203,7 +203,7 @@ export class Player {
                 let obj = intersects[0].object;
                 // Traverse up to find interactable root
                 while (obj) {
-                    if (obj.userData && (obj.userData.type || obj.userData.painting)) {
+                    if (obj.userData && (obj.userData.type || obj.userData.painting || obj.userData.vinyl)) {
                         return obj;
                     }
                     // Stop at scene root

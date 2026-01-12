@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -386,20 +386,51 @@ export class World {
 
         // Marcos para Vinilos (Grid 2x3 en Pared Oeste)
         // Pared Oeste L1 está en X = -32.5.
-        // Superficie interna ~ -32.25. Frame en -32.2.
         const frameX = -32.2;
-        const frameZ_Centers = [-1.3, 0, 1.3];
+        // User wants ID ordering: Start Top-Left -> 1, 2, 3 (Row 1), 4, 5, 6 (Row 2).
+        // On West Wall (Looking West), Left is South (+Z). Right is North (-Z).
+        // So Z order needs to be [Positive, 0, Negative].
+        const frameZ_Centers = [1.3, 0, -1.3]; // Left, Center, Right
         const frameY_Centers = [2.5, 1.2]; // Top row, Bottom row
+
+        const vinylColors = [
+            0xFF0000, 0x0000FF, 0x00FF00, // Red, Blue, Green
+            0xFFFF00, 0xFF00FF, 0x00FFFF  // Yellow, Magenta, Cyan
+        ];
+
+        let vIndex = 0;
 
         for (let r = 0; r < 2; r++) {
             for (let c = 0; c < 3; c++) {
                 const vf = new VinylFrame();
                 vf.setPosition(frameX, frameY_Centers[r], frameZ_Centers[c]);
                 vf.setRotation(Math.PI / 2); // Face East
+
+                // Initialize Vinyl
+                const vID = vIndex + 1;
+                const color = vinylColors[vIndex];
+                vf.setVinyl(vID, color);
+
                 this.scene.add(vf.mesh);
-                // this.interactables.push(vf.mesh); // Future interaction
+
+                // Add to interactables for click detection
+                this.interactables.push(vf.mesh);
+
+                vIndex++;
             }
         }
+
+        // Tocadiscos en mesita (Esquina SW: X cerca de -32.5, Z cerca de +7.5)
+        const recordTable = new RecordPlayerTable();
+        // X = -31.5 (1m from West), Z = 6.5 (1m from South)
+        recordTable.setPosition(-31.5, 0, 6.5);
+        recordTable.setRotation(Math.PI / 4); // Angled 45 deg
+        this.scene.add(recordTable.mesh);
+
+        this.recordPlayer = recordTable; // Access for main.js
+
+        this.recordPlayer = recordTable; // Access for main.js
+        // this.interactables.push(recordTable.mesh); // Future interaction
 
         this.addRoom(roomL1, 'L1');
 

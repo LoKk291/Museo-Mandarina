@@ -196,6 +196,7 @@ document.addEventListener('mousedown', (e) => {
 });
 
 let isModalOpen = false;
+let activeVinylFrame = null; // Track playing vinyl
 let lastHoveredSparrow = null;
 
 // Loop de Raycast para mostrar mensaje "Click para ver"
@@ -348,6 +349,29 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'secret-note') {
                 soundManager.play('click');
                 showLetter("Nota Guardada", "???", "Llamame! 3754-406297", false);
+            } else if (hitObject.userData.vinyl) {
+                // soundManager.play('click'); // Optional
+
+                const frame = hitObject.userData.instance;
+                const id = hitObject.userData.id;
+
+                // Restore previous if exists
+                if (activeVinylFrame && activeVinylFrame !== frame) {
+                    activeVinylFrame.showVinyl();
+                }
+
+                // Set new active
+                activeVinylFrame = frame;
+                frame.hideVinyl();
+
+                // Logic: ID 1-6 map to "1.mp3" ... "6.mp3"
+                soundManager.playVinyl(id, () => {
+                    // On Ended
+                    if (activeVinylFrame === frame) {
+                        frame.showVinyl();
+                        activeVinylFrame = null;
+                    }
+                });
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);

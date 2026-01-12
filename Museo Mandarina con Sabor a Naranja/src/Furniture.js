@@ -2920,8 +2920,8 @@ export class VinylFrame {
         right.position.x = w / 2 - thickness / 2;
         this.mesh.add(right);
 
-        // Backing (Dark Grey matte)
-        const backCheck = new THREE.Mesh(new THREE.PlaneGeometry(w - thickness * 2, h - thickness * 2), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 }));
+        // Backing (Grey matte)
+        const backCheck = new THREE.Mesh(new THREE.PlaneGeometry(w - thickness * 2, h - thickness * 2), new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 1.0 }));
         backCheck.position.z = 0; // Center plane
         this.mesh.add(backCheck);
 
@@ -2935,5 +2935,183 @@ export class VinylFrame {
 
     setRotation(y) {
         this.mesh.rotation.y = y;
+    }
+
+    setVinyl(id, colorHex, title) {
+        // Create Vinyl geometry
+        const vinylGroup = new THREE.Group();
+        // Position slightly in front of backing (z=0) -> z=0.02
+        vinylGroup.position.set(0, 0, 0.02);
+
+        // Disc (Black)
+        // Frame inner width ~ 0.8. Disc Radius max 0.35.
+        const discGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.01, 32);
+        const discMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.6 });
+        const disc = new THREE.Mesh(discGeo, discMat);
+        // Cylinder is vertical (along Y). Rotate to match plane (Z forward).
+        disc.rotation.x = Math.PI / 2;
+        vinylGroup.add(disc);
+
+        // Label (Center Color)
+        const labelGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.015, 32);
+        const labelMat = new THREE.MeshBasicMaterial({ color: colorHex });
+        const label = new THREE.Mesh(labelGeo, labelMat);
+        label.rotation.x = Math.PI / 2;
+        label.position.z = 0.005; // Slightly protruding
+        vinylGroup.add(label);
+
+        // Store ID for interaction
+        // Attach userdata to mesh to ensure raycaster picks it up up the chain
+        this.mesh.userData = { vinyl: true, id: id, instance: this, color: colorHex };
+
+        this.mesh.add(vinylGroup);
+        this.vinylMesh = vinylGroup;
+
+        // Add Text Label (Plaque) below frame
+        if (title) {
+            this.addLabel(title);
+        }
+    }
+
+    addLabel(text) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 128; // Wide rectangle
+        const ctx = canvas.getContext('2d');
+
+        // Background (Gold/Brass plaque look or simple white)
+        ctx.fillStyle = '#1a1a1a'; // Dark background
+        ctx.fillRect(0, 0, 512, 128);
+
+        // Border
+        ctx.strokeStyle = '#D4AF37'; // Gold
+        ctx.lineWidth = 10;
+        ctx.strokeRect(5, 5, 502, 118);
+
+        // Text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 40px Arial'; // Larger font
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, 256, 64);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const plaqueGeo = new THREE.PlaneGeometry(0.8, 0.2); // Width 0.8 (matches inner frame), Height 0.2
+        const plaqueMat = new THREE.MeshBasicMaterial({ map: texture });
+        const plaque = new THREE.Mesh(plaqueGeo, plaqueMat);
+
+        // Position below frame (Frame height 1.0, y range -0.5 to 0.5)
+        // Place at y = -0.65
+        plaque.position.set(0, -0.65, 0.05); // Slightly forward
+        this.mesh.add(plaque);
+    }
+
+    hideVinyl() {
+        if (this.vinylMesh) this.vinylMesh.visible = false;
+    }
+
+    showVinyl() {
+        if (this.vinylMesh) this.vinylMesh.visible = true;
+    }
+}
+
+export class RecordPlayerTable {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // --- 1. Cabinet (Solid Furniture) ---
+        const tableMat = new THREE.MeshStandardMaterial({ color: 0x5C4033, roughness: 0.6 }); // Dark Wood
+
+        // Solid Cabinet Body (Larger)
+        // Previous: 0.8 x 0.8 top. New: 1.2 width x 0.6 depth. Height 0.85.
+        const cabinetGeo = new THREE.BoxGeometry(1.2, 0.85, 0.6);
+        const cabinet = new THREE.Mesh(cabinetGeo, tableMat);
+        cabinet.position.y = 0.85 / 2; // Center on Y relative to floor (0) -> Position 0.425
+        // Wait, standard height is often bottom-aligned in my code or centered?
+        // BoxGeometry is centered. If I want it on floor, pos.y = height/2.
+        this.mesh.add(cabinet);
+
+        // --- 2. Record Player ---
+        const playerGroup = new THREE.Group();
+        playerGroup.position.set(0, 0.85, 0); // Sit on top of cabinet (height 0.85)
+
+        // Base
+        const baseGeo = new THREE.BoxGeometry(0.6, 0.1, 0.4);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.2 });
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.position.y = 0.05;
+        playerGroup.add(base);
+
+        // Platter (Disc Holder)
+        const platterGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.02, 32);
+        const platterMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+        const platter = new THREE.Mesh(platterGeo, platterMat);
+        platter.position.set(-0.1, 0.11, 0);
+        playerGroup.add(platter);
+
+        // Vinyl Disc (Black default)
+        const vinylGeo = new THREE.CylinderGeometry(0.17, 0.17, 0.01, 32);
+        const vinylMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.2, metalness: 0.5 });
+        const vinyl = new THREE.Mesh(vinylGeo, vinylMat);
+        vinyl.position.set(-0.1, 0.12, 0);
+        playerGroup.add(vinyl);
+
+        // Label (Red Center default)
+        const labelGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.015, 32);
+        const labelMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+        const label = new THREE.Mesh(labelGeo, labelMat);
+        label.position.set(-0.1, 0.122, 0);
+        playerGroup.add(label);
+
+        // Save references
+        this.baseVinylMesh = vinyl;
+        this.baseLabelMesh = label;
+        // Initially hide until selected? Or show generic?
+        // User implied "the selected disc is placed". So maybe empty initially?
+        // Or default black.
+        // Let's keep it visible but changeable.
+
+        // Tonearm Base
+        const armBaseGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.05, 16);
+        const silverMat = new THREE.MeshStandardMaterial({ color: 0xAAAAAA, metalness: 0.8, roughness: 0.2 });
+        const armBase = new THREE.Mesh(armBaseGeo, silverMat);
+        armBase.position.set(0.2, 0.12, 0.1);
+        playerGroup.add(armBase);
+
+        // Tonearm
+        const armGeo = new THREE.BoxGeometry(0.3, 0.01, 0.01);
+        const arm = new THREE.Mesh(armGeo, silverMat);
+        arm.position.set(0.05, 0.15, 0.1);
+        arm.rotation.z = 0.1;
+        arm.rotation.y = 0.5; // Angled towards record
+        playerGroup.add(arm);
+
+        this.mesh.add(playerGroup);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+
+    setVinyl(colorHex) {
+        if (this.baseLabelMesh) {
+            this.baseLabelMesh.material.color.setHex(colorHex);
+            this.baseLabelMesh.visible = true;
+            this.baseVinylMesh.visible = true;
+        }
+    }
+
+    clearVinyl() {
+        if (this.baseVinylMesh) {
+            this.baseVinylMesh.visible = false;
+            this.baseLabelMesh.visible = false;
+        }
     }
 }
