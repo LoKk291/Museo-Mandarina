@@ -133,6 +133,9 @@ export class World {
                 this.interactables.push(d.interactableMesh);
             });
         }
+        if (this.desk.secretNote) {
+            this.interactables.push(this.desk.secretNote.interactableMesh);
+        }
 
         // Computadora Retro
         const pc = new RetroComputer();

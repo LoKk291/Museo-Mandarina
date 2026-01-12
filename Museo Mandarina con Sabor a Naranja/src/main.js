@@ -51,6 +51,7 @@ soundManager.load('door_close', 'sounds/cerrar.mp3');
 soundManager.load('phone_ring', 'sounds/phone/ring.mp3');
 soundManager.load('phone_takeoff', 'sounds/phone/takeoff.mp3');
 soundManager.load('phone_guy', 'sounds/phone/phone%20guy.mp3');
+soundManager.load('secret_call', 'sounds/phone/ioamoremio.mp3'); // Secret Call Sound
 // Tunning Door Sounds
 
 // Tunning Door Sounds
@@ -344,6 +345,9 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'paper-stack') {
                 soundManager.play('click');
                 showLetter("Informe de Estado", "22/01/26", "El comando \"party time\" no funciona, debido al estado actual de los animatronicos, no se recomienda activar el comando, el comportamiento de Foxy y Mangle es algo inestable.<p style='text-align: right; margin-top: 20px;'>- Equipo Mandarina</p>", false);
+            } else if (hitObject.userData.type === 'secret-note') {
+                soundManager.play('click');
+                showLetter("Nota Guardada", "???", "Llamame! 3754-406297", false);
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
@@ -1094,7 +1098,11 @@ if (phoneCallBtn) {
             showLetter("???", "???", "No deberías haber hecho eso...");
             // Maybe play scary sound later
         } else if (currentNumber === "*#06#") {
-            showLetter("Información de Dispositivo", "SYS", "IMEI: 8844-MANDARINA-00");
+            showLetter("Información de Dispositivo", "SYS", "IMEI: 8844-MANDARINA-00", true);
+        } else if (currentNumber === "3754406297") {
+            // Secret Call
+            soundManager.play('secret_call');
+            showLetter("Llamando...", "IO AMORE MIO", "Reproduciendo mensaje especial...", true);
         } else if (currentNumber.length > 0) {
             // Generic Call
             setTimeout(() => {

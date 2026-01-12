@@ -165,6 +165,68 @@ export class Drawer {
 
 
 
+
+export class SecretNote {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Geometry: Small paper
+        const geo = new THREE.PlaneGeometry(0.15, 0.1);
+
+        // Texture with Text
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+
+        // Background (Paper color)
+        ctx.fillStyle = '#fdfbf7';
+        ctx.fillRect(0, 0, 256, 128);
+
+        // Text
+        ctx.fillStyle = '#cc0000'; // Red ink
+        ctx.font = 'bold 36px Courier New';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('3754-406297', 128, 64);
+
+        // Border/Dirt
+        ctx.strokeStyle = '#d0c0a0';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(0, 0, 256, 128);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.MeshStandardMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+
+        const note = new THREE.Mesh(geo, mat);
+        note.rotation.x = -Math.PI / 2; // Flat
+        // note.rotation.z = Math.random() * 0.2 - 0.1; // Slight mess
+        note.castShadow = true;
+        note.receiveShadow = true;
+
+        // Hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.15, 0.02, 0.1);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+        hitbox.userData = {
+            type: 'secret-note',
+            parentObj: this
+        };
+        note.add(hitbox);
+        this.interactableMesh = hitbox; // Expose HITBOX
+
+        this.mesh.add(note);
+    }
+}
+
 export class Desk {
     constructor(width = 3.5, depth = 1.2, height = 0.8) {
         this.width = width;
@@ -450,6 +512,15 @@ export class Desk {
                 key.mesh.position.set(0, -dH_Real / 2 + 0.05, 0);
                 key.mesh.rotation.y = Math.PI / 4;
                 drawerR.addItem(key.mesh);
+            }
+
+            // Secret Note (Top)
+            if (i === 0) {
+                const note = new SecretNote();
+                note.mesh.position.set(0, -dH_Real / 2 + 0.03, 0); // Bottom of drawer
+                note.mesh.rotation.y = Math.PI / 2; // Align
+                drawerR.addItem(note.mesh);
+                this.secretNote = note; // Store ref
             }
         }
     }
