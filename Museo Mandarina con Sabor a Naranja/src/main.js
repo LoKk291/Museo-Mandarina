@@ -352,7 +352,7 @@ document.addEventListener('click', () => {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
             } else if (hitObject.userData.type === 'phone') {
-                soundManager.play('click');
+                soundManager.play('phone_takeoff');
                 openPhone();
             } else {
                 console.error("Objeto interactuable sin tipo o datos definidos:", hitObject);
@@ -1061,12 +1061,16 @@ function updatePhoneDisplay() {
 }
 
 if (phoneBtns) {
-    phoneBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+    phoneBtns.forEach(key => { // Assuming phoneBtns is intended to be phoneKeys here
+        key.addEventListener('click', () => {
+            const value = key.getAttribute('data-key'); // Changed from data-value to data-key to match existing HTML structure
+
+            // Play DTMF Tone
+            soundManager.playDTMF(value); // Procedural Tone
+
             if (currentNumber.length < 12) {
-                soundManager.play('click'); // Reuse click or specific tone?
-                currentNumber += btn.dataset.key;
-                updatePhoneDisplay();
+                currentNumber += value;
+                updatePhoneDisplay(); // Changed from updateDisplay() to updatePhoneDisplay() to match existing function
             }
         });
     });
@@ -1102,7 +1106,7 @@ if (phoneCallBtn) {
         } else if (currentNumber === "3754406297") {
             // Secret Call
             soundManager.play('secret_call');
-            showLetter("Llamando...", "IO AMORE MIO", "Reproduciendo mensaje especial...", true);
+            // showLetter("Llamando...", "IO AMORE MIO", "Reproduciendo mensaje especial...", true);
         } else if (currentNumber.length > 0) {
             // Generic Call
             setTimeout(() => {

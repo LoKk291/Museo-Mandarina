@@ -121,4 +121,43 @@ export class SoundManager {
         thudSrc.start(t);
         thudSrc.stop(t + 0.1);
     }
+
+    // --- DTMF Tones (Dual Tone Multi Frequency) ---
+    playDTMF(key) {
+        if (!this.enabled) return;
+        this.initSynth();
+        const t = this.ctx.currentTime;
+        const duration = 0.15; // Short beep
+
+        // Frequencies matrix
+        //       1209 1336 1477
+        // 697    1    2    3
+        // 770    4    5    6
+        // 852    7    8    9
+        // 941    *    0    #
+
+        const dtmf = {
+            '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+            '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+            '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+            '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
+        };
+
+        const freqs = dtmf[key];
+        if (!freqs) return;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        gain.connect(this.ctx.destination);
+
+        freqs.forEach(f => {
+            const osc = this.ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.value = f;
+            osc.connect(gain);
+            osc.start(t);
+            osc.stop(t + duration);
+        });
+    }
 }
