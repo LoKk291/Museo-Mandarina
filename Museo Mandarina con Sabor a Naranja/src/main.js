@@ -354,6 +354,26 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'phone') {
                 soundManager.play('phone_takeoff');
                 openPhone();
+            } else if (hitObject.userData.type === 'globe') {
+                // Open Map
+                const mapModal = document.getElementById('map-modal');
+                const closeMap = document.getElementById('close-map');
+
+                mapModal.classList.remove('hidden');
+                player.unlock();
+                document.getElementById('instructions').style.display = 'none';
+                isModalOpen = true;
+
+                closeMap.onclick = () => {
+                    mapModal.classList.add('hidden');
+                    player.lock();
+                    isModalOpen = false;
+                };
+
+                // Esc/Click outside handled by existing event listener if modified, 
+                // OR add specific listener here:
+                // Actually, let's update the global ESC listener to handle map-modal too if needed, 
+                // or just rely on manual close for now.
             } else {
                 console.error("Objeto interactuable sin tipo o datos definidos:", hitObject);
                 // ...

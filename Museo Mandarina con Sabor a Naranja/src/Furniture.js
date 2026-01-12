@@ -2564,3 +2564,98 @@ export class WasteBasket {
         this.mesh.position.set(x, y, z);
     }
 }
+
+export class Globe {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // 1. Legs (Tripod)
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.6 }); // Dark Wood
+
+        for (let i = 0; i < 3; i++) {
+            const legGeo = new THREE.CylinderGeometry(0.04, 0.03, 1.2);
+            const leg = new THREE.Mesh(legGeo, legMat);
+            const angle = (i / 3) * Math.PI * 2;
+            const radius = 0.4;
+
+            // Initial pos
+            const legGroup = new THREE.Group();
+            legGroup.rotation.y = angle;
+
+            leg.position.set(0.3, 0.6, 0); // Out from center
+            leg.rotation.z = 0.2; // Tilt outward
+
+            legGroup.add(leg);
+            this.mesh.add(legGroup);
+        }
+
+        // 2. Central Pillar / Connection (Triangle base)
+        const baseGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 3); // Shape triangle? simpler cylinder disk
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.05, 16), legMat);
+        base.position.y = 0.2;
+        this.mesh.add(base);
+
+        // Center Rod
+        const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.0), legMat);
+        rod.position.y = 0.7;
+        this.mesh.add(rod);
+
+        // 3. Meridian Ring (Brass)
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, roughness: 0.4, metalness: 0.8 });
+        const ringGeo = new THREE.TorusGeometry(0.52, 0.03, 8, 32);
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.y = 1.2;
+        ring.rotation.z = 0.4; // Tilt axis
+        this.mesh.add(ring);
+
+        // 4. The Globe (Sphere)
+        const globeGeo = new THREE.SphereGeometry(0.5, 32, 32);
+        const globeMat = new THREE.MeshStandardMaterial({
+            color: 0x2244aa, // Blue Ocean 
+            roughness: 0.5
+        });
+        const globe = new THREE.Mesh(globeGeo, globeMat);
+        globe.position.y = 1.2;
+        globe.rotation.z = 0.4; // Match ring tilt
+        globe.rotation.y = 1.0; // Random spin
+        globe.castShadow = true;
+        this.mesh.add(globe);
+
+        // Hitbox
+        const hitBoxGeo = new THREE.SphereGeometry(0.55);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.y = 1.2;
+        hitBox.userData = { type: 'globe', parentObj: this };
+        this.interactableMesh = hitBox;
+        this.mesh.add(hitBox);
+
+        // Add some GREEN continents (Low poly style)
+        const landMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+        for (let j = 0; j < 12; j++) {
+            const size = 0.1 + Math.random() * 0.25;
+            const land = new THREE.Mesh(new THREE.DodecahedronGeometry(size), landMat);
+            // Random point on sphere
+            const u = Math.random();
+            const v = Math.random();
+            const theta = 2 * Math.PI * u;
+            const phi = Math.acos(2 * v - 1);
+
+            const r = 0.48; // Slightly inside/intersecting
+            land.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                r * Math.sin(phi) * Math.sin(theta) + 1.2, // Y offset
+                r * Math.cos(phi)
+            );
+            // Align rotation?
+            land.lookAt(0, 1.2, 0);
+            this.mesh.add(land);
+        }
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -359,6 +359,7 @@ export class World {
         hallCent_L1.addDoor('West', 4, 4);
         this.addRoom(hallCent_L1, 'HALL_L1');
 
+
         // --- Room L2 (Norte de L1) ---
         // Pos: -25, -25     (Gap logic: L1 End Z=-7.5. L2 Start Z=-17.5. Center L2=-25)
         const roomL2 = new Room(this.scene, -25, -25, 15, 15, 0xF5F5DC);
@@ -368,6 +369,13 @@ export class World {
         roomL2.addPaintingToWall('West', 4, 3, '', 'Bosque', 'Árboles antiguos.', '8');
 
         this.addRoom(roomL2, 'L2');
+
+        // --- GLOBO TERRÁQUEO ---
+        // Center of L2: -25, -25
+        const globe = new Globe();
+        globe.setPosition(-25, 0, -25);
+        this.scene.add(globe.mesh);
+        this.interactables.push(globe.interactableMesh);
 
         // Pasillo L1 <-> L2 (Vertical)
         // Center X = -25.
