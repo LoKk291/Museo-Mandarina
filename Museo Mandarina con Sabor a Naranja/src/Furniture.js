@@ -371,13 +371,14 @@ export class Desk {
             return group;
         };
 
-        // Left Wing Enclosure
-        // Needs Outer Side (Left) closed. Inner (Right) open.
-        const leftEnc = buildEnclosure(wingX_Left, wingZ);
-        const leftOuter = new THREE.Mesh(sidePanelGeo, woodMat);
-        leftOuter.position.x = -wCabW / 2 + panelThick / 2; // Left side
-        leftEnc.add(leftOuter);
-        this.mesh.add(leftEnc);
+        // Left Wing Enclosure (REMOVED DRAWERS - SOLID BLOCK)
+        const solidCabMat = woodMat;
+        const solidWingGeo = new THREE.BoxGeometry(wingWidth, cabinetHeight, wingDepth);
+        const leftSolidCabinet = new THREE.Mesh(solidWingGeo, solidCabMat);
+        leftSolidCabinet.position.set(wingX_Left, cabinetHeight / 2, wingZ);
+        leftSolidCabinet.castShadow = true;
+        leftSolidCabinet.receiveShadow = true;
+        this.mesh.add(leftSolidCabinet);
 
         // Right Wing Enclosure
         // Needs Outer Side (Right) closed. Inner (Left) open.
@@ -421,38 +422,7 @@ export class Desk {
             // i=0 (Top) -> Center at cabinetHeight - dH/2.
             const y = cabinetHeight - (i * dH) - dH / 2;
 
-            // --- Left Wing Drawers ---
-            // Face +X.
-            // Flush with Inner Face (X = wingX_Left + wingWidth/2).
-            // Drawer Local Front is at +dD/2.
-            // Rotated +90 (Y), Local Front (+Z) points +X.
-            // So Global X of Front = CenterX + dD/2.
-            // Eq: CenterX + dD/2 = wingX_Left + wingWidth/2.
-            // CenterX = wingX_Left + wingWidth/2 - dD/2.
-
-            // Adjust for enclosure thickness? Enclosure is open on Inner side.
-            // "wingWidth/2" is the theoretical edge of the 0.8 block.
-            // Enclosure panels are inside? No, let's assume Flush to theoretical edge.
-            const xPos_L = wingX_Left + wingWidth / 2 - dD / 2; // - 0.01 margin?
-
-            const drawerL = new Drawer(dW, dH_Real, dD, drawerColor);
-            drawerL.mesh.position.set(xPos_L, y, wingZ);
-            drawerL.mesh.rotation.y = Math.PI / 2;
-
-            // Add Wrapper
-            const wrapperL = new THREE.Group();
-            wrapperL.position.set(xPos_L, y, wingZ);
-            wrapperL.rotation.y = Math.PI / 2;
-            this.mesh.add(wrapperL);
-
-            // Reset Drawer Local Pos
-            drawerL.mesh.position.set(0, 0, 0);
-            wrapperL.add(drawerL.mesh);
-            drawerL.setOriginalZ(0);
-            this.drawers.push(drawerL);
-
-
-            // --- Right Wing Drawers ---
+            // --- Right Wing Drawers (Left removed) ---
             // Face -X.
             // Flush with Inner Face (X = wingX_Right - wingWidth/2).
             // Drawer Local Front at +dD/2.
@@ -474,12 +444,12 @@ export class Desk {
             drawerR.setOriginalZ(0);
             this.drawers.push(drawerR);
 
-            // Add Items (Key)
+            // Add Items (Key) - Moved to Right
             if (i === 1) { // Middle
                 const key = new GoldenKey();
                 key.mesh.position.set(0, -dH_Real / 2 + 0.05, 0);
                 key.mesh.rotation.y = Math.PI / 4;
-                drawerL.addItem(key.mesh);
+                drawerR.addItem(key.mesh);
             }
         }
     }
