@@ -794,6 +794,7 @@ export class World {
         if (this.chandelier) this.chandelier.update(delta);
         if (this.mainDoor) this.mainDoor.update(delta);
         if (this.sparrow) this.sparrow.update(delta, camera);
+        if (this.recordPlayer) this.recordPlayer.update(delta);
 
 
         this.rooms.forEach(room => {

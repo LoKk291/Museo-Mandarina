@@ -3118,11 +3118,115 @@ export class RecordPlayerTable {
         }
     }
 
+    // --- Particle System ---
+
+    createNoteTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = 'rgba(0,0,0,0)'; // Transparent background
+        ctx.fillRect(0, 0, 64, 64);
+
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Randomize color in spawn? Or just make white and tint sprite?
+        // Let's make white note on canvas, then tint the material/sprite.
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('♪', 32, 32);
+
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    startPlaying() {
+        this.isPlaying = true;
+        this.noteTexture = this.noteTexture || this.createNoteTexture();
+        this.particles = this.particles || [];
+    }
+
+    stopPlaying() {
+        this.isPlaying = false;
+    }
+
+    spawnNote() {
+        if (!this.noteTexture) return;
+
+        const material = new THREE.SpriteMaterial({
+            map: this.noteTexture,
+            color: new THREE.Color().setHSL(Math.random(), 1.0, 0.5), // Random Hue
+            transparent: true,
+            opacity: 1.0
+        });
+
+        const sprite = new THREE.Sprite(material);
+        // Start near the vinyl center
+        // Vinyl is at 0, 0.85 + 0.12 = 0.97 in Group local space
+        // And Group is at 0, 0, 0 relative to Mesh? 
+        // Note: The whole RecordPlayerTable mesh is a Group.
+        // It has a 'playerGroup' at 0, 0.85, 0 but that is internal variable in build().
+        // We need to add sprites to `this.mesh`.
+        // Platform is roughly at y=0.97.
+        sprite.position.set(
+            (Math.random() - 0.5) * 0.3, // Random X scatter
+            1.0, // Start height
+            (Math.random() - 0.5) * 0.3  // Random Z scatter
+        );
+
+        const scale = 0.1 + Math.random() * 0.1;
+        sprite.scale.set(scale, scale, 1);
+
+        this.mesh.add(sprite);
+
+        this.particles.push({
+            mesh: sprite,
+            life: 2.0, // Seconds
+            velocity: new THREE.Vector3(
+                (Math.random() - 0.5) * 0.2, // Drift X
+                0.2 + Math.random() * 0.3,   // Upward speed
+                (Math.random() - 0.5) * 0.2  // Drift Z
+            )
+        });
+    }
+
+    update(delta) {
+        // Spawn
+        if (this.isPlaying) {
+            // Spawn rate: e.g. every 0.5s or random chance per frame?
+            // Let's say 5% chance per frame at 60fps -> 3 notes/sec
+            if (Math.random() < 0.05) {
+                this.spawnNote();
+            }
+        }
+
+        // Update existings
+        if (this.particles && this.particles.length > 0) {
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.life -= delta;
+
+                // Move
+                p.mesh.position.addScaledVector(p.velocity, delta);
+
+                // Fade
+                p.mesh.material.opacity = Math.max(0, p.life / 2.0); // Simple linear fade
+
+                if (p.life <= 0) {
+                    this.mesh.remove(p.mesh);
+                    this.particles.splice(i, 1);
+                }
+            }
+        }
+    }
+
     clearVinyl() {
         if (this.baseVinylMesh) {
             this.baseVinylMesh.visible = false;
             this.baseLabelMesh.visible = false;
         }
+        this.stopPlaying(); // Also stop particles
     }
 }
 

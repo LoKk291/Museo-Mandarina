@@ -371,6 +371,7 @@ document.addEventListener('click', () => {
                 // Place on Record Player
                 if (world.recordPlayer) {
                     world.recordPlayer.setVinyl(color);
+                    world.recordPlayer.startPlaying();
                 }
 
                 // Logic: ID 1-6 map to "1.mp3" ... "6.mp3"
@@ -384,6 +385,8 @@ document.addEventListener('click', () => {
                         // Clear Record Player
                         if (world.recordPlayer) {
                             world.recordPlayer.clearVinyl();
+                            // stopPlaying is called inside clearVinyl, but good to be explicit/safe or let it be.
+                            // clearVinyl in Furniture.json now calls stopPlaying().
                         }
                     }
                 });
