@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -383,6 +383,23 @@ export class World {
         roomL1.addDoor('North', 4, 3.5); // Conecta con L2
 
         // Cuadros L1 (ELIMINADOS)
+
+        // Marcos para Vinilos (Grid 2x3 en Pared Oeste)
+        // Pared Oeste L1 está en X = -32.5.
+        // Superficie interna ~ -32.25. Frame en -32.2.
+        const frameX = -32.2;
+        const frameZ_Centers = [-1.3, 0, 1.3];
+        const frameY_Centers = [2.5, 1.2]; // Top row, Bottom row
+
+        for (let r = 0; r < 2; r++) {
+            for (let c = 0; c < 3; c++) {
+                const vf = new VinylFrame();
+                vf.setPosition(frameX, frameY_Centers[r], frameZ_Centers[c]);
+                vf.setRotation(Math.PI / 2); // Face East
+                this.scene.add(vf.mesh);
+                // this.interactables.push(vf.mesh); // Future interaction
+            }
+        }
 
         this.addRoom(roomL1, 'L1');
 

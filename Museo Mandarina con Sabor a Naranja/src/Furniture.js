@@ -2880,3 +2880,60 @@ export class MuseumBarrier {
         this.mesh.rotation.y = y;
     }
 }
+
+export class VinylFrame {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Frame Size 1x1m
+        const w = 1.0;
+        const h = 1.0;
+        const thickness = 0.1; // Border thickness
+        const depth = 0.05;
+
+        // Uses 4 bars to make a frame (Empty center)
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0x5C3317, // Chocolate/Baker's Chocolate (Dark Brown)
+            roughness: 0.6
+        });
+
+        // Top
+        const top = new THREE.Mesh(new THREE.BoxGeometry(w, thickness, depth), mat);
+        top.position.y = h / 2 - thickness / 2;
+        this.mesh.add(top);
+
+        // Bottom
+        const bot = new THREE.Mesh(new THREE.BoxGeometry(w, thickness, depth), mat);
+        bot.position.y = -h / 2 + thickness / 2;
+        this.mesh.add(bot);
+
+        // Left
+        const left = new THREE.Mesh(new THREE.BoxGeometry(thickness, h - 2 * thickness, depth), mat);
+        left.position.x = -w / 2 + thickness / 2;
+        this.mesh.add(left);
+
+        // Right
+        const right = new THREE.Mesh(new THREE.BoxGeometry(thickness, h - 2 * thickness, depth), mat);
+        right.position.x = w / 2 - thickness / 2;
+        this.mesh.add(right);
+
+        // Backing (Dark Grey matte)
+        const backCheck = new THREE.Mesh(new THREE.PlaneGeometry(w - thickness * 2, h - thickness * 2), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 }));
+        backCheck.position.z = 0; // Center plane
+        this.mesh.add(backCheck);
+
+        this.mesh.castShadow = true;
+        this.mesh.receiveShadow = true;
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}
