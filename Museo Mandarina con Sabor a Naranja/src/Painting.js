@@ -9,27 +9,115 @@ export class Painting {
         this.description = description || "Descripción pendiente.";
         this.id = id || "?";
 
-        // Geometría del cuadro
-        this.geometry = new THREE.PlaneGeometry(width, height);
+        // Group Container
+        this.mesh = new THREE.Group();
+        this.mesh.castShadow = true;
+        this.mesh.receiveShadow = true;
+        this.mesh.userData.painting = this; // Interaction on the whole group
 
-        // Crear textura con el número
-        const texture = this.createPlaceholderTexture(this.id);
+        // --- 1. Frame (Marco) ---
+        // Extra size for frame
+        const frameThickness = 0.2; // Width of the frame border
+        const frameDepth = 0.08; // How much it sticks out
 
-        this.material = new THREE.MeshStandardMaterial({
-            map: texture,
+        // Frame Geometry (Box)
+        const frameW = this.width + frameThickness;
+        const frameH = this.height + frameThickness;
+        const frameGeo = new THREE.BoxGeometry(frameW, frameH, frameDepth);
+
+        // Frame Texture
+        const frameLoader = new THREE.TextureLoader();
+        const frameTex = frameLoader.load('textures/frame.png');
+        frameTex.colorSpace = THREE.SRGBColorSpace;
+
+        const frameMat = new THREE.MeshStandardMaterial({
+            map: frameTex,
+            roughness: 0.5,
+            metalness: 0.1,
+            color: 0xffffff
+        });
+
+        const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+        frameMesh.position.z = frameDepth / 2; // Sit on wall (z=0) -> center at z/2
+        frameMesh.castShadow = true;
+        frameMesh.receiveShadow = true;
+        this.mesh.add(frameMesh);
+
+        // --- 2. Canvas (Pintura) ---
+        // Sits slightly in front of the frame background?
+        // Or frame acts as border. 
+        // Let's put Canvas 'inside' or on top.
+        // User wants "relief". Frame should be deeper.
+        // Canvas sits at front face of frame??
+        // Let's make Canvas slightly thinner but same Z-front as frame?
+        // Or recessed? Frames usually stick out more than canvas.
+
+        const canvasDepth = 0.02;
+        // Position Z: 
+        // Frame Front is at z = frameDepth (0.08).
+        // Let's put Canvas Front at z = 0.06 (Recessed 2cm)
+        // Canvas Center Z = 0.06 - canvasDepth/2 = 0.05.
+
+        const canvasGeo = new THREE.BoxGeometry(this.width, this.height, canvasDepth);
+
+        // Placeholder Texture
+        const placeholderTex = this.createPlaceholderTexture(this.id);
+        this.canvasMat = new THREE.MeshStandardMaterial({
+            map: placeholderTex,
+            roughness: 0.8,
             side: THREE.FrontSide
         });
 
-        // Si hay una imagen real, intentaríamos cargarla (esto sobreescribiría el mapa si funcionara)
-        // const loader = new THREE.TextureLoader();
-        // const tex = loader.load(imagePath, (t) => { this.material.map = t; this.material.needsUpdate = true; });
+        this.canvasMesh = new THREE.Mesh(canvasGeo, this.canvasMat);
+        // Frame Front Face is at z = frameDepth/2 + frameDepth/2 = frameDepth = 0.08
+        // Wait, BoxGeometry is centered at 0,0,0 local. 
+        // We moved frameMesh to z = frameDepth/2. Front face is at frameDepth.
+        // So Canvas must be at > frameDepth.
+        // Let's set Canvas Z = 0.09.
+        this.canvasMesh.position.z = 0.09;
+        this.canvasMesh.castShadow = true;
+        this.canvasMesh.receiveShadow = true;
+        this.mesh.add(this.canvasMesh);
 
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.mesh.castShadow = true;
-        this.mesh.receiveShadow = true;
+        // Load Real Image
+        if (imagePath && imagePath !== '') {
+            this.loadTextureWithFallback(imagePath);
+        }
+    }
 
-        // Guardar referencia
-        this.mesh.userData.painting = this;
+    loadTextureWithFallback(path) {
+        const loader = new THREE.TextureLoader();
+
+        const onLoad = (t) => {
+            t.colorSpace = THREE.SRGBColorSpace;
+            if (this.canvasMat) {
+                this.canvasMat.map = t;
+                this.canvasMat.needsUpdate = true;
+            }
+        };
+
+        const onError = (originalErr) => {
+            // Determine fallback
+            let fallbackPath = null;
+            const lower = path.toLowerCase();
+
+            if (lower.endsWith('.jpg')) {
+                fallbackPath = path.substring(0, path.length - 4) + '.webp';
+            } else if (lower.endsWith('.webp')) {
+                fallbackPath = path.substring(0, path.length - 5) + '.jpg';
+            }
+
+            if (fallbackPath) {
+                console.log(`[Painting] Primary path failed (${path}), trying fallback: ${fallbackPath}`);
+                loader.load(fallbackPath, onLoad, undefined, (fallbackErr) => {
+                    console.error(`[Painting] Failed to load both ${path} and ${fallbackPath}`);
+                });
+            } else {
+                console.error("Error loading painting:", path, originalErr);
+            }
+        };
+
+        loader.load(path, onLoad, undefined, onError);
     }
 
     createPlaceholderTexture(text) {

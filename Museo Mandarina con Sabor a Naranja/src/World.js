@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -292,7 +292,10 @@ export class World {
         this.scene.add(this.chandelier.mesh);
 
         // Cuadros Central
-        centralRoom.addPaintingToWall('North', 4, 3, '', 'Mona Lisa (Falsa)', 'Una copia muy convincente.', '1', 6, 0);
+        // centralRoom.addPaintingToWall('North', 4, 3, '', 'Mona Lisa (Falsa)', 'Una copia muy convincente.', '1', 6, 0);
+
+        // Placeholder Grande 14 (Pared Oeste, Lado Sur)
+        centralRoom.addPaintingToWall('West', 3, 3, 'cuadros/14.jpg', 'P-14', 'Cuadro 14', 'Grande', -5, 0);
 
         // Puerta Principal (Sur)
         centralRoom.addDoor('South', 4, 3.5);
@@ -318,6 +321,22 @@ export class World {
         const flowerBoxL = new WindowFlowerBox(2.2);
         flowerBoxL.mesh.position.set(-6, 0.6, 10.4);
         this.scene.add(flowerBoxL.mesh);
+
+        // Mesa Cruzada con Jarron (Esquina SW)
+        const cornerTable = new CornerTable();
+        cornerTable.setPosition(-9, 0, 9);
+        this.scene.add(cornerTable.mesh);
+        this.interactables.push(cornerTable.mesh); // In case we add interaction later
+
+        const vase = new OrchidPot();
+        // Table Height 0.7. Pot needs to sit on top.
+        // OrchidPot.build sets y=0.2 (floor sit). To sit on 0.7, we need to add 0.7 - 0.2? No.
+        // OrchidPot is built at local 0,0,0 range.
+        // We set vase.mesh.position.
+        // If vase sits on floor (y=0), elements are at +y.
+        // If we put it at y=0.7, it sits on table.
+        vase.mesh.position.set(-9, 0.7, 9);
+        this.scene.add(vase.mesh);
 
         const flowerBoxR = new WindowFlowerBox(2.2);
         flowerBoxR.mesh.position.set(6, 0.6, 10.4);
@@ -347,9 +366,7 @@ export class World {
         roomL1.addDoor('East', 4, 3.5); // Conecta con Recepción
         roomL1.addDoor('North', 4, 3.5); // Conecta con L2
 
-        // Cuadros L1
-        roomL1.addPaintingToWall('West', 3, 3, '', 'Ocaso', 'El sol poniéndose.', '3');
-        roomL1.addPaintingToWall('South', 2, 2, '', 'Manzana', 'Roja y brillante.', '4');
+        // Cuadros L1 (ELIMINADOS)
 
         this.addRoom(roomL1, 'L1');
 
@@ -366,7 +383,7 @@ export class World {
         roomL2.addDoor('South', 4, 3.5); // Conecta con L1
         roomL2.addDoor('North', 4, 3.5); // Conecta con L3
 
-        roomL2.addPaintingToWall('West', 4, 3, '', 'Bosque', 'Árboles antiguos.', '8');
+        // Cuadros L2 (ELIMINADOS)
 
         this.addRoom(roomL2, 'L2');
 
@@ -391,7 +408,7 @@ export class World {
         roomL3.addDoor('South', 4, 3.5); // Conecta con L2
         // Room final, sin puerta norte
 
-        roomL3.addPaintingToWall('North', 3, 4, '', 'Montaña', 'Pico nevado.', '9');
+        // Cuadros L3 (ELIMINADOS)
 
         this.addRoom(roomL3, 'L3');
 
@@ -412,8 +429,15 @@ export class World {
         roomR1.addDoor('West', 4, 3.5); // Conecta con Recepción
         roomR1.addDoor('North', 4, 3.5); // Conecta con R2
 
-        roomR1.addPaintingToWall('South', 3, 3, '', 'Abstracto', 'Formas y colores.', '6');
-        roomR1.addPaintingToWall('East', 2, 4, '', 'Retrato', 'Un señor serio.', '7');
+        // Distribución R1 (5 Cuadros)
+        // Pared Sur (3 cuadros)
+        roomR1.addPaintingToWall('South', 2, 2, 'cuadros/1.jpg', 'P-01', 'Espacio para Cuadro 1', 'Pendiente de asignar');
+        roomR1.addPaintingToWall('South', 2, 2, 'cuadros/2.jpg', 'P-02', 'Espacio para Cuadro 2', 'Pendiente de asignar', 3, 0); // Offset Right
+        roomR1.addPaintingToWall('South', 2, 2, 'cuadros/3.jpg', 'P-03', 'Espacio para Cuadro 3', 'Pendiente de asignar', -3, 0); // Offset Left
+
+        // Pared Este (2 cuadros)
+        roomR1.addPaintingToWall('East', 3, 3, 'cuadros/4.jpg', 'P-04', 'Espacio para Cuadro 4', 'Pendiente de asignar', 2, 0);
+        roomR1.addPaintingToWall('East', 2, 2, 'cuadros/5.jpg', 'P-05', 'Espacio para Cuadro 5', 'Pendiente de asignar', -3, 0);
 
         this.addRoom(roomR1, 'R1');
 
@@ -429,7 +453,13 @@ export class World {
         roomR2.addDoor('South', 4, 3.5); // Conecta con R1
         roomR2.addDoor('North', 4, 3.5); // Conecta con R3
 
-        roomR2.addPaintingToWall('East', 4, 3, '', 'Playa', 'Arena y mar.', '10');
+        // Distribución R2 (4 Cuadros)
+        // Pared Este (2 cuadros)
+        roomR2.addPaintingToWall('East', 3, 3, 'cuadros/6.jpg', 'P-06', 'Espacio para Cuadro 6', 'Pendiente de asignar', 2, 0);
+        roomR2.addPaintingToWall('East', 3, 3, 'cuadros/7.jpg', 'P-07', 'Espacio para Cuadro 7', 'Pendiente de asignar', -2, 0);
+        // Pared Oeste (2 cuadros)
+        roomR2.addPaintingToWall('West', 3, 3, 'cuadros/8.jpg', 'P-08', 'Espacio para Cuadro 8', 'Pendiente de asignar', 2, 0);
+        roomR2.addPaintingToWall('West', 3, 3, 'cuadros/9.jpg', 'P-09', 'Espacio para Cuadro 9', 'Pendiente de asignar', -2, 0);
 
         this.addRoom(roomR2, 'R2');
 
@@ -444,8 +474,14 @@ export class World {
         const roomR3 = new Room(this.scene, 25, -50, 15, 15, 0xF5F5DC);
         roomR3.addDoor('South', 4, 3.5); // Conecta con R2
 
-        // Movido 'El Grito' aquí
-        roomR3.addPaintingToWall('North', 3, 4, '', 'El Grito (Silencioso)', 'Un clásico.', '2');
+        // Distribución R3 (4 Cuadros)
+        // Pared Norte (2 cuadros)
+        roomR3.addPaintingToWall('North', 2.5, 2.5, 'cuadros/10.jpg', 'P-10', 'Espacio para Cuadro 10', 'Pendiente de asignar', 2, 0);
+        roomR3.addPaintingToWall('North', 2.5, 2.5, 'cuadros/11.jpg', 'P-11', 'Espacio para Cuadro 11', 'Pendiente de asignar', -2, 0);
+        // Pared Este (1 cuadro)
+        roomR3.addPaintingToWall('East', 3, 4, 'cuadros/12.jpg', 'P-12', 'Espacio para Cuadro 12', 'Pendiente de asignar');
+        // Pared Oeste (1 cuadro)
+        roomR3.addPaintingToWall('West', 3, 4, 'cuadros/13.jpg', 'P-13', 'Espacio para Cuadro 13', 'Pendiente de asignar');
 
         this.addRoom(roomR3, 'R3');
 

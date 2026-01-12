@@ -2659,3 +2659,61 @@ export class Globe {
         this.mesh.position.set(x, y, z);
     }
 }
+
+export class CornerTable {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        const height = 0.7;
+        const radius = 0.6;
+
+        const woodMat = new THREE.MeshStandardMaterial({
+            color: 0x4a1810,
+            roughness: 0.5,
+            metalness: 0.1
+        });
+
+        // Top
+        const topGeo = new THREE.CylinderGeometry(radius, radius, 0.05, 32);
+        const top = new THREE.Mesh(topGeo, woodMat);
+        top.position.y = height;
+        top.castShadow = true;
+        top.receiveShadow = true;
+        this.mesh.add(top);
+
+        // Pillar
+        const pillarGeo = new THREE.CylinderGeometry(0.1, 0.1, height, 16);
+        const pillar = new THREE.Mesh(pillarGeo, woodMat);
+        pillar.position.y = height / 2;
+        pillar.castShadow = true;
+        this.mesh.add(pillar);
+
+        // Cross Base
+        const footW = 1.0;
+        const footH = 0.05;
+        const footD = 0.1;
+
+        const foot1 = new THREE.Mesh(new THREE.BoxGeometry(footW, footH, footD), woodMat);
+        foot1.position.y = footH / 2;
+        this.mesh.add(foot1);
+
+        const foot2 = new THREE.Mesh(new THREE.BoxGeometry(footW, footH, footD), woodMat);
+        foot2.position.y = footH / 2;
+        foot2.rotation.y = Math.PI / 2;
+        this.mesh.add(foot2);
+
+        // Ring Detail
+        const ringGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16);
+        const ring = new THREE.Mesh(ringGeo, woodMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = height - 0.1;
+        this.mesh.add(ring);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+}
