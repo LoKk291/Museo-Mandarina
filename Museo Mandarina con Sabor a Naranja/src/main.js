@@ -286,6 +286,7 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'desk-lamp') {
                 soundManager.play('switch');
                 hitObject.userData.parentObj.toggle();
+            } else if (hitObject.userData.type === 'sparrow') {
                 soundManager.play('click');
                 const sparrow = hitObject.userData.parentObj;
                 if (sparrow.chirp) sparrow.chirp(0); // Play chirp locally
@@ -301,6 +302,10 @@ document.addEventListener('click', () => {
                 window.sparrowTimeout = setTimeout(() => {
                     dialogEl.classList.add('hidden');
                 }, 8000);
+            } else if (hitObject.userData.type === 'drawer') {
+                // Drawer Interaction
+                // soundManager.play('drawer_open'); // Need sound? Use simple click for now.
+                hitObject.userData.parentObj.toggle();
             } else if (hitObject.userData.type === 'paper-stack') {
                 soundManager.play('click'); // Paper sound would be better, using click for now
                 isModalOpen = true;

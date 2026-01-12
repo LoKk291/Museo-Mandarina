@@ -127,6 +127,12 @@ export class World {
         desk.setPosition(0, 0, -6.0);
         desk.setRotation(Math.PI);
         this.scene.add(desk.mesh);
+        this.desk = desk; // Keep reference for update
+        if (this.desk.drawers) {
+            this.desk.drawers.forEach(d => {
+                this.interactables.push(d.interactableMesh);
+            });
+        }
 
         // Computadora Retro
         const pc = new RetroComputer();
@@ -623,6 +629,7 @@ export class World {
 
     update(delta, time, camera) {
         // Update Components
+        if (this.desk) this.desk.update(delta);
         if (this.chandelier) this.chandelier.update(delta);
         if (this.mainDoor) this.mainDoor.update(delta);
         if (this.sparrow) this.sparrow.update(delta, camera);

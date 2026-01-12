@@ -1,5 +1,170 @@
 ﻿import * as THREE from 'three';
 
+export class GoldenKey {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xFFD700, // Gold
+            metalness: 1.0,
+            roughness: 0.2
+        });
+
+        // Head (Ring)
+        const headGeo = new THREE.TorusGeometry(0.015, 0.005, 8, 16);
+        const head = new THREE.Mesh(headGeo, material);
+        head.position.z = 0.04;
+        this.mesh.add(head);
+
+        // Shaft
+        const shaftGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.05, 8);
+        const shaft = new THREE.Mesh(shaftGeo, material);
+        shaft.rotation.x = Math.PI / 2;
+        this.mesh.add(shaft);
+
+        // Teeth
+        const toothGeo = new THREE.BoxGeometry(0.005, 0.01, 0.01);
+        const tooth1 = new THREE.Mesh(toothGeo, material);
+        tooth1.position.set(0, -0.005, -0.015);
+        this.mesh.add(tooth1);
+
+        const tooth2 = new THREE.Mesh(toothGeo, material);
+        tooth2.position.set(0, -0.005, -0.005);
+        this.mesh.add(tooth2);
+
+        this.mesh.castShadow = true;
+    }
+}
+
+export class Drawer {
+    constructor(width, height, depth, color) {
+        this.width = width;
+        this.height = height;
+        this.depth = depth;
+        this.color = color;
+        this.mesh = new THREE.Group();
+        this.isOpen = false;
+
+        // Animation
+        this.currentOffset = 0;
+        this.targetOffset = 0;
+        this.speed = 2.0;
+
+        // Slide Axis and Direction (Local)
+        // Default slide: +Z
+        this.slideAxis = new THREE.Vector3(0, 0, 1);
+
+        this.items = new THREE.Group();
+        this.mesh.add(this.items);
+
+        this.build();
+    }
+
+    build() {
+        const thickness = 0.02;
+        const woodMat = new THREE.MeshStandardMaterial({
+            color: this.color,
+            roughness: 0.5,
+            metalness: 0.1
+        });
+
+        // 1. Front Face
+        const frontGeo = new THREE.BoxGeometry(this.width, this.height, thickness);
+        const front = new THREE.Mesh(frontGeo, woodMat);
+        front.position.z = this.depth / 2 - thickness / 2;
+        front.castShadow = true;
+        front.receiveShadow = true;
+        this.mesh.add(front);
+
+        // 2. Bottom
+        const bottomGeo = new THREE.BoxGeometry(this.width - thickness * 2, thickness, this.depth - thickness);
+        const bottom = new THREE.Mesh(bottomGeo, woodMat);
+        bottom.position.y = -this.height / 2 + thickness / 2;
+        bottom.position.z = -thickness / 2;
+        this.mesh.add(bottom);
+
+        // 3. Back
+        const backGeo = new THREE.BoxGeometry(this.width - thickness * 2, this.height - thickness, thickness);
+        const back = new THREE.Mesh(backGeo, woodMat);
+        back.position.y = thickness / 2; // Offset up cause bottom exists
+        back.position.z = -this.depth / 2 + thickness / 2;
+        this.mesh.add(back);
+
+        // 4. Sides (Left/Right)
+        const sideGeo = new THREE.BoxGeometry(thickness, this.height - thickness, this.depth - thickness);
+
+        const left = new THREE.Mesh(sideGeo, woodMat);
+        left.position.set(-this.width / 2 + thickness / 2, thickness / 2, -thickness / 2);
+        this.mesh.add(left);
+
+        const right = new THREE.Mesh(sideGeo, woodMat);
+        right.position.set(this.width / 2 - thickness / 2, thickness / 2, -thickness / 2);
+        this.mesh.add(right);
+
+        // 5. Handle
+        const handleGeo = new THREE.BoxGeometry(0.12, 0.02, 0.02);
+        const metalMat = new THREE.MeshStandardMaterial({
+            color: 0x222222,
+            roughness: 0.4,
+            metalness: 0.6
+        });
+        const handle = new THREE.Mesh(handleGeo, metalMat);
+        handle.position.set(0, 0, this.depth / 2 + 0.01);
+        this.mesh.add(handle);
+
+        // 6. Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(this.width, this.height, 0.1);
+        const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+        const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+        hitBox.position.z = this.depth / 2 + 0.02;
+        hitBox.userData = { type: 'drawer', parentObj: this };
+        this.mesh.add(hitBox);
+        this.interactableMesh = hitBox;
+    }
+
+    addItem(itemMesh) {
+        this.items.add(itemMesh);
+    }
+
+    toggle() {
+        this.isOpen = !this.isOpen;
+        this.targetOffset = this.isOpen ? this.depth * 0.8 : 0;
+    }
+
+    // Must be called by parent Desk
+    update(delta) {
+        if (Math.abs(this.currentOffset - this.targetOffset) > 0.001) {
+            const dir = Math.sign(this.targetOffset - this.currentOffset);
+            const move = dir * this.speed * delta;
+
+            // Clamp
+            if (dir > 0 && this.currentOffset + move > this.targetOffset) {
+                this.currentOffset = this.targetOffset;
+            } else if (dir < 0 && this.currentOffset + move < this.targetOffset) {
+                this.currentOffset = this.targetOffset;
+            } else {
+                this.currentOffset += move;
+            }
+
+            // Apply to position along slideAxis
+            // We assume slideAxis is Z for a drawer usually.
+            // But if the drawer is rotated in the desk, we just move Z locally?
+            // Yes, standard is move along local Z.
+            this.mesh.position.z = this.originalZ + this.currentOffset;
+        }
+    }
+
+    setOriginalZ(z) {
+        this.originalZ = z;
+        this.mesh.position.z = z;
+    }
+}
+
+
+
 export class Desk {
     constructor(width = 3.5, depth = 1.2, height = 0.8) {
         this.width = width;
@@ -99,21 +264,20 @@ export class Desk {
         // Se eliminan de aquÃ­ para no quedar tapados.
         const handleGeo = new THREE.BoxGeometry(0.12, 0.02, 0.02);
 
+        this.drawers = []; // Store drawer references
+
         // --- 3. U-Shape Wings (Extensiones Laterales) ---
         // Extend backwards (Local +Z)
         const wingWidth = 0.8;
         const wingDepth = 1.5;
         const wingGeo = new THREE.BoxGeometry(wingWidth, topThickness, wingDepth);
-        const wingCabinetGeo = new THREE.BoxGeometry(wingWidth, cabinetHeight, wingDepth - 0.2);
+        // Removed solid cabinet geo, will use Drawers instad.
+        // const wingCabinetGeo = new THREE.BoxGeometry(wingWidth, cabinetHeight, wingDepth - 0.2);
 
         // Common Z position: Starts at half depth of main desk + half depth of wing
-        // Main Desk Z range: [-depth/2, depth/2]
-        // We want to attach at +depth/2 and go +Z.
-        // Center Z = depth/2 + wingDepth/2.
         const wingZ = this.depth / 2 + wingDepth / 2 - 0.01; // -0.01 overlap
 
         // Left Wing (at -X edge)
-        // Center X = -this.width/2 + wingWidth/2
         const wingX_Left = -this.width / 2 + wingWidth / 2;
 
         const leftWingTop = new THREE.Mesh(wingGeo, woodMat);
@@ -122,11 +286,12 @@ export class Desk {
         leftWingTop.receiveShadow = true;
         this.mesh.add(leftWingTop);
 
-        const leftWingCab = new THREE.Mesh(wingCabinetGeo, woodMat);
-        leftWingCab.position.set(wingX_Left, cabinetHeight / 2, wingZ);
-        leftWingCab.castShadow = true;
-        leftWingCab.receiveShadow = true;
-        this.mesh.add(leftWingCab);
+        // Frame for Left Wing (Since we removed the solid block, we need a frame or just the drawers)
+        // Let's create a back panel and side panel to hold drawers visually?
+        // Or simplified: Just the drawers stacked.
+        // To avoid "floating" look, let's add a thin frame.
+        // Re-using cabinetGeo but transparent? No.
+        // Let's just place Drawers. The Drawer class has sides/back.
 
         // Right Wing (at +X edge)
         const wingX_Right = this.width / 2 - wingWidth / 2;
@@ -137,41 +302,185 @@ export class Desk {
         rightWingTop.receiveShadow = true;
         this.mesh.add(rightWingTop);
 
-        const rightWingCab = new THREE.Mesh(wingCabinetGeo, woodMat);
-        rightWingCab.position.set(wingX_Right, cabinetHeight / 2, wingZ);
-        rightWingCab.castShadow = true;
-        rightWingCab.receiveShadow = true;
-        this.mesh.add(rightWingCab);
+        // --- Wing Enclosures (Hollow Cabinets) ---
+        // To hide drawer contents, we need panels: Back, Bottom, Outer Side, Inner Side.
+        const wCabH = cabinetHeight;
+        const wCabD = wingDepth - 0.2; // Same as old solid block
+        const wCabW = wingWidth;
+        const panelThick = 0.02;
 
-        // --- Cajones en Wings (Accesibles desde adentro) ---
-        // Inner Face of Left Wing is +X direction relative to Left Wing center.
-        // Inner Face of Right Wing is -X direction relative to Right Wing center.
-        // Rotation Y to align handle with face.
+        // Shared Geometries
+        // Back Panel (Vertical plane at -Z local relative to wing center)
+        const backPanelGeo = new THREE.BoxGeometry(wCabW, wCabH, panelThick);
+        // Bottom Panel
+        const botPanelGeo = new THREE.BoxGeometry(wCabW, panelThick, wCabD);
+        // Side Panels
+        const sidePanelGeo = new THREE.BoxGeometry(panelThick, wCabH, wCabD);
+
+        // Helper to build enclosure
+        const buildEnclosure = (x, z) => {
+            const group = new THREE.Group();
+            group.position.set(x, wCabH / 2, z); // Center of cabinet volume
+
+            // Back Panel (At rear) -> Local +Z is "back" of the desk extension? 
+            // Desk Extension extends +Z relative to desk.
+            // "Back" of the extension is at +Z limit.
+            // Drawer slides from Front (near desk) to Back? No, slides out to Side.
+            // Wait.
+            // Left Wing Drawers: Face Inner (+X). Slide towards center.
+            // Right Wing Drawers: Face Inner (-X). Slide towards center.
+            // So "Back" of the drawer is at Outer Side.
+            // "Front" of the drawer is at Inner Side.
+
+            // So the Enclosure needs:
+            // 1. Top (Provided by desk Top)
+            // 2. Bottom
+            // 3. Back (Away from user, +Z?) No.
+            // The "Cabinet" is the volume under the wing.
+            // Drawers slide sideways.
+
+            // So the "Back" of the cabinet is the side furthest from center? (Outer Side)
+            // Yes.
+            // Left Wing Outer Side: -X side of the wing.
+            // Left Wing Inner Side: +X side (Where drawers open).
+
+            // Panels needed for Left Wing:
+            // 1. Outer Side (Leftmost).
+            // 2. Rear Side (Towards Visitor, -Z local? Or +Z?).
+            // 3. Front Side (Towards Desk, -Z local?).
+            // 4. Bottom.
+
+            // Wing extends from Desk (Z=0 approx) to Z=1.5 approx.
+            // Let's cover all except the "Face" where drawers are.
+
+            // Bottom
+            const bot = new THREE.Mesh(botPanelGeo, woodMat);
+            bot.position.y = -wCabH / 2 + panelThick / 2;
+            group.add(bot);
+
+            // Rear (Far Z)
+            const rear = new THREE.Mesh(backPanelGeo, woodMat);
+            rear.position.z = wCabD / 2 - panelThick / 2;
+            group.add(rear);
+
+            // Front (Near Z)
+            const front = new THREE.Mesh(backPanelGeo, woodMat);
+            front.position.z = -wCabD / 2 + panelThick / 2;
+            group.add(front);
+
+            return group;
+        };
+
+        // Left Wing Enclosure
+        // Needs Outer Side (Left) closed. Inner (Right) open.
+        const leftEnc = buildEnclosure(wingX_Left, wingZ);
+        const leftOuter = new THREE.Mesh(sidePanelGeo, woodMat);
+        leftOuter.position.x = -wCabW / 2 + panelThick / 2; // Left side
+        leftEnc.add(leftOuter);
+        this.mesh.add(leftEnc);
+
+        // Right Wing Enclosure
+        // Needs Outer Side (Right) closed. Inner (Left) open.
+        const rightEnc = buildEnclosure(wingX_Right, wingZ);
+        const rightOuter = new THREE.Mesh(sidePanelGeo, woodMat);
+        rightOuter.position.x = wCabW / 2 - panelThick / 2; // Right side
+        rightEnc.add(rightOuter);
+        this.mesh.add(rightEnc);
+
+
+        // --- Cajones en Wings (Interactive) ---
+        // Dimensions Logic:
+        // Drawer is rotated 90deg. 
+        // Drawer.width (local X) -> Aligns with Global Z (Wing Length).
+        // Drawer.depth (local Z) -> Aligns with Global X (Wing Width/Depth).
+        // User wants "fill toda la longitud" -> Fill Global Z.
+
+        // Cabinet Enclosure Z-Length = wCabD = 1.3.
+        // We want Drawer Width to fill this minus small margin.
+        const dW = wCabD - 0.04; // 1.26
+
+        // Height: 3 Drawers to fill cabinetHeight.
+        const dH = cabinetHeight / 3; // No gap calculation effectively
+        // To visualize separation, we rely on the drawer bezel/thickness or add tiny gap.
+        // Let's use exact division but render slightly smaller box? 
+        // Or just subtrace 0.005.
+        const dH_Real = dH - 0.005;
+
+        // Depth (Global X): User wanted "menos largo", but "no espacios".
+        // The "espacios" were likely Z-gaps.
+        // Drawer Depth 0.6 is fine for containment.
+        // But we must POSITION it flush with the face.
+        const dD = 0.6;
+
+        // Colors
+        const drawerColor = 0x4a1810;
 
         for (let i = 0; i < 3; i++) {
-            const y = cabinetHeight * 0.8 - (i * 0.2);
+            // Y Position:
+            // Top of cabinet space = cabinetHeight.
+            // i=0 (Top) -> Center at cabinetHeight - dH/2.
+            const y = cabinetHeight - (i * dH) - dH / 2;
 
-            // Left Wing Drawers (Inner Face = +X)
-            const hL = new THREE.Mesh(handleGeo, metalMat);
-            // x = center + width/2 + offset
-            hL.position.set(
-                wingX_Left + wingWidth / 2 + 0.01,
-                y,
-                wingZ
-            );
-            hL.rotation.y = Math.PI / 2; // Face inside
-            this.mesh.add(hL);
+            // --- Left Wing Drawers ---
+            // Face +X.
+            // Flush with Inner Face (X = wingX_Left + wingWidth/2).
+            // Drawer Local Front is at +dD/2.
+            // Rotated +90 (Y), Local Front (+Z) points +X.
+            // So Global X of Front = CenterX + dD/2.
+            // Eq: CenterX + dD/2 = wingX_Left + wingWidth/2.
+            // CenterX = wingX_Left + wingWidth/2 - dD/2.
 
-            // Right Wing Drawers (Inner Face = -X)
-            const hR = new THREE.Mesh(handleGeo, metalMat);
-            // x = center - width/2 - offset
-            hR.position.set(
-                wingX_Right - wingWidth / 2 - 0.01,
-                y,
-                wingZ
-            );
-            hR.rotation.y = -Math.PI / 2; // Face inside
-            this.mesh.add(hR);
+            // Adjust for enclosure thickness? Enclosure is open on Inner side.
+            // "wingWidth/2" is the theoretical edge of the 0.8 block.
+            // Enclosure panels are inside? No, let's assume Flush to theoretical edge.
+            const xPos_L = wingX_Left + wingWidth / 2 - dD / 2; // - 0.01 margin?
+
+            const drawerL = new Drawer(dW, dH_Real, dD, drawerColor);
+            drawerL.mesh.position.set(xPos_L, y, wingZ);
+            drawerL.mesh.rotation.y = Math.PI / 2;
+
+            // Add Wrapper
+            const wrapperL = new THREE.Group();
+            wrapperL.position.set(xPos_L, y, wingZ);
+            wrapperL.rotation.y = Math.PI / 2;
+            this.mesh.add(wrapperL);
+
+            // Reset Drawer Local Pos
+            drawerL.mesh.position.set(0, 0, 0);
+            wrapperL.add(drawerL.mesh);
+            drawerL.setOriginalZ(0);
+            this.drawers.push(drawerL);
+
+
+            // --- Right Wing Drawers ---
+            // Face -X.
+            // Flush with Inner Face (X = wingX_Right - wingWidth/2).
+            // Drawer Local Front at +dD/2.
+            // Rotated -90 (Y), Local Front points -X.
+            // Global X of Front = CenterX - dD/2.
+            // Eq: CenterX - dD/2 = wingX_Right - wingWidth/2.
+            // CenterX = wingX_Right - wingWidth/2 + dD/2.
+
+            const xPos_R = wingX_Right - wingWidth / 2 + dD / 2;
+
+            const drawerR = new Drawer(dW, dH_Real, dD, drawerColor);
+            const wrapperR = new THREE.Group();
+            wrapperR.position.set(xPos_R, y, wingZ);
+            wrapperR.rotation.y = -Math.PI / 2;
+            this.mesh.add(wrapperR);
+
+            drawerR.mesh.position.set(0, 0, 0);
+            wrapperR.add(drawerR.mesh);
+            drawerR.setOriginalZ(0);
+            this.drawers.push(drawerR);
+
+            // Add Items (Key)
+            if (i === 1) { // Middle
+                const key = new GoldenKey();
+                key.mesh.position.set(0, -dH_Real / 2 + 0.05, 0);
+                key.mesh.rotation.y = Math.PI / 4;
+                drawerL.addItem(key.mesh);
+            }
         }
     }
 
@@ -181,6 +490,10 @@ export class Desk {
 
     setRotation(y) {
         this.mesh.rotation.y = y;
+    }
+
+    update(delta) {
+        this.drawers.forEach(d => d.update(delta));
     }
 }
 
@@ -1990,3 +2303,4 @@ export class PaperStack {
         this.mesh.rotation.y = y;
     }
 }
+
