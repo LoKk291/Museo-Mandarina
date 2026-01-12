@@ -227,6 +227,169 @@ export class SecretNote {
     }
 }
 
+export class Statue {
+    constructor(type = 'generic') {
+        this.type = type; // 'aphrodite' or 'athena'
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Marble Material
+        const marbleMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff, // White marble
+            roughness: 0.3, // Polished but old
+            metalness: 0.1
+        });
+
+        // Base (Pedestal) - Common
+        const baseGeo = new THREE.BoxGeometry(0.8, 1.0, 0.8);
+        const base = new THREE.Mesh(baseGeo, marbleMat);
+        base.position.y = 0.5;
+        base.castShadow = true;
+        base.receiveShadow = true;
+        this.mesh.add(base);
+
+        const bodyGroup = new THREE.Group();
+        bodyGroup.position.y = 1.0; // On top of pedestal
+        this.mesh.add(bodyGroup);
+
+        if (this.type === 'aphrodite') {
+            this.buildAphrodite(bodyGroup, marbleMat);
+        } else if (this.type === 'athena') {
+            this.buildAthena(bodyGroup, marbleMat);
+        } else {
+            // Fallback Generic
+            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.2, 0.8, 8), marbleMat);
+            torso.position.y = 0.4;
+            bodyGroup.add(torso);
+        }
+    }
+
+    buildAphrodite(group, mat) {
+        // "Venus de Milo" Style - Curvy, draped hips, S-curve
+
+        // Hips (Draped)
+        const hipsGeo = new THREE.CylinderGeometry(0.26, 0.28, 0.5, 12);
+        const hips = new THREE.Mesh(hipsGeo, mat);
+        hips.position.y = 0.25;
+        group.add(hips);
+
+        // Drapes (Torus loops around hips)
+        const drapeGeo = new THREE.TorusGeometry(0.3, 0.08, 8, 16);
+        const drape = new THREE.Mesh(drapeGeo, mat);
+        drape.rotation.x = Math.PI / 2;
+        drape.rotation.y = 0.2; // Tilt
+        drape.position.y = 0.15;
+        group.add(drape);
+
+        // Torso (Upper body, tilted)
+        const torsoGeo = new THREE.CylinderGeometry(0.24, 0.22, 0.5, 12);
+        const torso = new THREE.Mesh(torsoGeo, mat);
+        torso.position.set(0.02, 0.7, 0);
+        torso.rotation.z = -0.1; // Contrapposto tilt
+        group.add(torso);
+
+        // Chest
+        const chestGeo = new THREE.SphereGeometry(0.23, 12, 12);
+        const chest = new THREE.Mesh(chestGeo, mat);
+        chest.position.set(0.03, 0.95, 0);
+        group.add(chest);
+
+        // Head
+        const headGeo = new THREE.SphereGeometry(0.14, 12, 12);
+        const head = new THREE.Mesh(headGeo, mat);
+        head.position.set(0, 1.25, 0.05);
+        head.rotation.y = 0.5; // Looking side
+        group.add(head);
+
+        // Hair (Bun)
+        const bunGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const bun = new THREE.Mesh(bunGeo, mat);
+        bun.position.set(0, 1.3, -0.08);
+        group.add(bun);
+
+        // Arms (Venus Pudica - One across, one holding cloth? Or Milo - broken?)
+        // Let's do Milo (No arms) or just stubs? User asked for Aphrodite.
+        // Let's add partial arms.
+
+        // R Arm (Upper)
+        const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4), mat);
+        armR.position.set(0.28, 0.9, 0);
+        armR.rotation.z = -0.5;
+        group.add(armR);
+
+        // L Arm (Upper)
+        const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4), mat);
+        armL.position.set(-0.28, 0.9, 0);
+        armL.rotation.z = 0.5;
+        group.add(armL);
+    }
+
+    buildAthena(group, mat) {
+        // "Athena Parthenos" Style - Standing straight, Robes, Helmet, Shield, Spear
+
+        // Robes (Columnar)
+        const robeGeo = new THREE.CylinderGeometry(0.25, 0.4, 1.2, 16);
+        const robe = new THREE.Mesh(robeGeo, mat);
+        robe.position.y = 0.6;
+        group.add(robe);
+
+        // Chest/Armor (Aegis)
+        const chestGeo = new THREE.CylinderGeometry(0.28, 0.26, 0.5, 12);
+        const chest = new THREE.Mesh(chestGeo, mat);
+        chest.position.y = 1.3;
+        group.add(chest);
+
+        // Head
+        const headGeo = new THREE.SphereGeometry(0.16, 12, 12);
+        const head = new THREE.Mesh(headGeo, mat);
+        head.position.y = 1.65;
+        group.add(head);
+
+        // Helmet (Corinthian)
+        const helmGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.15, 12); // Cap
+        const helm = new THREE.Mesh(helmGeo, mat);
+        helm.position.y = 1.75;
+        group.add(helm);
+
+        // Crest via Box
+        const crestGeo = new THREE.BoxGeometry(0.05, 0.2, 0.4);
+        const crest = new THREE.Mesh(crestGeo, mat);
+        crest.position.y = 1.9;
+        group.add(crest);
+
+        // Shield (Left Side)
+        const shieldGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 16); // Disk
+        const shield = new THREE.Mesh(shieldGeo, mat);
+        shield.rotation.z = Math.PI / 2;
+        shield.rotation.y = -0.4;
+        shield.position.set(-0.5, 0.6, 0.3); // Leaning against leg
+        group.add(shield);
+
+        // Spear (Right Hand)
+        // Arm R
+        const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.6), mat);
+        armR.position.set(0.35, 1.4, 0.2);
+        armR.rotation.x = -1.0; // Reaching forward/up
+        group.add(armR);
+
+        // Spear Shaft
+        const spearGeo = new THREE.CylinderGeometry(0.015, 0.015, 2.8);
+        const spear = new THREE.Mesh(spearGeo, mat);
+        spear.position.set(0.35, 1.4, 0.2);
+        group.add(spear);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}
+
 export class Desk {
     constructor(width = 3.5, depth = 1.2, height = 0.8) {
         this.width = width;
@@ -2345,3 +2508,59 @@ export class PaperStack {
     }
 }
 
+
+export class WasteBasket {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Simple Wire Mesh Basket or Solid
+        // Let's do a solid dark metal bin
+        const binGeo = new THREE.CylinderGeometry(0.25, 0.2, 0.6, 16, 1, true); // Open top? Side double?
+        // To make it double sided or give thickness, we can use side: DoubleSide
+        const binMat = new THREE.MeshStandardMaterial({
+            color: 0x333333,
+            roughness: 0.7,
+            side: THREE.DoubleSide
+        });
+        const bin = new THREE.Mesh(binGeo, binMat);
+        bin.position.y = 0.3;
+        bin.castShadow = true;
+        this.mesh.add(bin);
+
+        // Bottom
+        const bottomGeo = new THREE.CircleGeometry(0.2, 16);
+        const bottom = new THREE.Mesh(bottomGeo, binMat);
+        bottom.rotation.x = -Math.PI / 2;
+        bottom.position.y = 0; // Base
+        this.mesh.add(bottom);
+
+        // Trash (Paper Balls)
+        const trashMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+        for (let i = 0; i < 5; i++) {
+            const ballGeo = new THREE.DodecahedronGeometry(0.06); // Low poly ball
+            const ball = new THREE.Mesh(ballGeo, trashMat);
+            ball.position.set(
+                (Math.random() - 0.5) * 0.2,
+                0.1 + Math.random() * 0.3,
+                (Math.random() - 0.5) * 0.2
+            );
+            ball.rotation.set(Math.random(), Math.random(), Math.random());
+            this.mesh.add(ball);
+        }
+
+        // Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(0.5, 0.6, 0.5);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.y = 0.3;
+        hitBox.userData = { type: 'waste-basket', parentObj: this };
+        this.interactableMesh = hitBox;
+        this.mesh.add(hitBox);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+}

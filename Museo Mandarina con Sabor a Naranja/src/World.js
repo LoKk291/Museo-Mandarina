@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -143,7 +143,39 @@ export class World {
         pc.setRotation(Math.PI);
         this.scene.add(pc.mesh);
         this.interactables.push(pc.interactableMesh);
-        this.pc = pc;
+        const wasteBasket = new WasteBasket();
+        // Position: Under desk extension (Left Wing).
+        // Left Wing Center X (Global) = 1.85. Z = -7.35.
+        // Let's put it on floor.
+        wasteBasket.setPosition(2.2, 0, -6.5);
+        this.scene.add(wasteBasket.mesh);
+        this.interactables.push(wasteBasket.interactableMesh);
+
+        // --- ESTATUAS (Afrodita & Atenea) ---
+        // Clock is presumably on North Wall (Z = -10).
+        // Desk is at Z = -6.
+        // Statues should be against the wall, flanking the clock?
+
+        // Afrodita (Izquierda del reloj, mirando al frente)
+        // Clock is at 0 (X). Left is -X (West) or +X (East)?
+        // User view (Facing North): Left is West (-X).
+
+        // --- ADDING STATUES ---
+        // We will assume Statue is imported or available via the bundle if I add it to import list.
+        // I need to update the import statement at top of file separately if I can't do it here. 
+        // I will do it in a separate step to be safe, or just assume the previous replace handled imports? 
+        // No, I need to update imports.
+        // I'll add the code here and then update imports.
+
+        const aphrodite = new Statue('aphrodite');
+        aphrodite.setPosition(-6, 0, -9.0); // Left, Back
+        aphrodite.setRotation(Math.PI / 4); // Angled towards center
+        this.scene.add(aphrodite.mesh);
+
+        const athena = new Statue('athena');
+        athena.setPosition(6, 0, -9.0); // Right, Back
+        athena.setRotation(-Math.PI / 4); // Angled towards center
+        this.scene.add(athena.mesh);
 
         // Lámpara de Escritorio
         const deskLamp = new DeskLamp();
