@@ -512,14 +512,24 @@ ponyClose.onclick = () => {
 
 function loadRandomEpisode() {
     ponyPlaceholder.style.display = 'block';
-    // Playlist ID for MLP FiM
-    const playlistId = 'PLKw8kqfW5YzKkIvaKHKqrW1Uzm0TQZWeH';
-    // Random index between 1 and 200 (Approx episodes available in playlist)
-    const index = Math.floor(Math.random() * 200) + 1;
+    // Playlist ID for MLP FiM (New User Provided)
+    const playlistId = 'PLg1swdOP0g_21X1J2zTOLkTXXDw0fAZJL';
+
+    // Attempt to fix "same sequence" issue.
+    // 1. Reduce range to ensure we don't go out of bounds (which resets to 1).
+    // 2. Add a timestamp to ensure unique URL.
+    const maxEpisodes = 221; // Exact count provided by user
+    const index = Math.floor(Math.random() * maxEpisodes) + 1;
 
     // Embed URL
-    const url = `https://www.youtube.com/embed?listType=playlist&list=${playlistId}&index=${index}&autoplay=1`;
-    ponyIframe.src = url;
+    // Ensure params are correct.
+    const url = `https://www.youtube.com/embed?listType=playlist&list=${playlistId}&index=${index}&autoplay=1&random=${Date.now()}`;
+
+    // Force reload trick
+    ponyIframe.src = "";
+    setTimeout(() => {
+        ponyIframe.src = url;
+    }, 100);
 
     setTimeout(() => {
         ponyPlaceholder.style.display = 'none';
