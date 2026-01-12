@@ -962,32 +962,44 @@ function processCommand(cmd) {
 
 function openModal(paintingData) {
     isModalOpen = true;
-    player.unlock(); // Soltar el mouse
-
-    // Ocultar instrucciones que aparecen al desbloquear
+    player.unlock();
     document.getElementById('instructions').style.display = 'none';
 
-    // Llenar datos
-    modalTitle.textContent = paintingData.title;
-    modalText.textContent = paintingData.description;
+    // Letter Data (Defaults if missing)
+    const data = paintingData.letterData || {
+        title: "Carta Generica",
+        place: "Lugar Desconocido",
+        date: "00/00/00",
+        body: "Texto no disponible.",
+        signature: "Anónimo"
+    };
 
-    // Si tuviera imagen real:
-    // modalImage.src = paintingData.imagePath;
-    // Como es placeholder, generamos un color o placeholder visual
-    modalImage.style.backgroundColor = '#' + paintingData.material.color.getHexString();
-    modalImage.src = ''; // Limpiar src anterior o poner un placeholder transparente
+    // Populate Letter Overlay
+    document.getElementById('letter-title').textContent = data.title;
 
-    paintingModal.classList.remove('hidden');
+    // Combine Place and Date
+    document.getElementById('letter-date').textContent = `${data.place}          ${data.date}`;
+
+    // Body and Signature
+    const bodyContainer = document.getElementById('letter-body');
+    bodyContainer.innerHTML = `
+        <p>${data.body}</p>
+        <p style="text-align: right; margin-top: 40px; font-style: italic;">${data.signature}</p>
+    `;
+
+    // Show Overlay
+    document.getElementById('letter-overlay').classList.remove('hidden');
 }
 
 function closeModal() {
     isModalOpen = false;
-    paintingModal.classList.add('hidden');
-    // Volver a capturar mouse
+    document.getElementById('painting-modal').classList.add('hidden');
+    document.getElementById('letter-overlay').classList.add('hidden'); // Also close letter
     player.lock();
 }
 
-
+// Close Button for Letter
+document.getElementById('close-letter').onclick = closeModal;
 
 closeModalBtn.onclick = closeModal;
 
@@ -1147,5 +1159,27 @@ if (phoneCallBtn) {
         closePhone(); // Close keyboard to show letter or just show letter over it?
         // If showLetter opens another modal, we might want to close phone first.
         // showLetter acts as an alert here.
+    });
+}
+
+// --- START GAME LOGIC ---
+if (instructions) {
+    instructions.addEventListener('click', () => {
+        player.lock();
+    });
+}
+
+// Update UI based on PointerLock state
+if (player && player.controls) {
+    player.controls.addEventListener('lock', () => {
+        if (instructions) instructions.style.display = 'none';
+    });
+
+    player.controls.addEventListener('unlock', () => {
+        // Show menu implies game paused
+        // Only if NOT inside a modal (PC, Letter, etc)
+        if (!isModalOpen && instructions) {
+            instructions.style.display = 'flex';
+        }
     });
 }

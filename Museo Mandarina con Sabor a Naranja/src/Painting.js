@@ -1,13 +1,22 @@
 import * as THREE from 'three';
 
 export class Painting {
-    constructor(width, height, imagePath, title, description, id) {
+    constructor(width, height, imagePath, title, description, id, letterData = null) {
         this.width = width;
         this.height = height;
         this.imagePath = imagePath;
         this.title = title || "Sin Título";
         this.description = description || "Descripción pendiente.";
         this.id = id || "?";
+
+        // Letter Data (Defaults as requested)
+        this.letterData = letterData || {
+            title: "Carta Generica",
+            place: "Lugar",
+            date: "Fecha",
+            body: "texto general",
+            signature: "firma"
+        };
 
         // Group Container
         this.mesh = new THREE.Group();

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -337,6 +337,22 @@ export class World {
         // If we put it at y=0.7, it sits on table.
         vase.mesh.position.set(-9, 0.7, 9);
         this.scene.add(vase.mesh);
+
+        // Barreras de Museo (Frente a Cuadro 14)
+        // P-14 está en Pared Oeste (X=-10), Z=-5.
+        // Colocamos barrera a X=-8.0, Z=-5. Rotada 90 grados.
+        const barrier = new MuseumBarrier(3.5);
+        barrier.setPosition(-8.5, 0, -5);
+        barrier.setRotation(Math.PI / 2);
+        this.scene.add(barrier.mesh);
+        this.collidables.push(barrier.collidableMesh); // Use the invisible hitbox
+
+        // Replica Barrera (Lado Norte, Z=5)
+        const barrier2 = new MuseumBarrier(3.5);
+        barrier2.setPosition(-8.5, 0, 5);
+        barrier2.setRotation(Math.PI / 2);
+        this.scene.add(barrier2.mesh);
+        this.collidables.push(barrier2.collidableMesh);
 
         const flowerBoxR = new WindowFlowerBox(2.2);
         flowerBoxR.mesh.position.set(6, 0.6, 10.4);

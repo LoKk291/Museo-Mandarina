@@ -194,13 +194,22 @@ export class Player {
     // Retorna el objeto (cuadro) que el jugador está mirando
     getInteractableObject(interactables) {
         this.raycaster.setFromCamera(this.center, this.camera);
-        // Intersección con meshes
-        const intersects = this.raycaster.intersectObjects(interactables, false);
+        // Intersección con meshes (RECURSIVE TRUE to hit children of Groups)
+        const intersects = this.raycaster.intersectObjects(interactables, true);
 
         if (intersects.length > 0) {
-            // Check distancia. Solo si está cerca (< 3 metros)
+            // Check distancia. Solo si está cerca (< 4 metros)
             if (intersects[0].distance < 4) {
-                return intersects[0].object;
+                let obj = intersects[0].object;
+                // Traverse up to find interactable root
+                while (obj) {
+                    if (obj.userData && (obj.userData.type || obj.userData.painting)) {
+                        return obj;
+                    }
+                    // Stop at scene root
+                    if (obj.parent === null || obj.parent.type === 'Scene') break;
+                    obj = obj.parent;
+                }
             }
         }
         return null;

@@ -2293,21 +2293,95 @@ export class OrchidPot {
 
     createFlower(color) {
         const group = new THREE.Group();
-        const petalMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5, side: THREE.DoubleSide });
-        const centerMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, roughness: 0.4 }); // Yellow center
 
-        // 3 Petals
-        for (let i = 0; i < 3; i++) {
-            const petalGeo = new THREE.CircleGeometry(0.08, 5);
-            const petal = new THREE.Mesh(petalGeo, petalMat);
-            petal.rotation.z = (i / 3) * Math.PI * 2;
-            group.add(petal);
-        }
+        // Materials
+        const petalColor = 0xC71585;
 
-        // Center
-        const centerGeo = new THREE.SphereGeometry(0.03, 8, 8);
+        // Front Face Material
+        const petalMatFront = new THREE.MeshStandardMaterial({
+            color: petalColor,
+            roughness: 0.5,
+            side: THREE.FrontSide
+        });
+
+        // Back Face Material
+        const petalMatBack = new THREE.MeshStandardMaterial({
+            color: petalColor,
+            roughness: 0.5,
+            side: THREE.BackSide
+        });
+
+        // White Rim (Middle Layer)
+        const rimMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
+
+        const lipMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.4, side: THREE.DoubleSide });
+        const centerMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, roughness: 0.4 });
+
+        // HELPER: Create Petal Geo (Sandwich Method)
+        const createPetal = (w, h, rotZ, posZ, isSepal = false) => {
+            const geo = new THREE.CircleGeometry(0.05, 8);
+            geo.scale(w, h, 1);
+
+            const wrapper = new THREE.Group();
+            wrapper.rotation.z = rotZ;
+            wrapper.position.z = posZ;
+
+            // 1. Front Magenta Layer
+            const frontMesh = new THREE.Mesh(geo, petalMatFront);
+            frontMesh.position.z = 0.002;
+            wrapper.add(frontMesh);
+
+            // 2. Middle White Rim Layer
+            const rimMesh = new THREE.Mesh(geo, rimMat);
+            rimMesh.scale.set(1.1, 1.1, 1);
+            rimMesh.position.z = 0;
+            wrapper.add(rimMesh);
+
+            // 3. Back Magenta Layer
+            const backMesh = new THREE.Mesh(geo, petalMatBack);
+            backMesh.position.z = -0.002;
+            wrapper.add(backMesh);
+
+            return wrapper;
+        };
+
+        // --- 1. Sepals (3 back petals) ---
+        // Top Sepal
+        const sepalTop = createPetal(1.0, 1.5, 0, 0, true);
+        sepalTop.position.y = 0.03;
+        group.add(sepalTop);
+
+        // Bottom Left/Right Sepals
+        const sepalL = createPetal(1.1, 1.5, 2 * Math.PI / 3, -0.01, true);
+        sepalL.position.set(-0.04, -0.04, 0);
+        group.add(sepalL);
+
+        const sepalR = createPetal(1.1, 1.5, -2 * Math.PI / 3, -0.01, true);
+        sepalR.position.set(0.04, -0.04, 0);
+        group.add(sepalR);
+
+        // --- 2. Petals (2 broad side petals) ---
+        const petalL = createPetal(1.4, 1.4, 0, 0.01);
+        petalL.position.set(-0.06, 0.01, 0.01);
+        group.add(petalL);
+
+        const petalR = createPetal(1.4, 1.4, 0, 0.01);
+        petalR.position.set(0.06, 0.01, 0.01);
+        group.add(petalR);
+
+        // --- 3. Labellum (Lip) ---
+        // Distinct shape at bottom
+        const lipGeo = new THREE.CircleGeometry(0.04, 8);
+        lipGeo.scale(1, 0.8, 1);
+        const lip = new THREE.Mesh(lipGeo, lipMat);
+        lip.position.set(0, -0.03, 0.02);
+        lip.rotation.x = 0.5; // Curled out
+        group.add(lip);
+
+        // --- 4. Column (Center) ---
+        const centerGeo = new THREE.SphereGeometry(0.02, 8, 8);
         const center = new THREE.Mesh(centerGeo, centerMat);
-        center.position.z = 0.02;
+        center.position.set(0, 0, 0.03);
         group.add(center);
 
         return group;
@@ -2715,5 +2789,94 @@ export class CornerTable {
 
     setPosition(x, y, z) {
         this.mesh.position.set(x, y, z);
+    }
+}
+
+export class MuseumBarrier {
+    constructor(width = 2) {
+        this.width = width;
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        const height = 0.9;
+        const postRadius = 0.04;
+        const baseRadius = 0.15;
+
+        const goldMat = new THREE.MeshStandardMaterial({
+            color: 0xFFD700,
+            metalness: 0.9,
+            roughness: 0.2
+        });
+
+        const ropeMat = new THREE.MeshStandardMaterial({
+            color: 0xCC0000,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+
+        const createPost = (x) => {
+            const group = new THREE.Group();
+            group.position.set(x, 0, 0);
+
+            // Base
+            const baseGeo = new THREE.CylinderGeometry(baseRadius, baseRadius, 0.05, 16);
+            const base = new THREE.Mesh(baseGeo, goldMat);
+            base.position.y = 0.025;
+            base.castShadow = true;
+            group.add(base);
+
+            // Pole
+            const poleGeo = new THREE.CylinderGeometry(postRadius, postRadius, height, 16);
+            const pole = new THREE.Mesh(poleGeo, goldMat);
+            pole.position.y = height / 2;
+            pole.castShadow = true;
+            group.add(pole);
+
+            // Top Sphere
+            const topGeo = new THREE.SphereGeometry(postRadius * 1.5, 16, 16);
+            const top = new THREE.Mesh(topGeo, goldMat);
+            top.position.y = height;
+            top.castShadow = true;
+            group.add(top);
+
+            return group;
+        };
+
+        const leftPost = createPost(-this.width / 2);
+        this.mesh.add(leftPost);
+
+        const rightPost = createPost(this.width / 2);
+        this.mesh.add(rightPost);
+
+        // Rope (Catenary)
+        // Start and end points (attach to rings usually below top)
+        const ropeH = height - 0.1;
+        const start = new THREE.Vector3(-this.width / 2, ropeH, 0);
+        const end = new THREE.Vector3(this.width / 2, ropeH, 0);
+        // Midpoint sag
+        const mid = new THREE.Vector3(0, ropeH - 0.3, 0);
+
+        const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+        const ropeGeo = new THREE.TubeGeometry(curve, 20, 0.03, 8, false);
+        const rope = new THREE.Mesh(ropeGeo, ropeMat);
+        rope.castShadow = true;
+        this.mesh.add(rope);
+
+        // Hitbox for collision
+        const hitGeo = new THREE.BoxGeometry(this.width, height, 0.2);
+        const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.collidableMesh = new THREE.Mesh(hitGeo, hitMat);
+        this.collidableMesh.position.y = height / 2;
+        this.mesh.add(this.collidableMesh);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
     }
 }
