@@ -293,7 +293,7 @@ document.addEventListener('click', () => {
                 const dialogEl = document.getElementById('sparrow-dialog');
                 const textEl = document.getElementById('dialog-text');
 
-                textEl.textContent = "Hola Giovy, como estas? David me dijo que busques en el cajon del escritorio";
+                textEl.textContent = "Hola Giovy! Soy Naranjita, gracias por haberme cuidado tanto <3";
                 dialogEl.classList.remove('hidden');
 
                 // Auto hide after 8 seconds
