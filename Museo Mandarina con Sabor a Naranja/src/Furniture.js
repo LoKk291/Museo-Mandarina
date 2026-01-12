@@ -3007,7 +3007,11 @@ export class VinylFrame {
 
         const texture = new THREE.CanvasTexture(canvas);
         const plaqueGeo = new THREE.PlaneGeometry(0.8, 0.2); // Width 0.8 (matches inner frame), Height 0.2
-        const plaqueMat = new THREE.MeshBasicMaterial({ map: texture });
+        const plaqueMat = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 0.8,
+            metalness: 0.1
+        });
         const plaque = new THREE.Mesh(plaqueGeo, plaqueMat);
 
         // Position below frame (Frame height 1.0, y range -0.5 to 0.5)
@@ -3071,7 +3075,11 @@ export class RecordPlayerTable {
 
         // Label (Red Center default)
         const labelGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.015, 32);
-        const labelMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+        const labelMat = new THREE.MeshStandardMaterial({
+            color: 0xFF0000,
+            roughness: 0.3,
+            metalness: 0.1
+        });
         const label = new THREE.Mesh(labelGeo, labelMat);
         label.position.set(-0.1, 0.122, 0);
         playerGroup.add(label);
