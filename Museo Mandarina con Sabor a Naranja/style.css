@@ -994,7 +994,9 @@ body {
 
 .room-spacer {
     width: 60px;
-}/* Letter Overlay */
+}
+
+/* Letter Overlay */
 #letter-overlay {
     position: absolute;
     top: 0;
@@ -1045,6 +1047,32 @@ body {
     margin-bottom: 40px;
 }
 
+.system-message {
+    background: rgba(0, 0, 0, 0.6) !important;
+    color: #00ff00 !important;
+    border: 2px solid #00ff00;
+    box-shadow: 0 0 20px #00ff00 !important;
+    font-family: 'Courier New', monospace !important;
+    transform: none !important;
+    border-radius: 10px;
+}
+
+.system-message h2,
+.system-message .date {
+    border-color: #00ff00 !important;
+    color: #00ff00 !important;
+}
+
+.system-message button {
+    background: #00ff00 !important;
+    color: #000 !important;
+    border: none;
+}
+
+.system-message button:hover {
+    background: #ccffcc !important;
+}
+
 #close-letter {
     display: block;
     margin: 0 auto;
@@ -1060,4 +1088,129 @@ body {
 
 #close-letter:hover {
     background: #555;
+}
+
+/* Phone Modal */
+#phone-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+#phone-modal.hidden {
+    display: none;
+    pointer-events: none;
+}
+
+.phone-container {
+    background: #dddddd;
+    padding: 20px;
+    border-radius: 15px;
+    border: 5px solid #333;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+    background: linear-gradient(135deg, #f0f0f0 0%, #d9d9d9 100%);
+}
+
+.phone-screen {
+    background: #9ea792;
+    /* Retro LCD greenish */
+    border: 2px solid #555;
+    border-radius: 5px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    color: #222;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.phone-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.phone-btn {
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #111;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.phone-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #111;
+}
+
+.phone-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.action-btn.call {
+    background: #2ecc71;
+    box-shadow: 0 4px 0 #27ae60;
+}
+
+.action-btn.call:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.action-btn.clear {
+    background: #e74c3c;
+    box-shadow: 0 4px 0 #c0392b;
+}
+
+.action-btn.clear:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+#phone-close {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: red;
+    color: white;
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }

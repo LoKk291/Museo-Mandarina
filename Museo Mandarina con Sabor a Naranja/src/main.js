@@ -143,11 +143,46 @@ const letterOverlay = document.getElementById('letter-overlay');
 const closeLetterBtn = document.getElementById('close-letter');
 
 // Close Letter Logic
+// Close Letter Logic
 closeLetterBtn.onclick = () => {
     letterOverlay.classList.add('hidden');
     isModalOpen = false;
     player.lock();
 };
+
+
+function showLetter(title, date, content, isSystem = false) {
+    isModalOpen = true;
+    player.unlock();
+    // Hide instructions
+    if (document.getElementById('instructions')) {
+        document.getElementById('instructions').style.display = 'none';
+    }
+
+    // Populate Data
+    const titleEl = document.getElementById('letter-title');
+    const dateEl = document.getElementById('letter-date');
+    const bodyEl = document.getElementById('letter-body');
+    const contentBox = document.querySelector('.letter-content');
+
+    if (titleEl) titleEl.textContent = title;
+    if (dateEl) dateEl.textContent = date;
+    if (bodyEl) bodyEl.innerHTML = `<p>${content}</p>`;
+
+    // Apply System Style if needed
+    if (contentBox) {
+        if (isSystem) {
+            contentBox.classList.add('system-message');
+        } else {
+            contentBox.classList.remove('system-message');
+        }
+    }
+
+    // Show Overlay
+    if (letterOverlay) letterOverlay.classList.remove('hidden');
+}
+
+
 
 // GLOBAL CLICK SOUND FOR PC
 document.addEventListener('mousedown', (e) => {
@@ -307,21 +342,18 @@ document.addEventListener('click', () => {
                 // soundManager.play('drawer_open'); // Need sound? Use simple click for now.
                 hitObject.userData.parentObj.toggle();
             } else if (hitObject.userData.type === 'paper-stack') {
-                soundManager.play('click'); // Paper sound would be better, using click for now
-                isModalOpen = true;
-                player.unlock();
-                instructions.style.display = 'none';
-                letterOverlay.classList.remove('hidden');
+                soundManager.play('click');
+                showLetter("Informe de Estado", "22/01/26", "El comando \"party time\" no funciona, debido al estado actual de los animatronicos, no se recomienda activar el comando, el comportamiento de Foxy y Mangle es algo inestable.<p style='text-align: right; margin-top: 20px;'>- Equipo Mandarina</p>", false);
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
                 openModal(hitObject.userData.painting);
+            } else if (hitObject.userData.type === 'phone') {
+                soundManager.play('click');
+                openPhone();
             } else {
                 console.error("Objeto interactuable sin tipo o datos definidos:", hitObject);
-                // Intento de fallback o debug en pantalla
-                if (document.getElementById('error-console')) {
-                    document.getElementById('error-console').style.display = 'block';
-                    document.getElementById('error-console').innerHTML += `<p>Warning: Clicked object with no data. Type: ${hitObject.type}</p>`;
-                }
+                // ...
+
             }
         }
     }
@@ -994,3 +1026,84 @@ window.addEventListener('resize', () => {
 
 // Iniciar
 animate();
+
+// --- PHONE DIALER LOGIC ---
+const phoneModal = document.getElementById('phone-modal');
+const phoneDisplay = document.getElementById('phone-display');
+const phoneBtns = document.querySelectorAll('.phone-btn');
+const phoneCallBtn = document.getElementById('phone-call');
+const phoneClearBtn = document.getElementById('phone-clear');
+const phoneCloseBtn = document.getElementById('phone-close');
+
+let currentNumber = "";
+
+function openPhone() {
+    isModalOpen = true;
+    player.unlock();
+    document.getElementById('instructions').style.display = 'none';
+    phoneModal.classList.remove('hidden');
+    currentNumber = "";
+    updatePhoneDisplay();
+}
+
+function closePhone() {
+    phoneModal.classList.add('hidden');
+    isModalOpen = false;
+    player.lock();
+}
+
+function updatePhoneDisplay() {
+    phoneDisplay.textContent = currentNumber;
+}
+
+if (phoneBtns) {
+    phoneBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (currentNumber.length < 12) {
+                soundManager.play('click'); // Reuse click or specific tone?
+                currentNumber += btn.dataset.key;
+                updatePhoneDisplay();
+            }
+        });
+    });
+}
+
+if (phoneClearBtn) {
+    phoneClearBtn.addEventListener('click', () => {
+        soundManager.play('click');
+        currentNumber = "";
+        updatePhoneDisplay();
+    });
+}
+
+if (phoneCloseBtn) {
+    phoneCloseBtn.addEventListener('click', () => {
+        soundManager.play('click');
+        closePhone();
+    });
+}
+
+if (phoneCallBtn) {
+    phoneCallBtn.addEventListener('click', () => {
+        soundManager.play('click'); // Dialing sound?
+
+        if (currentNumber === "911") {
+            showLetter("ERROR DE RED", "SISTEMA", "Servicios de emergencia no disponibles en esta realidad.");
+        } else if (currentNumber === "666") {
+            // Spooky event?
+            showLetter("???", "???", "No deberías haber hecho eso...");
+            // Maybe play scary sound later
+        } else if (currentNumber === "*#06#") {
+            showLetter("Información de Dispositivo", "SYS", "IMEI: 8844-MANDARINA-00");
+        } else if (currentNumber.length > 0) {
+            // Generic Call
+            setTimeout(() => {
+                showLetter("Llamada Finalizada", "Operadora", "El número que usted marcó no corresponde a un abonado en servicio.");
+            }, 1000);
+        }
+
+        closePhone(); // Close keyboard to show letter or just show letter over it?
+        // If showLetter opens another modal, we might want to close phone first.
+        // showLetter acts as an alert here.
+    });
+}

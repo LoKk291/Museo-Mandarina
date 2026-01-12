@@ -95,11 +95,13 @@
     <!-- Letter Overlay -->
     <div id="letter-overlay" class="hidden">
         <div class="letter-content">
-            <h2>Informe de Estado</h2>
-            <span class="date">22/01/26</span>
-            <p>El comando "party time" no funciona, debido al estado actual de los animatronicos, no se recomienda
-                activar el comando, el comportamiento de Foxy y Mangle es algo inestable.</p>
-            <p style="text-align: right; margin-top: 20px;">- Equipo Mandarina</p>
+            <h2 id="letter-title">Informe de Estado</h2>
+            <span id="letter-date" class="date">22/01/26</span>
+            <div id="letter-body">
+                <p>El comando "party time" no funciona, debido al estado actual de los animatronicos, no se recomienda
+                    activar el comando, el comportamiento de Foxy y Mangle es algo inestable.</p>
+                <p style="text-align: right; margin-top: 20px;">- Equipo Mandarina</p>
+            </div>
             <button id="close-letter">Cerrar</button>
         </div>
     </div>
@@ -129,6 +131,34 @@
                 <h2 id="modal-title">Título del Cuadro</h2>
                 <p id="modal-text">Descripción...</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Phone Modal -->
+    <div id="phone-modal" class="hidden">
+        <div class="phone-container">
+            <div class="phone-screen">
+                <span id="phone-display"></span>
+            </div>
+            <div class="phone-keypad">
+                <button class="phone-btn" data-key="1">1</button>
+                <button class="phone-btn" data-key="2">2</button>
+                <button class="phone-btn" data-key="3">3</button>
+                <button class="phone-btn" data-key="4">4</button>
+                <button class="phone-btn" data-key="5">5</button>
+                <button class="phone-btn" data-key="6">6</button>
+                <button class="phone-btn" data-key="7">7</button>
+                <button class="phone-btn" data-key="8">8</button>
+                <button class="phone-btn" data-key="9">9</button>
+                <button class="phone-btn" data-key="*">*</button>
+                <button class="phone-btn" data-key="0">0</button>
+                <button class="phone-btn" data-key="#">#</button>
+            </div>
+            <div class="phone-controls">
+                <button id="phone-call" class="action-btn call">LLAMAR</button>
+                <button id="phone-clear" class="action-btn clear">BORRAR</button>
+            </div>
+            <button id="phone-close">X</button>
         </div>
     </div>
 
