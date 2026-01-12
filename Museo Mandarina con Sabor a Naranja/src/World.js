@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -438,6 +438,16 @@ export class World {
         this.scene.add(recordTable.mesh);
 
         this.recordPlayer = recordTable; // Access for main.js
+
+        // Piano (Pared Izquierda/South Wall)
+        // Room L1 Center (-25, 0). South Wall Z = 7.5.
+        // Place Piano against South Wall. X centered or slightly offset.
+        // X range [-32.5, -17.5]. Center X = -25.
+        const piano = new Piano();
+        piano.setPosition(-25, 0, 5.5); // 2m from wall
+        piano.setRotation(Math.PI); // Keys facing North (into room)
+        this.scene.add(piano.mesh);
+        this.interactables.push(piano.mesh); // Or piano.interactableMesh if set? Yes it has hitBox with userData.
         // this.interactables.push(recordTable.mesh); // Future interaction
 
         this.addRoom(roomL1, 'L1');

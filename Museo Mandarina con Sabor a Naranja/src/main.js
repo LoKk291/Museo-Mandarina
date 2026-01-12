@@ -242,6 +242,9 @@ function checkInteraction() {
         } else if (hitObject.userData.type === 'paper-stack') {
             interactionMsg.textContent = "Click para leer";
             interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'piano') {
+            interactionMsg.textContent = "Un hermoso Piano de Cola";
+            interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
             interactionMsg.style.display = 'block';
@@ -390,6 +393,9 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'phone') {
                 soundManager.play('phone_takeoff');
                 openPhone();
+            } else if (hitObject.userData.type === 'piano') {
+                // Just play a sound or nothing, but prevent error
+                soundManager.play('click');
             } else if (hitObject.userData.type === 'globe') {
                 // Open Map
                 const mapModal = document.getElementById('map-modal');

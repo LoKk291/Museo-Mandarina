@@ -2945,8 +2945,14 @@ export class VinylFrame {
 
         // Disc (Black)
         // Frame inner width ~ 0.8. Disc Radius max 0.35.
-        const discGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.01, 32);
-        const discMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.6 });
+
+        const discGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.02, 32);
+        // Change to Standard Material for light reaction
+        const discMat = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            roughness: 0.1,
+            metalness: 0.5
+        });
         const disc = new THREE.Mesh(discGeo, discMat);
         // Cylinder is vertical (along Y). Rotate to match plane (Z forward).
         disc.rotation.x = Math.PI / 2;
@@ -2954,7 +2960,11 @@ export class VinylFrame {
 
         // Label (Center Color)
         const labelGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.015, 32);
-        const labelMat = new THREE.MeshBasicMaterial({ color: colorHex });
+        const labelMat = new THREE.MeshStandardMaterial({
+            color: colorHex,
+            roughness: 0.3,
+            metalness: 0.1
+        });
         const label = new THREE.Mesh(labelGeo, labelMat);
         label.rotation.x = Math.PI / 2;
         label.position.z = 0.005; // Slightly protruding
@@ -3113,5 +3123,183 @@ export class RecordPlayerTable {
             this.baseVinylMesh.visible = false;
             this.baseLabelMesh.visible = false;
         }
+    }
+}
+
+export class Piano {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Materiales
+        // Wood (Polished Brown/Orange)
+        const woodMat = new THREE.MeshStandardMaterial({
+            color: 0x8B4513, // SaddleBrown
+            roughness: 0.1, // Shiny / Polished
+            metalness: 0.1
+        });
+
+        const keyWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+        const keyBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 });
+        const interiorMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.8, roughness: 0.3 }); // Gold
+
+        // 1. Main Body (Curved Grand Shape)
+        // Creating extraction shape
+        const shape = new THREE.Shape();
+        // Draw the classic kidney/wing shape
+        const width = 1.4;
+        const length = 2.0;
+
+        shape.moveTo(0, 0);
+        shape.lineTo(width, 0); // Front flat
+        shape.lineTo(width, length * 0.6); // Straight side right
+
+        // Curve back
+        shape.bezierCurveTo(
+            width, length,          // Control 1
+            0, length,              // Control 2
+            0, length * 0.4         // End point (Left side curve)
+        );
+        shape.lineTo(0, 0); // Close
+
+        const extrudeSettings = {
+            steps: 2,
+            depth: 0.35, // Thickness of body
+            bevelEnabled: true,
+            bevelThickness: 0.02,
+            bevelSize: 0.02,
+            bevelSegments: 2
+        };
+
+        const bodyGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        const body = new THREE.Mesh(bodyGeo, woodMat);
+        // Fix Rotation: +90 deg X so Y extends to +Z (matching legs 0..2.0)
+        // Extrusion Z becomes -Y (down).
+        body.rotation.x = Math.PI / 2;
+        // Position: Top of legs (0.7) + Thickness (0.35) = 1.05
+        body.position.y = 1.05;
+        body.castShadow = true;
+        body.receiveShadow = true;
+        this.mesh.add(body);
+
+        // 2. Legs (3 Legs)
+        const legH = 0.7;
+        const legGeo = new THREE.CylinderGeometry(0.06, 0.04, legH);
+
+        // Front Left
+        const l1 = new THREE.Mesh(legGeo, woodMat);
+        l1.position.set(0.2, legH / 2, 0.2);
+        this.mesh.add(l1);
+
+        // Front Right
+        const l2 = new THREE.Mesh(legGeo, woodMat);
+        l2.position.set(width - 0.2, legH / 2, 0.2);
+        this.mesh.add(l2);
+
+        // Back
+        const l3 = new THREE.Mesh(legGeo, woodMat);
+        l3.position.set(width * 0.4, legH / 2, length * 0.8);
+        this.mesh.add(l3);
+
+        // 3. Keyboard Area
+        const keysW = width - 0.2;
+        const keysH = 0.15;
+        const keysD = 0.3;
+
+        // Keybed (Wood holding keys)
+        const keybedGeo = new THREE.BoxGeometry(keysW + 0.1, 0.1, keysD);
+        const keybed = new THREE.Mesh(keybedGeo, woodMat);
+        // Position: X center, Y on top of legs handling thickness logic
+        // Body is at 1.05, extrudes down to 0.7.
+        // We want keys to be roughly flush or embedded.
+        // Top of piano is 1.05.
+        // Keybed at 0.7-ish? No, grand piano keybed is usually slightly lower than rim.
+        keybed.position.set(width / 2, 0.9, 0.15); // Z pushed slightly in
+        this.mesh.add(keybed);
+
+        // White Keys
+        const numWhite = 52;
+        const keyWidth = keysW / numWhite;
+        const whiteGeo = new THREE.BoxGeometry(keyWidth * 0.9, 0.04, 0.2);
+
+        for (let i = 0; i < numWhite; i++) {
+            const key = new THREE.Mesh(whiteGeo, keyWhiteMat);
+            // Center is width/2. 
+            // Start x = width/2 - keysW/2 = 0.1
+            const x = 0.1 + i * keyWidth + keyWidth / 2;
+            key.position.set(x, 0.96, 0.15); // Higher than keybed
+            this.mesh.add(key);
+        }
+
+        // Black Keys 
+        const blackGeo = new THREE.BoxGeometry(keyWidth * 0.6, 0.05, 0.12);
+
+        for (let i = 0; i < numWhite - 1; i++) {
+            const octave = i % 7;
+            let hasBlack = true;
+            if (octave === 2 || octave === 6) hasBlack = false;
+
+            if (hasBlack) {
+                const key = new THREE.Mesh(blackGeo, keyBlackMat);
+                const x = 0.1 + i * keyWidth + keyWidth;
+                key.position.set(x, 0.99, 0.1); // Higher and set back
+                this.mesh.add(key);
+            }
+        }
+
+        // 4. Lid (Top Cover)
+        const lid = new THREE.Mesh(bodyGeo, woodMat);
+        lid.scale.set(1, 1, 0.05); // Thin
+
+        // Pivot group needed?
+        // Body (Y=0.7 to 1.05). Lid sits at 1.05.
+        // Let's just create a simple open lid mesh without complex pivoting for now to avoid bugs.
+        // Or fix the pivot.
+
+        // Lid matching body rotation +90 X.
+        // If we want to open it, we rotate around Z axis (straight edge).
+
+        const lidOpen = new THREE.Mesh(bodyGeo, woodMat);
+        lidOpen.scale.z = 0.05; // Thin extrude
+        // Default Rotation matches body: Math.PI/2
+        // Then rotate up.
+        // Math.PI/2 means Flat.
+        // Rotate around straight edge (Right side, X = width).
+
+        // Simple approximation:
+        lidOpen.rotation.x = Math.PI / 2 - 0.5; // Angled Up
+        lidOpen.rotation.z = 0.1; // Tilted sideways slightly
+        lidOpen.position.set(0, 1.05, 0);
+        this.mesh.add(lidOpen);
+
+        // Stick prop
+        const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8), interiorMat);
+        stick.position.set(width * 0.8, 1.3, length * 0.5); // Adjusted Y and Z
+        stick.rotation.x = 0.4;
+        this.mesh.add(stick);
+
+        // Music Rack
+        const rackGeo = new THREE.BoxGeometry(0.8, 0.3, 0.02);
+        const rack = new THREE.Mesh(rackGeo, woodMat);
+        rack.position.set(width / 2, 0.85, 0.2);
+        rack.rotation.x = -0.2;
+        this.mesh.add(rack);
+
+        // Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(1.5, 1.5, 2.0);
+        const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        hitBox.position.set(0.7, 0.75, 1.0);
+        hitBox.userData = { type: 'piano', parentObj: this };
+        this.mesh.add(hitBox);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
     }
 }
