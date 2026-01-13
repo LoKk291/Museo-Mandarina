@@ -390,7 +390,12 @@ export class World {
         // User wants ID ordering: Start Top-Left -> 1, 2, 3 (Row 1), 4, 5, 6 (Row 2).
         // On West Wall (Looking West), Left is South (+Z). Right is North (-Z).
         // So Z order needs to be [Positive, 0, Negative].
-        const frameZ_Centers = [1.3, 0, -1.3]; // Left, Center, Right
+
+        // RE-CENTERING (Total 6 cols now).
+        // Wall Center Z=0. Original Group Left (South), Generic Group Right (North).
+        // Columns: 3.25, 1.95, 0.65 | -0.65, -1.95, -3.25
+
+        const frameZ_Centers = [3.25, 1.95, 0.65]; // Left Group (Originals)
         const frameY_Centers = [2.5, 1.2]; // Top row, Bottom row
 
         const vinylColors = [
@@ -424,6 +429,29 @@ export class World {
                 this.scene.add(vf.mesh);
 
                 // Add to interactables for click detection
+                this.interactables.push(vf.mesh);
+
+                vIndex++;
+            }
+        }
+
+        // --- GENERIC VINYLS (6 More, to the Right/North) ---
+        // New Z set for centering.
+        const genericZ_Centers = [-0.65, -1.95, -3.25]; // Right Group
+
+        for (let r = 0; r < 2; r++) {
+            for (let c = 0; c < 3; c++) {
+                const vf = new VinylFrame();
+                // Same X and Y, shifted Z
+                vf.setPosition(frameX, frameY_Centers[r], genericZ_Centers[c]);
+                vf.setRotation(Math.PI / 2);
+
+                const vID = vIndex + 1;
+                // Random pastel color
+                const color = Math.random() * 0xFFFFFF;
+                vf.setVinyl(vID, color, "Generico");
+
+                this.scene.add(vf.mesh);
                 this.interactables.push(vf.mesh);
 
                 vIndex++;
