@@ -122,6 +122,11 @@
             showTempError(`<h3>Error Detectado:</h3><p>${msg}</p><p>En: ${url}:${line}</p><br>Trying to run local modules (file://) without a server often causes this. Use the start_game.bat file!`);
         };
         window.addEventListener('unhandledrejection', function (event) {
+            // Ignore PointerLock SecurityError (User pressed ESC or clicked too fast)
+            if (event.reason && (event.reason.name === 'SecurityError' ||
+                (typeof event.reason === 'string' && event.reason.includes('exited the lock')))) {
+                return;
+            }
             showTempError(`<h3>Error de Promesa:</h3><p>${event.reason}</p>`);
         });
     </script>

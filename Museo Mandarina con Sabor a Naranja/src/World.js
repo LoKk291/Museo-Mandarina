@@ -434,10 +434,21 @@ export class World {
                 vIndex++;
             }
         }
-
         // --- GENERIC VINYLS (6 More, to the Right/North) ---
         // New Z set for centering.
         const genericZ_Centers = [-0.65, -1.95, -3.25]; // Right Group
+
+        const genericTitles = [
+            "Tomando Té",
+            "Prófugos",
+            "Cup of Tea",
+            "Hey",
+            "Golden Hour",
+            "Misty"
+        ];
+
+        // Reset local index for this array, but vIndex continues globally for ID
+        let gIndex = 0;
 
         for (let r = 0; r < 2; r++) {
             for (let c = 0; c < 3; c++) {
@@ -449,12 +460,16 @@ export class World {
                 const vID = vIndex + 1;
                 // Random pastel color
                 const color = Math.random() * 0xFFFFFF;
-                vf.setVinyl(vID, color, vID.toString());
+
+                // Use title from array
+                const title = genericTitles[gIndex] || vID.toString();
+                vf.setVinyl(vID, color, title);
 
                 this.scene.add(vf.mesh);
                 this.interactables.push(vf.mesh);
 
                 vIndex++;
+                gIndex++;
             }
         }
 
