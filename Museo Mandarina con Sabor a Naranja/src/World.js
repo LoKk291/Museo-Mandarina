@@ -497,7 +497,18 @@ export class World {
         const arcade = new ArcadeMachine();
         arcade.setPosition(-18, 0, -4); // East wall area
         arcade.setRotation(-Math.PI / 2); // Facing West (into room)
+
+        // Interaction setup
+        arcade.mesh.userData = { type: 'arcade' };
+        // Traverse to ensure children also have the data if raycast hits them
+        arcade.mesh.traverse((child) => {
+            if (child.isMesh) {
+                child.userData = { type: 'arcade', parent: arcade.mesh };
+            }
+        });
+
         this.scene.add(arcade.mesh);
+        this.interactables.push(arcade.mesh);
 
         const arcadeBox = new THREE.Mesh(
             new THREE.BoxGeometry(0.8, 2, 0.8),

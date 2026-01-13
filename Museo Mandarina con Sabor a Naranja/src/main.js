@@ -245,6 +245,9 @@ function checkInteraction() {
         } else if (hitObject.userData.type === 'piano') {
             interactionMsg.textContent = "Un hermoso Piano de Cola";
             interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'arcade') {
+            interactionMsg.textContent = "Click para Jugar PONG";
+            interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
             interactionMsg.style.display = 'block';
@@ -346,6 +349,9 @@ document.addEventListener('click', () => {
                 // Drawer Interaction
                 // soundManager.play('drawer_open'); // Need sound? Use simple click for now.
                 hitObject.userData.parentObj.toggle();
+            } else if (hitObject.userData.type === 'arcade') {
+                soundManager.play('click');
+                startPong();
             } else if (hitObject.userData.type === 'paper-stack') {
                 soundManager.play('click');
                 showLetter("Informe de Estado", "22/01/26", "El comando \"party time\" no funciona, debido al estado actual de los animatronicos, no se recomienda activar el comando, el comportamiento de Foxy y Mangle es algo inestable.<p style='text-align: right; margin-top: 20px;'>- Equipo Mandarina</p>", false);
@@ -1286,3 +1292,173 @@ if (musicVolumeSlider) {
         if (soundManager) soundManager.setVinylVolume(vol);
     });
 }
+
+// --- PONG GAME ---
+let pongOverlay = null;
+let pongCanvas = null;
+let pongCtx = null;
+let pongRunning = false;
+let pongLoopId = null;
+
+// Game State
+const paddleWidth = 10;
+const paddleHeight = 80;
+const ballSize = 10;
+let playerY = 260;
+let cpuY = 260;
+let ballX = 400;
+let ballY = 300;
+let ballSpeedX = 5;
+let ballSpeedY = 5;
+let playerScore = 0;
+let cpuScore = 0;
+
+// Input
+const keys = {
+    ArrowUp: false,
+    ArrowDown: false
+};
+
+function initPong() {
+    pongOverlay = document.getElementById('pong-overlay');
+    pongCanvas = document.getElementById('pong-canvas');
+    if (pongCanvas) {
+        pongCtx = pongCanvas.getContext('2d');
+    } else {
+        console.error("Pong Canvas not found!");
+    }
+}
+
+function startPong() {
+    if (!pongCtx || !pongCanvas) initPong();
+    if (!pongCtx) return;
+
+    pongRunning = true;
+    player.unlock(); // Release pointer lock
+
+    if (pongOverlay) pongOverlay.classList.remove('hidden');
+
+    // Reset Game
+    ballX = 400;
+    ballY = 300;
+    ballSpeedX = 5 * (Math.random() > 0.5 ? 1 : -1);
+    ballSpeedY = 3 * (Math.random() > 0.5 ? 1 : -1);
+    playerScore = 0;
+    cpuScore = 0;
+    playerY = 260;
+    cpuY = 260;
+
+    // Start Loop
+    pongLoop();
+}
+
+function stopPong() {
+    pongRunning = false;
+    if (pongLoopId) cancelAnimationFrame(pongLoopId);
+    if (pongOverlay) pongOverlay.classList.add('hidden');
+    player.lock(); // Return to game
+}
+
+function pongLoop() {
+    if (!pongRunning) return;
+
+    // Update Player
+    if (keys.ArrowUp && playerY > 0) playerY -= 6;
+    if (keys.ArrowDown && playerY < 600 - paddleHeight) playerY += 6;
+
+    // Update CPU AI
+    const center = cpuY + paddleHeight / 2;
+    if (ballY < center - 10) cpuY -= 4.5;
+    if (ballY > center + 10) cpuY += 4.5;
+
+    // Clamp CPU
+    if (cpuY < 0) cpuY = 0;
+    if (cpuY > 600 - paddleHeight) cpuY = 600 - paddleHeight;
+
+    // Update Ball
+    ballX += ballSpeedX;
+    ballY += ballSpeedY;
+
+    // Bounce Y
+    if (ballY < 0 || ballY > 600 - ballSize) ballSpeedY = -ballSpeedY;
+
+    // Paddles Hit
+    // Player (Left)
+    if (ballX < 20 + paddleWidth && ballY + ballSize > playerY && ballY < playerY + paddleHeight) {
+        ballSpeedX = Math.abs(ballSpeedX); // Force positive
+        const deltaY = ballY - (playerY + paddleHeight / 2);
+        ballSpeedY = deltaY * 0.3;
+        ballSpeedX *= 1.05;
+        if (soundManager) soundManager.play('click');
+    }
+
+    // CPU (Right)
+    if (ballX > 780 - paddleWidth - ballSize && ballY + ballSize > cpuY && ballY < cpuY + paddleHeight) {
+        ballSpeedX = -Math.abs(ballSpeedX); // Force negative
+        const deltaY = ballY - (cpuY + paddleHeight / 2);
+        ballSpeedY = deltaY * 0.3;
+        ballSpeedX *= 1.05;
+        if (soundManager) soundManager.play('click');
+    }
+
+    // Score / Reset
+    if (ballX < 0) {
+        cpuScore++;
+        resetBall();
+    }
+    if (ballX > 800) {
+        playerScore++;
+        resetBall();
+    }
+
+    // Draw
+    pongCtx.fillStyle = 'black';
+    pongCtx.fillRect(0, 0, 800, 600);
+
+    // Net
+    pongCtx.fillStyle = '#333';
+    for (let i = 0; i < 600; i += 40) {
+        pongCtx.fillRect(398, i, 4, 20);
+    }
+
+    // Paddles
+    pongCtx.fillStyle = '#FFD700'; // Gold
+    pongCtx.fillRect(20, playerY, paddleWidth, paddleHeight);
+    pongCtx.fillRect(780 - paddleWidth, cpuY, paddleWidth, paddleHeight);
+
+    // Ball
+    pongCtx.fillStyle = '#FFF';
+    pongCtx.fillRect(ballX, ballY, ballSize, ballSize);
+
+    // Score
+    pongCtx.font = "50px monospace";
+    pongCtx.fillStyle = '#888';
+    pongCtx.fillText(playerScore, 200, 60);
+    pongCtx.fillText(cpuScore, 600, 60);
+
+    pongLoopId = requestAnimationFrame(pongLoop);
+}
+
+function resetBall() {
+    ballX = 400;
+    ballY = 300;
+    ballSpeedX = 5 * (Math.random() > 0.5 ? 1 : -1);
+    ballSpeedY = 3 * (Math.random() > 0.5 ? 1 : -1);
+}
+
+// Global Listener for Pong Keys
+window.addEventListener('keydown', (e) => {
+    if (pongRunning) {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            keys[e.key] = true;
+            e.preventDefault(); // Prevent scrolling
+        }
+        if (e.key === 'Escape') stopPong();
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (pongRunning) {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') keys[e.key] = false;
+    }
+});
