@@ -22,7 +22,7 @@ export class SoundManager {
     }
 
     play(key, clone = true) {
-        if (!this.enabled) return;
+        if (!this.enabled) return null;
         const sound = this.sounds[key];
         if (sound) {
             if (clone) {
@@ -31,14 +31,17 @@ export class SoundManager {
                 cloneAudio.volume = sound.volume;
                 cloneAudio.playbackRate = sound.playbackRate || 1.0; // Apply rate
                 cloneAudio.play().catch(e => console.warn("Audio play blocked (user interac needed?)", e));
+                return cloneAudio;
             } else {
                 // Restart same instance
                 sound.currentTime = 0;
                 sound.playbackRate = sound.playbackRate || 1.0; // Apply rate for non-clones too
                 sound.play().catch(e => console.warn("Audio play blocked", e));
+                return sound;
             }
         } else {
             console.warn(`Sound '${key}' not loaded.`);
+            return null;
         }
     }
 

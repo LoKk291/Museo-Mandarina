@@ -1213,8 +1213,14 @@ if (phoneCallBtn) {
             showLetter("Información de Dispositivo", "SYS", "IMEI: 8844-MANDARINA-00", true);
         } else if (currentNumber === "3754406297") {
             // Secret Call
-            soundManager.play('secret_call');
-            // showLetter("Llamando...", "IO AMORE MIO", "Reproduciendo mensaje especial...", true);
+            const audio = soundManager.play('secret_call'); // Returns audio instance
+            showLetter("Llamando...", "IO AMORE MIO", "Reproduciendo mensaje especial...", true);
+
+            if (audio) {
+                audio.addEventListener('ended', () => {
+                    soundManager.play('phone_takeoff');
+                });
+            }
         } else if (currentNumber.length > 0) {
             // Generic Call
             setTimeout(() => {

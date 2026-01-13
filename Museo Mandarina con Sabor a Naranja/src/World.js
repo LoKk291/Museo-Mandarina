@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -564,7 +564,25 @@ export class World {
         roomR1.addPaintingToWall('East', 3, 3, 'cuadros/4.jpg', 'P-04', 'Espacio para Cuadro 4', 'Pendiente de asignar', 2, 0);
         roomR1.addPaintingToWall('East', 2, 2, 'cuadros/5.jpg', 'P-05', 'Espacio para Cuadro 5', 'Pendiente de asignar', -3, 0);
 
+        roomR1.addPaintingToWall('East', 3, 3, 'cuadros/4.jpg', 'P-04', 'Espacio para Cuadro 4', 'Pendiente de asignar', 2, 0);
+        roomR1.addPaintingToWall('East', 2, 2, 'cuadros/5.jpg', 'P-05', 'Espacio para Cuadro 5', 'Pendiente de asignar', -3, 0);
+
         this.addRoom(roomR1, 'R1');
+
+        // --- HORSE SKELETON (Room R1 Center) ---
+        const horse = new HorseSkeleton();
+        horse.setPosition(25, 0, 0); // Center of R1
+        horse.setRotation(-Math.PI / 4); // Angled 45 deg
+        this.scene.add(horse.mesh);
+
+        // Collision Box for Horse
+        const horseBox = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 2, 2.5),
+            new THREE.MeshBasicMaterial({ visible: false })
+        );
+        horseBox.position.set(25, 1, 0);
+        this.collidables.push(horseBox);
+        this.scene.add(horseBox);
 
         // Pasillo Central <-> R1
         const hallCent_R1 = new Room(this.scene, 13.75, 0, 7.5, 4, 0xF5F5DC);

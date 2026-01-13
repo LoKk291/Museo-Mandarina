@@ -3649,3 +3649,118 @@ export class Bookshelf {
         this.mesh.rotation.y = y;
     }
 }
+
+export class HorseSkeleton {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.boneMaterial = new THREE.MeshStandardMaterial({ color: 0xE8DECC, roughness: 0.7 });
+        this.metalMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.2 });
+        this.build();
+    }
+
+    build() {
+        // --- SUPPORT RODS ---
+        const rod1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8), this.metalMaterial);
+        rod1.position.set(0, 0.75, 0.4); // Hind support
+        this.mesh.add(rod1);
+
+        const rod2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 8), this.metalMaterial);
+        rod2.position.set(0, 0.8, -0.4); // Front support
+        this.mesh.add(rod2);
+
+        const base = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 2), this.metalMaterial);
+        base.position.set(0, 0.05, 0);
+        this.mesh.add(base);
+
+        // --- SPINE ---
+        const spineGeo = new THREE.CylinderGeometry(0.08, 0.06, 1.8, 8);
+        spineGeo.rotateX(Math.PI / 2);
+        const spine = new THREE.Mesh(spineGeo, this.boneMaterial);
+        spine.position.set(0, 1.5, 0);
+        this.mesh.add(spine);
+
+        // --- RIBS (Procedural) ---
+        for (let i = 0; i < 7; i++) {
+            const z = -0.5 + (i * 0.15);
+            const ribCurve = new THREE.TorusGeometry(0.35, 0.03, 4, 12, Math.PI); // Half circle
+            const rib = new THREE.Mesh(ribCurve, this.boneMaterial);
+            rib.rotation.z = Math.PI; // Face down
+            rib.position.set(0, 1.5, z);
+            this.mesh.add(rib);
+        }
+
+        // --- NECK ---
+        const neckGeo = new THREE.CylinderGeometry(0.07, 0.1, 0.8, 8);
+        neckGeo.rotateX(Math.PI / 4); // Angled up
+        const neck = new THREE.Mesh(neckGeo, this.boneMaterial);
+        neck.position.set(0, 1.8, -0.9);
+        this.mesh.add(neck);
+
+        // --- SKULL ---
+        const skullGroup = new THREE.Group();
+        skullGroup.position.set(0, 2.1, -1.2);
+
+        const skullMain = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.5), this.boneMaterial);
+        skullGroup.add(skullMain);
+
+        const snout = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.3), this.boneMaterial);
+        snout.position.set(0, -0.05, -0.35);
+        skullGroup.add(snout);
+
+        this.mesh.add(skullGroup);
+
+        // --- LEGS (Stylized Bones) ---
+        // Positions relative to center
+        const positions = [
+            { x: -0.25, z: 0.6, name: 'HindLeft' },
+            { x: 0.25, z: 0.6, name: 'HindRight' },
+            { x: -0.25, z: -0.6, name: 'FrontLeft' },
+            { x: 0.25, z: -0.6, name: 'FrontRight' }
+        ];
+
+        positions.forEach(pos => {
+            const legGroup = new THREE.Group();
+            legGroup.position.set(pos.x, 1.4, pos.z); // Hip joint
+
+            // Femur/Upper
+            const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.7, 8), this.boneMaterial);
+            upper.position.set(0, -0.35, 0);
+            legGroup.add(upper);
+
+            // Joint
+            const joint = new THREE.Mesh(new THREE.SphereGeometry(0.07), this.boneMaterial);
+            joint.position.set(0, -0.7, 0);
+            legGroup.add(joint);
+
+            // Tibia/Lower
+            const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.7, 8), this.boneMaterial);
+            lower.position.set(0, -1.05, 0);
+            legGroup.add(lower);
+
+            // Hoof
+            const hoof = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.1, 8), this.boneMaterial);
+            hoof.position.set(0, -1.4, 0);
+            legGroup.add(hoof);
+
+            this.mesh.add(legGroup);
+        });
+
+        // --- PELVIS & SCAPULA ---
+        const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.4), this.boneMaterial);
+        pelvis.position.set(0, 1.5, 0.6);
+        this.mesh.add(pelvis);
+
+        const scapula = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.1), this.boneMaterial);
+        scapula.rotation.x = Math.PI / 4;
+        scapula.position.set(0, 1.55, -0.6);
+        this.mesh.add(scapula);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}
