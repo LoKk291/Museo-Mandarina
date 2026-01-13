@@ -374,9 +374,18 @@ document.addEventListener('click', () => {
                     world.recordPlayer.startPlaying();
                 }
 
+                // Show Audio Controls
+                if (audioControls) {
+                    audioControls.classList.remove('hidden');
+                    // Reset volume slider if needed?
+                    // musicVolumeSlider.value = 0.5;
+                }
+
                 // Logic: ID 1-6 map to "1.mp3" ... "6.mp3"
                 soundManager.playVinyl(id, () => {
                     // On Ended
+                    if (audioControls) audioControls.classList.add('hidden');
+
                     // Verify if this is still the active vinyl (user might have clicked another one)
                     if (activeVinylFrame === frame) {
                         frame.showVinyl();
@@ -385,8 +394,6 @@ document.addEventListener('click', () => {
                         // Clear Record Player
                         if (world.recordPlayer) {
                             world.recordPlayer.clearVinyl();
-                            // stopPlaying is called inside clearVinyl, but good to be explicit/safe or let it be.
-                            // clearVinyl in Furniture.json now calls stopPlaying().
                         }
                     }
                 });
@@ -1240,5 +1247,36 @@ if (player && player.controls) {
         if (!isModalOpen && instructions) {
             instructions.style.display = 'flex';
         }
+    });
+}
+
+// --- AUDIO CONTROLS LOGIC ---
+const audioControls = document.getElementById('audio-controls');
+const stopMusicBtn = document.getElementById('stop-music');
+const musicVolumeSlider = document.getElementById('music-volume');
+
+if (stopMusicBtn) {
+    stopMusicBtn.addEventListener('click', () => {
+        // Stop Visuals
+        if (world.recordPlayer) {
+            world.recordPlayer.clearVinyl(); // Stops particles
+        }
+        // Stop Audio
+        soundManager.stopVinyl(); // Explicitly stop audio
+
+        // Return Vinyl to Frame
+        if (activeVinylFrame) {
+            activeVinylFrame.showVinyl();
+            activeVinylFrame = null;
+        }
+
+        if (audioControls) audioControls.classList.add('hidden');
+    });
+}
+
+if (musicVolumeSlider) {
+    musicVolumeSlider.addEventListener('input', (e) => {
+        const vol = parseFloat(e.target.value);
+        if (soundManager) soundManager.setVinylVolume(vol);
     });
 }

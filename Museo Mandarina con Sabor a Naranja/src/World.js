@@ -449,7 +449,7 @@ export class World {
                 const vID = vIndex + 1;
                 // Random pastel color
                 const color = Math.random() * 0xFFFFFF;
-                vf.setVinyl(vID, color, "Generico");
+                vf.setVinyl(vID, color, vID.toString());
 
                 this.scene.add(vf.mesh);
                 this.interactables.push(vf.mesh);

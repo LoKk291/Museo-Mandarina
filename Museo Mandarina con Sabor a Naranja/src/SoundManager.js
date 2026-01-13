@@ -184,4 +184,10 @@ export class SoundManager {
             this.currentVinyl = null;
         }
     }
+
+    setVinylVolume(vol) {
+        if (this.currentVinyl) {
+            this.currentVinyl.volume = Math.max(0, Math.min(1, vol));
+        }
+    }
 }
