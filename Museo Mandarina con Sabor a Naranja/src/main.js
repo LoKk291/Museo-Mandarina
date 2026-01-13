@@ -575,7 +575,21 @@ ponyClose.onclick = () => {
     if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = ""; // Stop video
 };
 
+const ponyOfflineMsg = document.getElementById('pony-offline-msg');
+
 function loadRandomEpisode() {
+    // Online Check
+    if (!navigator.onLine) {
+        if (ponyOfflineMsg) ponyOfflineMsg.classList.remove('hidden');
+        if (ponyPlaceholder) ponyPlaceholder.style.display = 'none';
+        // Clear iframe to be sure
+        if (ponyIframe) ponyIframe.src = "";
+        return;
+    }
+
+    // If Online
+    if (ponyOfflineMsg) ponyOfflineMsg.classList.add('hidden');
+
     ponyPlaceholder.style.display = 'block';
     // Playlist ID for MLP FiM (New User Provided)
     const playlistId = 'PLg1swdOP0g_21X1J2zTOLkTXXDw0fAZJL';

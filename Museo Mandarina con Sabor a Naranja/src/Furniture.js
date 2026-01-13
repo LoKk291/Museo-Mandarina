@@ -3415,3 +3415,237 @@ export class Piano {
         this.mesh.rotation.y = y;
     }
 }
+
+export class MadHatterHat {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // --- Materials ---
+        const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.1, metalness: 0.1 }); // Marble-ish
+
+        // Hat Colors (Based on reference/classic look: Dark Green/Brownish with Salmon sash)
+        const hatMat = new THREE.MeshStandardMaterial({
+            color: 0x2F4F4F, // Dark Slate Gray (Greenish)
+            roughness: 0.6,
+            metalness: 0.1
+        });
+
+        const sashMat = new THREE.MeshStandardMaterial({
+            color: 0xFA8072, // Salmon
+            roughness: 0.5
+        });
+
+        const cardMat = this.createCardMaterial();
+
+        // --- 1. Pedestal ---
+        const pedestalGeo = new THREE.CylinderGeometry(0.4, 0.5, 1.0, 32);
+        const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
+        pedestal.position.y = 0.5;
+        this.mesh.add(pedestal);
+
+        // --- 2. Hat Group ---
+        const hatGroup = new THREE.Group();
+        hatGroup.position.y = 1.0; // On top of pedestal
+        // Tilt it slightly for "Mad" effect
+        hatGroup.rotation.z = 0.1;
+        hatGroup.rotation.x = -0.1;
+
+        // Brim
+        const brimGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 32);
+        const brim = new THREE.Mesh(brimGeo, hatMat);
+        brim.position.y = 0.025;
+        hatGroup.add(brim);
+
+        // Body (Crown) - Tapered slightly larger at top implies craziness, but standard top hat flares out slightly at top
+        const crownGeo = new THREE.CylinderGeometry(0.35, 0.28, 0.5, 32);
+        const crown = new THREE.Mesh(crownGeo, hatMat);
+        crown.position.y = 0.025 + 0.25; // Brim thickness + half height
+        hatGroup.add(crown);
+
+        // Sash
+        const sashGeo = new THREE.CylinderGeometry(0.29, 0.29, 0.1, 32);
+        const sash = new THREE.Mesh(sashGeo, sashMat);
+        sash.position.y = 0.15; // Just above brim
+        hatGroup.add(sash);
+
+        // Card (10/6)
+        const cardGeo = new THREE.PlaneGeometry(0.12, 0.15);
+        const card = new THREE.Mesh(cardGeo, cardMat);
+        // Position on side of sash
+        card.position.set(0.2, 0.2, 0.15);
+        card.rotation.y = -0.5;
+        card.rotation.z = 0.2; // Tucked in
+        hatGroup.add(card);
+
+        // Hat Pins / Feathers (Simple Cylinders)
+        const pinGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.2);
+        const pinMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 1.0 });
+        const pin1 = new THREE.Mesh(pinGeo, pinMat);
+        pin1.position.set(0.25, 0.3, 0);
+        pin1.rotation.z = -0.5;
+        hatGroup.add(pin1);
+
+        const pin2 = new THREE.Mesh(pinGeo, pinMat);
+        pin2.position.set(0.26, 0.28, -0.05);
+        pin2.rotation.z = -0.3;
+        pin2.rotation.x = 0.5;
+        hatGroup.add(pin2);
+
+        this.mesh.add(hatGroup);
+    }
+
+    createCardMaterial() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 160;
+        const ctx = canvas.getContext('2d');
+
+        // Paper Background
+        ctx.fillStyle = '#F5F5DC'; // Beige
+        ctx.fillRect(0, 0, 128, 160);
+
+        // Text
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 60px "Times New Roman"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.fillText('10/6', 64, 80);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5 });
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}
+
+export class Bookshelf {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Wood darker than piano? Just standard wood.
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+
+        // Dimensions
+        const width = 3;
+        const height = 4;
+        const depth = 0.8;
+        const thickness = 0.1;
+
+        // Frame Group
+        const frame = new THREE.Group();
+
+        // Sides
+        const sideGeo = new THREE.BoxGeometry(thickness, height, depth);
+        const leftSide = new THREE.Mesh(sideGeo, woodMat);
+        leftSide.position.set(-width / 2 + thickness / 2, height / 2, 0);
+        frame.add(leftSide);
+
+        const rightSide = new THREE.Mesh(sideGeo, woodMat);
+        rightSide.position.set(width / 2 - thickness / 2, height / 2, 0);
+        frame.add(rightSide);
+
+        // Top/Bottom
+        const topBotGeo = new THREE.BoxGeometry(width, thickness, depth);
+        const bottom = new THREE.Mesh(topBotGeo, woodMat);
+        bottom.position.set(0, thickness / 2, 0);
+        frame.add(bottom);
+
+        const top = new THREE.Mesh(topBotGeo, woodMat);
+        top.position.set(0, height - thickness / 2, 0);
+        frame.add(top);
+
+        // Back
+        const backGeo = new THREE.BoxGeometry(width, height, thickness);
+        const back = new THREE.Mesh(backGeo, woodMat);
+        back.position.set(0, height / 2, -depth / 2 + thickness / 2);
+        frame.add(back);
+
+        // Shelves
+        const numShelves = 4;
+        const shelfSpacing = (height - thickness * 2) / numShelves;
+        const shelfGeo = new THREE.BoxGeometry(width - thickness * 2, thickness, depth - thickness);
+
+        for (let i = 1; i < numShelves; i++) {
+            const shelf = new THREE.Mesh(shelfGeo, woodMat);
+            shelf.position.set(0, bottom.position.y + i * shelfSpacing, 0);
+            frame.add(shelf);
+
+            // Fill Shelf with Books
+            this.fillShelf(shelf.position.y + thickness / 2, width - thickness * 2, depth - thickness);
+        }
+
+        // Fill Bottom Shelf
+        this.fillShelf(bottom.position.y + thickness / 2, width - thickness * 2, depth - thickness);
+
+        this.mesh.add(frame);
+    }
+
+    fillShelf(yPos, shelfWidth, shelfDepth) {
+        let currentX = -shelfWidth / 2 + 0.1; // Start from left with padding
+        const maxX = shelfWidth / 2 - 0.1;
+
+        while (currentX < maxX) {
+            // Book Dimensions
+            const bookWidth = 0.05 + Math.random() * 0.1; // Thickness
+            const bookHeight = 0.4 + Math.random() * 0.3;
+            const bookDepth = shelfDepth * (0.8 + Math.random() * 0.15);
+
+            if (currentX + bookWidth > maxX) break;
+
+            // Highlight Logic (Random low chance)
+            const isHighlighted = Math.random() < 0.02;
+
+            const color = isHighlighted ? 0x00FFFF : Math.random() * 0xffffff;
+            const emissive = isHighlighted ? 0x004444 : 0x000000;
+
+            const bookMat = new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.4,
+                emissive: emissive
+            });
+            const bookGeo = new THREE.BoxGeometry(bookWidth, bookHeight, bookDepth);
+
+            const book = new THREE.Mesh(bookGeo, bookMat);
+
+            // Position
+            // Center X: currentX + half width
+            // Center Y: yPos + half height
+            // Center Z: back aligned? Let's center it or align back. 
+            // Align back: -shelfDepth/2 + bookDepth/2
+            // Let's randomize Z slightly for "messy" look
+            const zOffset = (Math.random() - 0.5) * 0.1;
+
+            book.position.set(currentX + bookWidth / 2, yPos + bookHeight / 2, zOffset);
+
+            // Random Tilt (occasional)
+            if (Math.random() < 0.1) {
+                book.rotation.z = (Math.random() - 0.5) * 0.2;
+            }
+
+            this.mesh.add(book);
+
+            currentX += bookWidth + 0.005; // Gap
+        }
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}

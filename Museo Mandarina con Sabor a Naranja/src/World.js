@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -739,6 +739,52 @@ export class World {
         // L3 (-25, -50) - South Wall (Entrance from L2)
         // South Wall Z=-42.5. Inner Z=-42.75.
         this.addSwitchToRoom('L3', -22, 1.5, -42.8, Math.PI);
+
+        // --- MAD HATTER HAT (Room L3 Center) ---
+        const hatSculpture = new MadHatterHat();
+        hatSculpture.setPosition(-25, 0, -50);
+        this.scene.add(hatSculpture.mesh);
+        this.interactables.push(hatSculpture.mesh); // Make clickable? Maybe just decorative.
+
+        // Add Collider for Hat Pedestal
+        const hatBox = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 1, 1),
+            new THREE.MeshBasicMaterial({ visible: false })
+        );
+        hatBox.position.set(-25, 0.5, -50);
+        this.collidables.push(hatBox);
+        this.scene.add(hatBox);
+
+        // --- BOOKSHELVES (Room L3 North Wall) ---
+        // Room Center: (-25, -50), Size 15x15.
+        // North Wall Z = -50 - 7.5 = -57.5.
+        // Place shelves at Z = -56.5 (Depth 0.8 -> Center offset 0.4 from back? No, center is center).
+        // If box depth 0.8, back is at -0.4.
+        // We want back at -57.4 or so. Center at -57.
+
+        const shelf1 = new Bookshelf();
+        shelf1.setPosition(-28, 0, -57);
+        this.scene.add(shelf1.mesh);
+        // this.collidables.push(shelf1.mesh); // REMOVED: Groups crash Player physics. Used manual box below.
+
+        const shelf2 = new Bookshelf();
+        shelf2.setPosition(-22, 0, -57);
+        this.scene.add(shelf2.mesh);
+        // this.collidables.push(shelf2.mesh);
+
+        // Manual Colliders for Shelves (Groups don't collide well with simple logic usually)
+        const shelfBoxGeo = new THREE.BoxGeometry(3, 4, 1);
+        const shelfBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+
+        const s1Box = new THREE.Mesh(shelfBoxGeo, shelfBoxMat);
+        s1Box.position.set(-28, 2, -57);
+        this.scene.add(s1Box);
+        this.collidables.push(s1Box);
+
+        const s2Box = new THREE.Mesh(shelfBoxGeo, shelfBoxMat);
+        s2Box.position.set(-22, 2, -57);
+        this.scene.add(s2Box);
+        this.collidables.push(s2Box);
 
 
         // R1 (25, 0) - West Wall (Entrance from Central)
