@@ -3822,3 +3822,119 @@ export class HorseSkeleton {
         this.mesh.rotation.y = y;
     }
 }
+
+export class ArcadeMachine {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Materials
+        const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
+        const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.4 });
+        const screenMat = new THREE.MeshStandardMaterial({
+            color: 0x000000,
+            emissive: 0x2244ff,
+            emissiveIntensity: 0.8
+        });
+        const marqueeMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            emissive: 0xffaa00,
+            emissiveIntensity: 0.5
+        });
+        const chromeMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.2 });
+
+        // --- CABINET ---
+        const cabWidth = 0.8;
+        const cabHeight = 1.9;
+        const cabDepth = 0.8;
+
+        // Base/Body
+        // Shape: Simplified profile (not just a box)
+        // Bottom block
+        const baseGeo = new THREE.BoxGeometry(cabWidth, 0.8, cabDepth);
+        const base = new THREE.Mesh(baseGeo, blackMat);
+        base.position.set(0, 0.4, 0);
+        this.mesh.add(base);
+
+        // Screen Section (Angled back)
+        const midGeo = new THREE.BoxGeometry(cabWidth, 0.6, cabDepth * 0.8);
+        const mid = new THREE.Mesh(midGeo, blackMat);
+        mid.position.set(0, 1.1, -0.1);
+        this.mesh.add(mid);
+
+        // Top Section (Overhang)
+        const topGeo = new THREE.BoxGeometry(cabWidth, 0.3, cabDepth * 0.9);
+        const top = new THREE.Mesh(topGeo, blackMat);
+        top.position.set(0, 1.55, -0.05);
+        this.mesh.add(top);
+
+        // Side Panels (Red T-Molding simulated by thin boxes)
+        const sideGeo = new THREE.BoxGeometry(0.02, 1.9, cabDepth);
+        const leftSide = new THREE.Mesh(sideGeo, redMat);
+        leftSide.position.set(-cabWidth / 2 - 0.01, 0.95, 0);
+        this.mesh.add(leftSide);
+
+        const rightSide = new THREE.Mesh(sideGeo, redMat);
+        rightSide.position.set(cabWidth / 2 + 0.01, 0.95, 0);
+        this.mesh.add(rightSide);
+
+        // --- CONTROL PANEL ---
+        const cpGeo = new THREE.BoxGeometry(cabWidth, 0.1, 0.4);
+        const cp = new THREE.Mesh(cpGeo, blackMat);
+        cp.position.set(0, 0.85, 0.25);
+        cp.rotation.x = 0.2; // Slight tilt
+        this.mesh.add(cp);
+
+        // Joystick
+        const stickShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.1), chromeMat);
+        stickShaft.position.set(-0.2, 0.95, 0.3);
+        stickShaft.rotation.x = 0.2;
+        this.mesh.add(stickShaft);
+
+        const stickBall = new THREE.Mesh(new THREE.SphereGeometry(0.035), redMat);
+        stickBall.position.set(-0.2, 1.0, 0.28);
+        this.mesh.add(stickBall);
+
+        // Buttons
+        const buttonGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.02);
+        for (let i = 0; i < 3; i++) {
+            const btn = new THREE.Mesh(buttonGeo, (i % 2 === 0) ? redMat : chromeMat);
+            btn.position.set(0.1 + (i * 0.08), 0.92, 0.3);
+            btn.rotation.x = 0.2; // Match panel tilt
+            this.mesh.add(btn);
+        }
+
+        for (let i = 0; i < 3; i++) {
+            const btn = new THREE.Mesh(buttonGeo, (i % 2 === 0) ? redMat : chromeMat);
+            btn.position.set(0.1 + (i * 0.08), 0.92, 0.38); // Lower row
+            btn.rotation.x = 0.2;
+            this.mesh.add(btn);
+        }
+
+        // --- SCREEN ---
+        const screenGeo = new THREE.PlaneGeometry(cabWidth * 0.8, 0.5);
+        const screen = new THREE.Mesh(screenGeo, screenMat);
+        screen.position.set(0, 1.25, 0.25);
+        screen.rotation.x = -0.3; // Tilted back
+        this.mesh.add(screen);
+
+        // --- MARQUEE ---
+        const marqueeGeo = new THREE.PlaneGeometry(cabWidth * 0.9, 0.2);
+        const marquee = new THREE.Mesh(marqueeGeo, marqueeMat);
+        marquee.position.set(0, 1.6, 0.36);
+        this.mesh.add(marquee);
+
+        this.mesh.castShadow = true;
+        this.mesh.receiveShadow = true;
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}

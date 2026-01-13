@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton, ArcadeMachine } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -492,6 +492,20 @@ export class World {
         this.scene.add(piano.mesh);
         this.interactables.push(piano.mesh); // Or piano.interactableMesh if set? Yes it has hitBox with userData.
         // this.interactables.push(recordTable.mesh); // Future interaction
+
+        // --- ARCADE MACHINE (Room L1) ---
+        const arcade = new ArcadeMachine();
+        arcade.setPosition(-18, 0, -4); // East wall area
+        arcade.setRotation(-Math.PI / 2); // Facing West (into room)
+        this.scene.add(arcade.mesh);
+
+        const arcadeBox = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 2, 0.8),
+            new THREE.MeshBasicMaterial({ visible: false })
+        );
+        arcadeBox.position.set(-18, 1, -4);
+        this.collidables.push(arcadeBox);
+        this.scene.add(arcadeBox);
 
         this.addRoom(roomL1, 'L1');
 
