@@ -10,30 +10,88 @@ export class GoldenKey {
         const material = new THREE.MeshStandardMaterial({
             color: 0xFFD700, // Gold
             metalness: 1.0,
-            roughness: 0.2
+            roughness: 0.15,
+            emissive: 0x332200,
+            emissiveIntensity: 0.2
         });
 
-        // Head (Ring)
-        const headGeo = new THREE.TorusGeometry(0.015, 0.005, 8, 16);
-        const head = new THREE.Mesh(headGeo, material);
-        head.position.z = 0.04;
-        this.mesh.add(head);
+        // --- BOW (The Head) ---
+        // A trefoil shape: 3 rings
+        const ringRadius = 0.012;
+        const ringTube = 0.003;
+        const ringGeo = new THREE.TorusGeometry(ringRadius, ringTube, 8, 24);
 
-        // Shaft
-        const shaftGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.05, 8);
+        // Top Ring
+        const ring1 = new THREE.Mesh(ringGeo, material);
+        ring1.position.set(0, 0, 0.055);
+        this.mesh.add(ring1);
+
+        // Bottom Left Ring
+        const ring2 = new THREE.Mesh(ringGeo, material);
+        ring2.position.set(-0.018, 0, 0.035);
+        this.mesh.add(ring2);
+
+        // Bottom Right Ring
+        const ring3 = new THREE.Mesh(ringGeo, material);
+        ring3.position.set(0.018, 0, 0.035);
+        this.mesh.add(ring3);
+
+        // Center Connector (holds rings together)
+        const centerGeo = new THREE.CylinderGeometry(0.008, 0.005, 0.02, 8);
+        centerGeo.rotateX(Math.PI / 2);
+        const center = new THREE.Mesh(centerGeo, material);
+        center.position.set(0, 0, 0.04);
+        this.mesh.add(center);
+
+        // --- SHAFT (The Stem) ---
+        // Main rod
+        const shaftLen = 0.08;
+        const shaftGeo = new THREE.CylinderGeometry(0.004, 0.003, shaftLen, 12);
+        shaftGeo.rotateX(Math.PI / 2);
         const shaft = new THREE.Mesh(shaftGeo, material);
-        shaft.rotation.x = Math.PI / 2;
+        shaft.position.set(0, 0, -0.01); // Centered relative to bow
         this.mesh.add(shaft);
 
-        // Teeth
-        const toothGeo = new THREE.BoxGeometry(0.005, 0.01, 0.01);
-        const tooth1 = new THREE.Mesh(toothGeo, material);
-        tooth1.position.set(0, -0.005, -0.015);
-        this.mesh.add(tooth1);
+        // Decorative Collars (Ridges on shaft)
+        const collarGeo = new THREE.TorusGeometry(0.005, 0.0015, 6, 16);
 
-        const tooth2 = new THREE.Mesh(toothGeo, material);
-        tooth2.position.set(0, -0.005, -0.005);
-        this.mesh.add(tooth2);
+        // Collar near head
+        const collar1 = new THREE.Mesh(collarGeo, material);
+        collar1.position.set(0, 0, 0.02);
+        this.mesh.add(collar1);
+
+        // Collar middle
+        const collar2 = new THREE.Mesh(collarGeo, material);
+        collar2.position.set(0, 0, -0.01);
+        this.mesh.add(collar2);
+
+        // Collar near bit
+        const collar3 = new THREE.Mesh(collarGeo, material);
+        collar3.position.set(0, 0, -0.04);
+        this.mesh.add(collar3);
+
+        // --- BIT (The part that unlocks) ---
+        const bitGroup = new THREE.Group();
+        bitGroup.position.set(0, 0, -0.045);
+
+        // Main blade
+        const bladeGeo = new THREE.BoxGeometry(0.012, 0.02, 0.004);
+        const blade = new THREE.Mesh(bladeGeo, material);
+        blade.position.set(0, -0.01, 0); // Stick down
+        bitGroup.add(blade);
+
+        // Teeth details (Simulate notches by adding small blocks)
+        const toothGeo = new THREE.BoxGeometry(0.006, 0.005, 0.005);
+
+        const t1 = new THREE.Mesh(toothGeo, material);
+        t1.position.set(0.004, -0.02, 0);
+        bitGroup.add(t1);
+
+        const t2 = new THREE.Mesh(toothGeo, material);
+        t2.position.set(-0.004, -0.02, 0);
+        bitGroup.add(t2);
+
+        this.mesh.add(bitGroup);
 
         this.mesh.castShadow = true;
     }
