@@ -1142,6 +1142,37 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// --- PERFORMANCE OPTIMIZATION: WARMUP ---
+// Force GPU upload of textures/geometry and shader compilation by rendering the scene from multiple angles.
+// This prevents the "stutter" when looking at new areas (like the Garden) for the first time.
+function warmup() {
+    console.log("Warming up GPU...");
+    const originalRot = camera.rotation.clone();
+
+    // Render 4 cardinal directions
+    for (let i = 0; i < 4; i++) {
+        camera.rotation.set(0, (i * Math.PI) / 2, 0);
+        camera.updateMatrixWorld();
+        renderer.render(scene, camera);
+    }
+
+    // Restore Original Rotation
+    camera.rotation.copy(originalRot);
+    camera.updateMatrixWorld();
+
+    // Clear the artifact from the canvas
+    renderer.clear();
+    console.log("Warmup complete.");
+}
+
+// Execute Warmup
+try {
+    renderer.compile(scene, camera); // Compile shaders
+    warmup(); // Force GPU upload
+} catch (e) {
+    console.warn("Warmup failed:", e);
+}
+
 // Iniciar
 animate();
 
