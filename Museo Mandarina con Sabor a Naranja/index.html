@@ -131,6 +131,41 @@
         });
     </script>
     <div id="game-container"></div>
+    <!-- Piano Interface -->
+    <div id="piano-modal" class="modal-overlay hidden">
+        <div class="piano-container">
+            <div class="piano-header">
+                <h2>Piano de Cola</h2>
+                <button id="close-piano" class="close-btn">X</button>
+            </div>
+            <div class="piano-keys" id="piano-keys">
+                <!-- Keys generated via JS or hardcoded? Hardcoding for control -->
+                <!-- Octave 3 -->
+                <div class="key white" data-note="C3" data-key="a"></div>
+                <div class="key black" data-note="C#3" data-key="w"></div>
+                <div class="key white" data-note="D3" data-key="s"></div>
+                <div class="key black" data-note="D#3" data-key="e"></div>
+                <div class="key white" data-note="E3" data-key="d"></div>
+                <div class="key white" data-note="F3" data-key="f"></div>
+                <div class="key black" data-note="F#3" data-key="t"></div>
+                <div class="key white" data-note="G3" data-key="g"></div>
+                <div class="key black" data-note="G#3" data-key="y"></div>
+                <div class="key white" data-note="A3" data-key="h"></div>
+                <div class="key black" data-note="A#3" data-key="u"></div>
+                <div class="key white" data-note="B3" data-key="j"></div>
+
+                <!-- Octave 4 -->
+                <div class="key white" data-note="C4" data-key="k"></div>
+                <div class="key black" data-note="C#4" data-key="o"></div>
+                <div class="key white" data-note="D4" data-key="l"></div>
+                <div class="key black" data-note="D#4" data-key="p"></div>
+                <div class="key white" data-note="E4" data-key="ñ"></div>
+            </div>
+            <div class="piano-hint">
+                <p>Usa el teclado: A S D F G H J K L Ñ (Blancas) | W E T Y U O P (Negras)</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Instrucciones de inicio -->
     <div id="instructions">

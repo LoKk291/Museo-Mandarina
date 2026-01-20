@@ -410,8 +410,8 @@ document.addEventListener('click', () => {
                 soundManager.play('phone_takeoff');
                 openPhone();
             } else if (hitObject.userData.type === 'piano') {
-                // Just play a sound or nothing, but prevent error
                 soundManager.play('click');
+                openPiano();
             } else if (hitObject.userData.type === 'globe') {
                 // Open Map
                 const mapModal = document.getElementById('map-modal');
@@ -1491,5 +1491,93 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
     if (pongRunning) {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') keys[e.key] = false;
+    }
+});
+
+// --- PIANO LOGIC ---
+const pianoModal = document.getElementById('piano-modal');
+const closePianoBtn = document.getElementById('close-piano');
+const pianoKeys = document.querySelectorAll('.key');
+
+const noteFreqs = {
+    'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81,
+    'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00,
+    'A#3': 233.08, 'B3': 246.94,
+    'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63
+};
+
+function openPiano() {
+    isModalOpen = true;
+    player.unlock();
+    document.getElementById('instructions').style.display = 'none';
+    pianoModal.classList.remove('hidden');
+}
+
+function closePiano() {
+    pianoModal.classList.add('hidden');
+    isModalOpen = false;
+    player.lock();
+}
+
+closePianoBtn.onclick = closePiano;
+
+function playKey(keyEl) {
+    if (!keyEl) return;
+
+    // Visual Feedback
+    keyEl.classList.add('active');
+    setTimeout(() => keyEl.classList.remove('active'), 200);
+
+    // Audio
+    const note = keyEl.getAttribute('data-note');
+    if (note && noteFreqs[note]) {
+        soundManager.playPianoNote(noteFreqs[note]);
+    }
+}
+
+// Mouse Interaction
+pianoKeys.forEach(key => {
+    key.addEventListener('mousedown', () => playKey(key));
+});
+
+// Keyboard Interaction
+const keyMap = {};
+pianoKeys.forEach(key => {
+    const k = key.getAttribute('data-key');
+    if (k) keyMap[k.toLowerCase()] = key;
+});
+
+const activePianoKeys = new Set(); // Track pressed keys
+
+window.addEventListener('keydown', (e) => {
+    if (!isModalOpen || pianoModal.classList.contains('hidden')) return;
+
+    const keyChar = e.key.toLowerCase();
+
+    if (keyMap[keyChar]) {
+        if (!activePianoKeys.has(keyChar)) { // Only play if not already pressed
+            activePianoKeys.add(keyChar);
+
+            const keyEl = keyMap[keyChar];
+            // Visual On
+            keyEl.classList.add('active');
+
+            // Audio
+            const note = keyEl.getAttribute('data-note');
+            if (note && noteFreqs[note]) {
+                soundManager.playPianoNote(noteFreqs[note]);
+            }
+        }
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    const keyChar = e.key.toLowerCase();
+    if (activePianoKeys.has(keyChar)) {
+        activePianoKeys.delete(keyChar);
+        if (keyMap[keyChar]) {
+            // Visual Off
+            keyMap[keyChar].classList.remove('active');
+        }
     }
 });

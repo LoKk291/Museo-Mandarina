@@ -164,6 +164,41 @@ export class SoundManager {
         });
     }
 
+    // --- PIANO SYNTH ---
+    playPianoNote(frequency) {
+        if (!this.enabled) return;
+        this.initSynth();
+        const t = this.ctx.currentTime;
+        const duration = 1.5; // Long decay
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.4, t + 0.02); // Attack
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration); // Decay
+        gain.connect(this.ctx.destination);
+
+        // Core Tone (Triangle for body)
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(frequency, t);
+        osc.connect(gain);
+        osc.start(t);
+        osc.stop(t + duration);
+
+        // Harmonics (Sine for smooth top)
+        const osc2 = this.ctx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(frequency * 2, t);
+        const gain2 = this.ctx.createGain();
+        gain2.gain.setValueAtTime(0.1, t); // Lower volume for harmonic
+        gain2.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+        osc2.connect(gain2);
+        gain2.connect(this.ctx.destination);
+        osc2.start(t);
+        osc2.stop(t + duration);
+    }
+
     playVinyl(id) {
         if (!this.enabled) return;
 
