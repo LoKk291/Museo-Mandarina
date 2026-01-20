@@ -3305,309 +3305,250 @@ export class Piano {
     build() {
         // --- Materials ---
         const blackLacquerMat = new THREE.MeshStandardMaterial({
-            color: 0x050505, // Almost black
-            roughness: 0.02, // Very shiny (Polished)
-            metalness: 0.1,
-            envMapIntensity: 1.0
+            color: 0x050505,
+            roughness: 0.05,
+            metalness: 0.2,
+            envMapIntensity: 1.0,
+            side: THREE.DoubleSide
         });
 
         const goldMat = new THREE.MeshStandardMaterial({
             color: 0xFFD700,
-            roughness: 0.3,
-            metalness: 0.8
+            roughness: 0.4,
+            metalness: 0.6,
+            side: THREE.DoubleSide
         });
 
         const keyWhiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.1 });
         const keyBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
-        const redFeltMat = new THREE.MeshStandardMaterial({ color: 0x880000, roughness: 1.0 });
+        const redFeltMat = new THREE.MeshStandardMaterial({ color: 0x880000, roughness: 0.9 });
 
         // --- Dimensions ---
-        // A baby grand is roughly 1.5m wide x 1.5-1.8m long.
-        const width = 1.48; // Standard width
-        const length = 1.8; // Medium Grand
+        const width = 1.5;
+        const length = 1.9; // Z depth
+        const heightFromFloor = 0.72; // Leg height
+        const bodyThickness = 0.35;
 
-        // --- 1. RIM (The curved outer body) ---
-        const rimShape = new THREE.Shape();
-        rimShape.moveTo(0, 0); // Front Left
-        rimShape.lineTo(width, 0); // Front Right
-        rimShape.lineTo(width, length * 0.65); // Straight side
+        // --- 1. BODY SHAPE (Corrected: Straight Left, Curved Right) ---
+        // Drawing on XZ plane directly logic-wise but using XY Shape.
+        // --- 1. BODY SHAPE (Corrected: Straight Left, Curved Right) ---
+        // Drawing on XZ plane directly logic-wise but using XY Shape.
+        const solidShape = new THREE.Shape();
+        solidShape.moveTo(0, 0); // Front Left
+        solidShape.lineTo(width, 0); // Front Right
+        solidShape.lineTo(width, length * 0.35); // Straight part on Right (Treble side)
 
-        // The Curve (Taijitu style curve)
-        rimShape.bezierCurveTo(
-            width, length,          // Ctrl 1
-            width * 0.3, length,      // Ctrl 2
-            width * 0.3, length      // End of main rear curve (approx center)
+        // Curve Right side to Left Back
+        solidShape.bezierCurveTo(
+            width, length * 0.8,    // Ctrl 1
+            width * 0.4, length,    // Ctrl 2
+            0, length               // Back Left (Tail)
         );
-        rimShape.bezierCurveTo(
-            0, length * 0.9,
-            0, length * 0.5,
-            0, 0
-        );
 
-        // Inner Shape for subtractive extrusion (Hollow Rim)
-        const thickness = 0.08;
+        solidShape.lineTo(0, 0); // Straight Left side (Bass)
+
+        // --- 2. BOTTOM PLATE (Solid Bottom) ---
+        const bottomSettings = {
+            steps: 1,
+            depth: 0.05,
+            bevelEnabled: false
+        };
+        const bottomGeo = new THREE.ExtrudeGeometry(solidShape, bottomSettings);
+        const bottomPlate = new THREE.Mesh(bottomGeo, blackLacquerMat);
+        bottomPlate.rotation.x = Math.PI / 2;
+        bottomPlate.position.y = heightFromFloor;
+        bottomPlate.castShadow = true;
+        this.mesh.add(bottomPlate);
+
+        // --- 3. RIM (Hollow Body) ---
+        // Clone for rim so we don't put hole in solidShape
+        const rimShape = new THREE.Shape(solidShape.getPoints());
+
+        const rimWidth = 0.08;
         const innerShape = new THREE.Shape();
-        innerShape.moveTo(thickness, thickness);
-        innerShape.lineTo(width - thickness, thickness);
-        innerShape.lineTo(width - thickness, length * 0.63);
-
+        innerShape.moveTo(rimWidth, rimWidth);
+        innerShape.lineTo(width - rimWidth, rimWidth);
+        innerShape.lineTo(width - rimWidth, length * 0.35);
         innerShape.bezierCurveTo(
-            width - thickness, length - thickness,
-            width * 0.3 + thickness * 0.5, length - thickness,
-            width * 0.3 + thickness * 0.5, length - thickness
+            width - rimWidth, length * 0.8 - rimWidth,
+            width * 0.4, length - rimWidth,
+            rimWidth, length - rimWidth
         );
-        innerShape.bezierCurveTo(
-            thickness, length * 0.9 - thickness,
-            thickness, length * 0.5,
-            thickness, thickness
-        );
+        innerShape.lineTo(rimWidth, rimWidth);
 
         rimShape.holes.push(innerShape);
 
         const extrudeSettings = {
-            steps: 2,
-            depth: 0.35, // Rim Height
+            steps: 1,
+            depth: bodyThickness,
             bevelEnabled: true,
-            bevelThickness: 0.01,
+            bevelThickness: 0.02,
             bevelSize: 0.01,
-            bevelSegments: 3,
-            curveSegments: 32
+            bevelSegments: 3
         };
 
         const rimGeo = new THREE.ExtrudeGeometry(rimShape, extrudeSettings);
         const rim = new THREE.Mesh(rimGeo, blackLacquerMat);
-        rim.rotation.x = Math.PI / 2; // Lie flat
-        rim.position.y = 0.98; // Top height approx
+        rim.rotation.x = Math.PI / 2; // Lay flat
+        rim.position.y = heightFromFloor + bodyThickness;
         rim.castShadow = true;
         rim.receiveShadow = true;
         this.mesh.add(rim);
 
-        // --- 2. SOUNDBOARD / PLATE (Interior) ---
-        // Fill the hole with gold plate
-        const plateShape = new THREE.Shape();
-        plateShape.moveTo(thickness + 0.02, thickness + 0.02);
-        plateShape.lineTo(width - thickness - 0.02, thickness + 0.02);
-        plateShape.lineTo(width - thickness - 0.02, length * 0.63);
-        plateShape.bezierCurveTo(
-            width - thickness - 0.02, length - thickness - 0.02,
-            width * 0.3 + thickness * 0.5, length - thickness - 0.02,
-            width * 0.3 + thickness * 0.5, length - thickness - 0.02
-        );
-        plateShape.bezierCurveTo(
-            thickness + 0.02, length * 0.9 - thickness,
-            thickness + 0.02, length * 0.5,
-            thickness + 0.02, thickness + 0.02
-        );
-
-        const plateGeo = new THREE.ShapeGeometry(plateShape);
+        // --- 4. PLATE / HARP (Gold Interior) ---
+        const plateGeo = new THREE.ShapeGeometry(innerShape);
         const plate = new THREE.Mesh(plateGeo, goldMat);
         plate.rotation.x = Math.PI / 2;
-        plate.position.y = 0.75; // Inside rim
+        plate.position.y = heightFromFloor + 0.15; // Raised slightly inside
         this.mesh.add(plate);
 
-        // --- 3. KEYBED (Under keys) ---
-        const keybedGeo = new THREE.BoxGeometry(width + 0.1, 0.12, 0.5);
-        const keybed = new THREE.Mesh(keybedGeo, blackLacquerMat);
-        keybed.position.set(width / 2, 0.68, 0.05); // Protrude front
+        // --- 5. KEYBED & KEYS ---
+        const kbDepth = 0.35;
+        const kbThickness = 0.08;
+        const keybed = new THREE.Mesh(
+            new THREE.BoxGeometry(width, kbThickness, kbDepth),
+            blackLacquerMat
+        );
+        keybed.position.set(width / 2, heightFromFloor + 0.04, -kbDepth / 2 + 0.02);
         this.mesh.add(keybed);
 
-        // Key Cheeks (Side blocks)
-        const cheekGeo = new THREE.BoxGeometry(0.1, 0.2, 0.5);
+        const cheekGeo = new THREE.BoxGeometry(rimWidth, 0.18, kbDepth);
         const cheekL = new THREE.Mesh(cheekGeo, blackLacquerMat);
-        cheekL.position.set(0.05, 0.8, 0.05);
+        cheekL.position.set(rimWidth / 2, heightFromFloor + 0.13, -kbDepth / 2 + 0.02);
         this.mesh.add(cheekL);
 
         const cheekR = new THREE.Mesh(cheekGeo, blackLacquerMat);
-        cheekR.position.set(width - 0.05, 0.8, 0.05);
+        cheekR.position.set(width - rimWidth / 2, heightFromFloor + 0.13, -kbDepth / 2 + 0.02);
         this.mesh.add(cheekR);
 
-        // Fallboard (Cover) - Open
-        const fallboardGeo = new THREE.BoxGeometry(width - 0.2, 0.2, 0.05);
-        const fallboard = new THREE.Mesh(fallboardGeo, blackLacquerMat);
-        fallboard.position.set(width / 2, 0.9, 0.15);
-        fallboard.rotation.x = -Math.PI / 8; // Angled back
-        this.mesh.add(fallboard);
-
-        // --- 4. KEYS ---
-        // Red Felt Strip
-        const felt = new THREE.Mesh(new THREE.BoxGeometry(width - 0.2, 0.01, 0.3), redFeltMat);
-        felt.position.set(width / 2, 0.75, 0.05);
-        this.mesh.add(felt);
-
+        // Keys
         const numWhite = 52;
-        const keyW = (width - 0.22) / numWhite;
+        const totalKeyWidth = width - (rimWidth * 2) - 0.02;
+        const whiteKeyW = totalKeyWidth / numWhite;
+        const whiteGeo = new THREE.BoxGeometry(whiteKeyW * 0.92, 0.02, 0.15);
 
-        const whiteGeo = new THREE.BoxGeometry(keyW * 0.95, 0.04, 0.25);
-        const blackGeo = new THREE.BoxGeometry(keyW * 0.6, 0.05, 0.15);
+        const keyStartZ = -0.15;
+        const keyY = heightFromFloor + kbThickness + 0.02;
 
         for (let i = 0; i < numWhite; i++) {
-            const x = 0.11 + i * keyW + keyW / 2;
-            const key = new THREE.Mesh(whiteGeo, keyWhiteMat);
-            key.position.set(x, 0.77, 0.12);
-            this.mesh.add(key);
+            const k = new THREE.Mesh(whiteGeo, keyWhiteMat);
+            const x = rimWidth + 0.01 + i * whiteKeyW + whiteKeyW / 2;
+            k.position.set(x, keyY, keyStartZ);
+            this.mesh.add(k);
         }
 
-        // Black Keys Logic
+        const blackGeo = new THREE.BoxGeometry(whiteKeyW * 0.6, 0.035, 0.1);
         for (let i = 0; i < numWhite - 1; i++) {
             const octave = i % 7;
-            if (octave !== 2 && octave !== 6) { // Skip E-F and B-C gaps
-                const x = 0.11 + i * keyW + keyW;
-                const key = new THREE.Mesh(blackGeo, keyBlackMat);
-                key.position.set(x, 0.8, 0.05); // Higher and back
-                this.mesh.add(key);
+            if (octave !== 2 && octave !== 6) {
+                const k = new THREE.Mesh(blackGeo, keyBlackMat);
+                const x = rimWidth + 0.01 + i * whiteKeyW + whiteKeyW;
+                k.position.set(x, keyY + 0.02, keyStartZ - 0.03);
+                this.mesh.add(k);
             }
         }
 
-        // --- 5. LID (Wings) ---
-        const lidShape = new THREE.Shape();
-        lidShape.moveTo(0, 0);
-        lidShape.lineTo(width + 0.05, 0); // Slight overhang
-        lidShape.lineTo(width + 0.05, length * 0.65);
-        lidShape.bezierCurveTo(
-            width + 0.05, length + 0.02,
-            width * 0.3, length + 0.02,
-            width * 0.3, length + 0.02
+        const felt = new THREE.Mesh(
+            new THREE.BoxGeometry(totalKeyWidth, 0.01, 0.02),
+            redFeltMat
         );
-        lidShape.bezierCurveTo(
-            -0.05, length * 0.9,
-            -0.05, length * 0.5,
-            -0.05, 0
+        felt.position.set(width / 2, keyY + 0.01, 0);
+        this.mesh.add(felt);
+
+        const fb = new THREE.Mesh(
+            new THREE.BoxGeometry(totalKeyWidth, 0.15, 0.02),
+            blackLacquerMat
         );
+        fb.position.set(width / 2, keyY + 0.08, 0.02);
+        fb.rotation.x = -Math.PI / 6;
+        this.mesh.add(fb);
 
-        const lidGeo = new THREE.ExtrudeGeometry(lidShape, { steps: 1, depth: 0.04, bevelEnabled: false });
-        // Pivot point is along the straight edge (Left in this orientation since we drew 0->width)
-        // Actually typically hinges on the STRAIGHT side (Left)
-        // But our curve is on the left? My Rim shape:
-        // 0,0 -> width,0 -> width,len -> curve back to 0. 
-        // So Right side is Straight. Left side is Curved.
-        // Grand pianos curve on the Right usually? 
-        // Standard: Keyboard at front. Bass string (Long) on Left. Treble (Short) Right.
-        // Curve goes on the Right side. Straight side is Left.
-        // My Rim shape: 0,0 (FL) -> width,0 (FR) -> width,len (RR straight?)
-        // Wait, standard piano: Straight on LEFT (Bass), Curve on RIGHT (Treble).
-        // Let's adjust my Rim shape mental model.
-        // Shape: 0,0. Line to Width,0. (Front).
-        // Line to Width, Length*0.6 (Right Side).
-        // Curve to Left rear... 
-        // I drew straight on Right side in my code (width, length*0.6).
-        // I should stick to the code I wrote or standard?
-        // Let's assume my shape code produces a reasonable piano shape.
-
+        // --- 6. LID ---
+        const lidSettings = {
+            steps: 1,
+            depth: 0.04,
+            bevelEnabled: false
+        };
+        // USE solidShape HERE, NOT rimShape
+        const lidGeo = new THREE.ExtrudeGeometry(solidShape, lidSettings);
         const lid = new THREE.Mesh(lidGeo, blackLacquerMat);
-        lid.rotation.x = Math.PI / 2;
-        lid.position.set(0, 0.98 + 0.35, 0); // On top of rim
 
-        // Open the lid: Rotate around Z axis (Straight Left Edge approx)
-        // To pivot correctly, put in Group
+        // To pivot correctly around X=0 line (Left Edge):
         const lidGroup = new THREE.Group();
-        lidGroup.position.set(0.1, 0.98, 0); // Hinge line approx
+        lidGroup.position.set(0, heightFromFloor + bodyThickness + 0.01, 0);
 
-        // Offset geometry so 0 is at hinge
-        lid.position.set(-0.1, 0, 0); // Local rel to group
+        // Lid inside group
+        lid.rotation.x = Math.PI / 2; // Flat
+        lid.position.set(0, 0, 0);
+
         lidGroup.add(lid);
-
-        lidGroup.rotation.z = Math.PI / 6; // Open 30 deg
+        lidGroup.rotation.z = Math.PI / 6; // Rotate the Group
         this.mesh.add(lidGroup);
 
         // Stick
-        const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.8), goldMat);
-        stick.position.set(width * 0.7, 1.15, length * 0.5);
-        stick.rotation.x = 0.3;
+        const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.6), goldMat);
+        stick.position.set(width * 0.6, heightFromFloor + bodyThickness + 0.1, length * 0.4);
+        stick.rotation.x = 0.5;
+        stick.rotation.z = -0.2;
         this.mesh.add(stick);
 
         // Music Desk
-        const deskGeo = new THREE.BoxGeometry(0.6, 0.25, 0.02);
-        const desk = new THREE.Mesh(deskGeo, blackLacquerMat);
-        desk.position.set(width / 2, 0.85, 0.2);
+        const desk = new THREE.Mesh(
+            new THREE.BoxGeometry(0.6, 0.25, 0.02),
+            blackLacquerMat
+        );
+        desk.position.set(width / 2, heightFromFloor + bodyThickness - 0.05, 0.2);
         desk.rotation.x = -0.2;
         this.mesh.add(desk);
 
-        // --- 6. LEGS & LYRE ---
-        const legH = 0.62;
-        const legShape = new THREE.CylinderGeometry(0.08, 0.04, legH); // Tapered
-
+        // --- 7. LEGS ---
+        const legGeo = new THREE.CylinderGeometry(0.09, 0.05, heightFromFloor);
         const makeLeg = (x, z) => {
-            const l = new THREE.Mesh(legShape, blackLacquerMat);
-            l.position.set(x, legH / 2, z);
-
-            // Caster
-            const caster = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.05, 0.06, 0.08),
-                goldMat
-            );
-            caster.position.y = -legH / 2 + 0.04;
-            l.add(caster);
-
+            const l = new THREE.Mesh(legGeo, blackLacquerMat);
+            l.position.set(x, heightFromFloor / 2, z);
+            const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.08), goldMat);
+            c.rotation.z = Math.PI / 2;
+            c.position.y = -heightFromFloor / 2 + 0.04;
+            l.add(c);
             return l;
         };
 
-        this.mesh.add(makeLeg(0.2, 0.4)); // Front Left
-        this.mesh.add(makeLeg(width - 0.2, 0.4)); // Front Right
-        this.mesh.add(makeLeg(width * 0.3, length * 0.8)); // Back
+        this.mesh.add(makeLeg(0.15, 0.3));
+        this.mesh.add(makeLeg(width - 0.15, 0.3));
+        this.mesh.add(makeLeg(0.25, length * 0.8)); // Back Left Leg
 
-        // Lyre (Pedals)
+        // --- 8. LYRE ---
         const lyreGroup = new THREE.Group();
-        lyreGroup.position.set(width / 2, 0, 0.4);
+        lyreGroup.position.set(width / 2, 0, 0.1);
 
-        // Rods
-        const rodGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.45);
-        const rodL = new THREE.Mesh(rodGeo, blackLacquerMat);
-        rodL.position.set(-0.1, 0.35, 0);
-        lyreGroup.add(rodL);
-        const rodR = new THREE.Mesh(rodGeo, blackLacquerMat);
-        rodR.position.set(0.1, 0.35, 0);
-        lyreGroup.add(rodR);
+        const lyreStem = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.15), blackLacquerMat);
+        lyreStem.position.y = 0.1;
+        lyreGroup.add(lyreStem);
 
-        // Pedal Box
-        const box = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.2), blackLacquerMat);
-        box.position.y = 0.1;
-        lyreGroup.add(box);
+        const braceL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5), blackLacquerMat);
+        braceL.position.set(-0.15, 0.4, 0.1); braceL.rotation.x = -0.3; lyreGroup.add(braceL);
+        const braceR = braceL.clone(); braceR.position.set(0.15, 0.4, 0.1); lyreGroup.add(braceR);
 
-        // Pedals (Gold)
-        const pedalGeo = new THREE.BoxGeometry(0.04, 0.02, 0.15);
+        const pGeo = new THREE.BoxGeometry(0.04, 0.03, 0.12);
         for (let i = -1; i <= 1; i++) {
-            const p = new THREE.Mesh(pedalGeo, goldMat);
-            p.position.set(i * 0.08, 0.06, 0.1);
-            p.rotation.x = 0.2;
-            lyreGroup.add(p);
+            const p = new THREE.Mesh(pGeo, goldMat);
+            p.position.set(i * 0.08, 0.08, 0.05); lyreGroup.add(p);
         }
-
-        // Braces
-        const braceGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.5);
-        const braceL = new THREE.Mesh(braceGeo, goldMat);
-        braceL.position.set(-0.1, 0.3, -0.2);
-        braceL.rotation.x = -0.5;
-        lyreGroup.add(braceL);
-        const braceR = braceL.clone();
-        braceR.position.set(0.1, 0.3, -0.2);
-        lyreGroup.add(braceR);
-
         this.mesh.add(lyreGroup);
 
-        // --- 7. BENCH ---
-        const benchGroup = new THREE.Group();
-        benchGroup.position.set(width / 2, 0, -0.6); // Behind piano keys
-
-        // Cushion
-        const seatGeo = new THREE.BoxGeometry(0.7, 0.1, 0.35);
-        const seatMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }); // Leather
-        const seat = new THREE.Mesh(seatGeo, seatMat);
-        seat.position.y = 0.5;
-        benchGroup.add(seat);
-
-        // Legs
-        const bLegGeo = new THREE.BoxGeometry(0.05, 0.45, 0.05);
-        const legPos = [
-            [-0.3, 0.225, -0.12], [0.3, 0.225, -0.12],
-            [-0.3, 0.225, 0.12], [0.3, 0.225, 0.12]
-        ];
-        legPos.forEach(p => {
+        // --- 9. BENCH ---
+        const bench = new THREE.Group();
+        bench.position.set(width / 2, 0, -0.8);
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        seat.position.y = 0.55; bench.add(seat);
+        const bLegGeo = new THREE.BoxGeometry(0.06, 0.5, 0.06);
+        [[-0.35, -0.15], [0.35, -0.15], [-0.35, 0.15], [0.35, 0.15]].forEach(off => {
             const l = new THREE.Mesh(bLegGeo, blackLacquerMat);
-            l.position.set(...p);
-            benchGroup.add(l);
+            l.position.set(off[0], 0.25, off[1]);
+            bench.add(l);
         });
 
-        this.mesh.add(benchGroup);
+        this.mesh.add(bench);
 
         // Hitbox
         const hitBoxGeo = new THREE.BoxGeometry(2, 2, 2.5);
