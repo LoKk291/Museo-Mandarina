@@ -487,8 +487,8 @@ export class World {
         // Place Piano against South Wall. X centered or slightly offset.
         // X range [-32.5, -17.5]. Center X = -25.
         const piano = new Piano();
-        piano.setPosition(-25, 0, 5.5); // 2m from wall
-        piano.setRotation(Math.PI); // Keys facing North (into room)
+        piano.setPosition(-25, 0, 4.5); // Adjusted closer to wall
+        piano.setRotation(0); // Rotated 180 degrees from Math.PI
         this.scene.add(piano.mesh);
         this.interactables.push(piano.mesh); // Or piano.interactableMesh if set? Yes it has hitBox with userData.
         // this.interactables.push(recordTable.mesh); // Future interaction
