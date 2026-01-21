@@ -420,8 +420,12 @@ document.addEventListener('click', () => {
                 soundManager.play('click'); // Or play a special collection sound
 
                 // 1. Show in UI
-                const inventoryGui = document.querySelector('#inventory-gui');
-                if (inventoryGui) inventoryGui.style.display = 'flex';
+                // inventory-gui is always flex now (in CSS)
+                // const inventoryGui = document.querySelector('#inventory-gui');
+                // if (inventoryGui) inventoryGui.style.display = 'flex';
+
+                const keySlot = document.getElementById('slot-key');
+                if (keySlot) keySlot.classList.remove('hidden');
 
                 const keyIcon = document.querySelector('#slot-key .key-icon');
                 if (keyIcon) keyIcon.classList.remove('hidden');
@@ -441,7 +445,6 @@ document.addEventListener('click', () => {
 
                 // Optional: Toast message
                 showLetter("Sistema", "INFO", "Has recogido la Llave Dorada.", true);
-            } else if (hitObject.userData.type === 'secret-bookshelf-door') {
                 if (hasGoldenKey) {
                     soundManager.play('door_open'); // reuse door sound for now
                     const isOpen = hitObject.userData.parentObj.toggle();
@@ -452,6 +455,21 @@ document.addEventListener('click', () => {
                     // Trigger revelation in desk
                     world.revealGoldenKey();
                 }
+            } else if (hitObject.userData.type === 'flashlight') {
+                soundManager.play('click');
+                // Equip Flashlight
+                player.equipFlashlight();
+
+                // Remove from World
+                const item = hitObject.userData.parentObj.mesh;
+                // It is attached to a drawer probably
+                if (item.parent) item.parent.remove(item);
+
+                // Remove from interactables
+                const idx = world.interactables.indexOf(hitObject);
+                if (idx > -1) world.interactables.splice(idx, 1);
+
+                showLetter("Sistema", "INFO", "Has recogido una Linterna. Presiona Q para usarla. (Atención: Batería Limitada)", true);
             } else if (hitObject.userData.vinyl) {
                 // soundManager.play('click'); // Optional
 

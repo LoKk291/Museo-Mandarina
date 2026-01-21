@@ -4763,3 +4763,52 @@ export class SecretRug {
         this.mesh.position.set(x, y, z);
     }
 }
+
+export class FlashlightItem {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Body (Black Cylinder)
+        const bodyGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.25, 12);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6, metalness: 0.4 });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.rotation.z = Math.PI / 2;
+        this.mesh.add(body);
+
+        // Head (Wider Cylinder)
+        const headGeo = new THREE.CylinderGeometry(0.06, 0.04, 0.08, 12);
+        const headMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5, metalness: 0.6 });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.rotation.z = Math.PI / 2;
+        head.position.x = 0.165; // Offset from body center (0.25/2 + 0.08/2 = 0.125 + 0.04)
+        this.mesh.add(head);
+
+        // Lens (Yellowish emissive)
+        const lensGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.01, 12);
+        const lensMat = new THREE.MeshBasicMaterial({ color: 0xffffaa });
+        const lens = new THREE.Mesh(lensGeo, lensMat);
+        lens.rotation.z = Math.PI / 2;
+        lens.position.x = 0.21;
+        this.mesh.add(lens);
+
+        // Switch (Red Button)
+        const switchGeo = new THREE.BoxGeometry(0.03, 0.02, 0.02);
+        const switchMat = new THREE.MeshStandardMaterial({ color: 0xcc0000 });
+        const btn = new THREE.Mesh(switchGeo, switchMat);
+        btn.position.y = 0.045;
+        this.mesh.add(btn);
+
+        this.mesh.castShadow = true;
+
+        // Hitbox
+        const hitGeo = new THREE.BoxGeometry(0.4, 0.15, 0.15);
+        const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+        const hitbox = new THREE.Mesh(hitGeo, hitMat);
+        hitbox.userData = { type: 'flashlight', parentObj: this };
+        this.mesh.add(hitbox);
+        this.interactableMesh = hitbox; // Expose for raycasting
+    }
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -941,6 +941,26 @@ export class World {
         wasteBasket.setPosition(2.2, 0, -6.5);
         this.scene.add(wasteBasket.mesh);
         this.interactables.push(wasteBasket.interactableMesh);
+
+        // Flashlight in 3rd Drawer (Bottom Right Wing?)
+        // Desk creates 3 drawers in Right Wing (indices 0, 1, 2) if loop is 0..2
+        // Drawer 2 is the bottom one.
+        if (this.desk.drawers && this.desk.drawers.length > 2) {
+            const flashlight = new FlashlightItem();
+            // Add to drawer hierarchy, not scene directly (so it moves with drawer)
+            // Drawer adds items via addItem()
+            this.desk.drawers[2].addItem(flashlight.mesh);
+
+            // Position relative to drawer center
+            flashlight.mesh.position.set(0, 0.05, 0);
+            flashlight.mesh.rotation.y = Math.PI / 4;
+
+            // Ensure interactable is tracked
+            this.interactables.push(flashlight.interactableMesh);
+            // Note: Drawer.addItem already checks for interactable userData!
+            // Let's verify FlashlightItem.build adds hitbox with userData type='flashlight'.
+            // Yes it does.
+        }
 
         // --- ESTATUAS (Afrodita & Atenea) ---
         // Clock is presumably on North Wall (Z = -10).

@@ -29,8 +29,38 @@ export class Player {
         this.direction = new THREE.Vector3();
         this.isLocked = false;
 
+        // Flashlight State
+        this.hasFlashlight = false;
+        this.flashlightOn = false;
+        // Intensity 2.5 is too low for physical lights if legacy is off.
+        // Let's bump to 100.
+        this.flashlight = new THREE.SpotLight(0xffffff, 0, 40, Math.PI / 6, 0.5, 2);
+        this.flashlight.position.set(0.3, -0.3, 0); // Offset to right hand
+        // Target needs to be in front
+        // We add both to camera.
+        this.flashlight.target.position.set(0, 0, -5);
+        this.camera.add(this.flashlight);
+        this.camera.add(this.flashlight.target);
+
+        // Battery Logic
+        // 3 Bars. Each bar lasts 4 cycles of ON/OFF toggle.
+        // Total "Charges" = 3 * 4 = 12 toggles? Or 4 toggles per bar? 
+        // Request: "3 barras de bateria, las cuales deben durar cada una 4 encendidos y apagados"
+        // Interpretation: Each bar depletes after 4 toggles. Total 12 toggles.
+        this.batteryLevel = 3; // Max bars
+        this.batteryCycles = 0; // Counts usage within current bar
+        this.cyclesPerBar = 4;
+
         // Controles
         this.controls = new PointerLockControls(camera, domElement);
+        // Important: PointerLockControls object (camera) must be in scene!
+        // main.js adds 'camera' to scene? No, line 82: `scene.add(camera);` is NOT there in main.js snippet view!
+        // Line 11: `const camera = new...`
+        // Line 20: `scene.add(amiLight)...`
+        // I should ensure camera is added to scene so light children render.
+        // I will do it here if not present, but `main.js` governs it.
+        // However, `PointerLockControls` adds the camera to `controls.getObject()`.
+        // We should double check if `controls.getObject()` is added to scene.
 
         // Raycaster para interacción
         this.raycaster = new THREE.Raycaster();
@@ -40,6 +70,11 @@ export class Player {
 
         // Posición Inicial
         this.camera.position.set(0, this.height, 0);
+
+        // Ensure camera is in scene for lights to work if attached
+        if (!this.camera.parent) {
+            this.scene.add(this.camera);
+        }
     }
 
     setupEventListeners() {
@@ -48,8 +83,108 @@ export class Player {
         document.addEventListener('keyup', (event) => this.onKeyUp(event));
     }
 
+    equipFlashlight() {
+        this.hasFlashlight = true;
+        // Show UI Icon
+        const slot = document.getElementById('slot-flashlight');
+        const icon = document.querySelector('.flashlight-icon');
+        const batt = document.getElementById('battery-indicator');
+
+        // Reveal the slot itself
+        if (slot) slot.classList.remove('hidden');
+
+        // Ensure slot contents visible
+        if (icon) icon.classList.remove('hidden');
+        if (batt) batt.classList.remove('hidden');
+
+        // Force layout update if needed
+        if (slot) slot.style.borderColor = '#ffd700'; // Gold border for active item
+
+        this.updateBatteryUI();
+    }
+
+    toggleFlashlight() {
+        if (!this.hasFlashlight) return;
+
+        // If battery is dead (0), play empty click and return
+        if (this.batteryLevel <= 0) {
+            if (this.soundManager) this.soundManager.play('click'); // Click sound but no light
+            return;
+        }
+
+        this.flashlightOn = !this.flashlightOn;
+        // Intensity 100 for visibility
+        this.flashlight.intensity = this.flashlightOn ? 100 : 0;
+
+        if (this.soundManager) this.soundManager.play('click');
+
+        if (this.flashlightOn) {
+            // Count Usage Cycle ONLY on Turn ON
+            this.batteryCycles++;
+            if (this.batteryCycles >= this.cyclesPerBar) {
+                this.batteryLevel--;
+                this.batteryCycles = 0; // Reset cycle count for new bar
+                this.updateBatteryUI();
+
+                // If battery died just now
+                if (this.batteryLevel <= 0) {
+                    // Turn off immediately or let it stay until toggled off?
+                    // User said "duran X encendidos". 
+                    // Let's force off or dim out? 
+                    // Typical game logic: Light dies.
+                    setTimeout(() => {
+                        this.flashlightOn = false;
+                        this.flashlight.intensity = 0;
+                        if (this.soundManager) this.soundManager.play('click'); // Power down sound
+                    }, 500); // 0.5s flicker delay maybe?
+                }
+            }
+        }
+    }
+
+    updateBatteryUI() {
+        const bars = document.querySelectorAll('.battery-bar');
+        // Bars are usually bottom-up or top-down? Flex-direction column -> Top is bar[0].
+        // Let's say bar[2] is bottom (1st bar to die?), bar[0] is top (last bar)?
+        // Or standard: 3 bars visible. 
+        // Level 3: All Green.
+        // Level 2: Top (index 0) OFF.
+        // Level 1: Mid (index 1) OFF.
+        // Level 0: All OFF.
+
+        // Reverse loop to match visual stack (if index 0 is top)
+        // If batteryLevel is 2, we want 2 bars active. The bottom 2. (Indices 1, 2).
+        // If 3, indices 0, 1, 2 active.
+
+        // Let's assume indices 0,1,2 map to bars 3,2,1 visually?
+        // Flex column: Element 0 is top. Element 2 is bottom.
+        // Battery fills from bottom. 
+        // So indices 2, 1, 0.
+
+        bars.forEach((bar, index) => {
+            // Logic: If batteryLevel is 3, indices 0,1,2 active.
+            // If 2, indices 1,2 active.
+            // If 1, index 2 active.
+            // Formula: index >= (3 - batteryLevel) is ACTIVE.
+            // Ex: Level 2. 3-2=1. Indices >= 1 (1, 2) active. Correct.
+
+            if (index >= (3 - this.batteryLevel)) {
+                bar.classList.remove('off');
+            } else {
+                bar.classList.add('off');
+            }
+        });
+    }
+
     onKeyDown(event) {
+        // Ignore inputs if typing in a text field
+        const activeTag = document.activeElement.tagName.toLowerCase();
+        if (activeTag === 'input' || activeTag === 'textarea') return;
+
         switch (event.code) {
+            case 'KeyQ':
+                this.toggleFlashlight();
+                break;
             case 'ArrowUp':
             case 'KeyW':
                 this.moveForward = true;

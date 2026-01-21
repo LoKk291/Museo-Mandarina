@@ -568,10 +568,62 @@
 
     <!-- Inventory GUI -->
     <div id="inventory-gui">
-        <div class="inventory-slot" id="slot-key" title="Llave Dorada">
+        <div class="inventory-slot hidden" id="slot-key" title="Llave Dorada">
             <div class="key-icon hidden">🔑</div>
         </div>
+        <!-- Flashlight Slot: Hidden by default -->
+        <div class="inventory-slot hidden" id="slot-flashlight" title="Linterna (Q)">
+            <div class="flashlight-icon hidden">🔦</div>
+            <div class="battery-indicator hidden" id="battery-indicator">
+                <div class="battery-bar"></div>
+                <div class="battery-bar"></div>
+                <div class="battery-bar"></div>
+            </div>
+        </div>
     </div>
+
+    <style>
+        .battery-indicator {
+            position: absolute;
+            left: 50%;
+            bottom: -12px;
+            /* Move below the slot */
+            transform: translateX(-50%);
+            display: flex;
+            /* Flex row by default? No, vertical bars or horizontal? */
+            /* User said "3 barras". Vertical stack or horizontal? */
+            /* Reference images usually horizontal or vertical. */
+            /* My previous CSS was flex-direction: column (Vertical stack). */
+            /* If it's below, meaningful to be horizontal? */
+            /* "Debajo del mismo slot". */
+            /* Let's keep vertical stack but make it small, or horizontal bar? */
+            /* Let's switch to Horizontal Row below the slot. */
+            flex-direction: row;
+            gap: 2px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .battery-bar {
+            width: 10px;
+            height: 6px;
+            background-color: #00ff00;
+            border: 1px solid #000;
+        }
+
+        .battery-bar.off {
+            background-color: #333;
+        }
+
+        .flashlight-icon {
+            font-size: 24px;
+        }
+
+        /* Helper to hide slot itself */
+        #slot-flashlight.hidden {
+            display: none;
+        }
+    </style>
 
     <script type="module" src="./src/main.js"></script>
     <!-- PDF Overlay -->
