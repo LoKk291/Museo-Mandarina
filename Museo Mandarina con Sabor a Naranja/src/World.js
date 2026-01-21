@@ -1186,6 +1186,18 @@ export class World {
         // Cuadros L1
         roomL1.addPaintingToWall('North', 3, 3, 'cuadros/15.jpg', 'P-15', 'Cuadro 15', 'Grande', -4.75, 0);
 
+        // Add Letter to Painting 15
+        if (roomL1.paintings.length > 0) {
+            const p15 = roomL1.paintings[roomL1.paintings.length - 1];
+            p15.mesh.userData.painting.letterData = {
+                title: "Musico Musiquista",
+                place: "El ensueño",
+                date: "",
+                body: "Un musico, un musico que es cantante y que canta, que canta acerca de tus ojos, que toca acerca de tu mirada, y que en sus versos exclama \"Te amo, Giovana\"",
+                signature: "Yo mismo"
+            };
+        }
+
         // Marcos para Vinilos (Grid 2x3 en Pared Oeste)
         // Pared Oeste L1 está en X = -32.5.
         const frameX = -32.2;
