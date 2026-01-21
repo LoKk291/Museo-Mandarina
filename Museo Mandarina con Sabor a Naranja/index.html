@@ -128,6 +128,36 @@
             font-size: 16px;
             font-weight: bold;
         }
+
+        /* Special Letter Modal (Minecraft Blocks) */
+        .special-letter {
+            background: url('textures/letter_special_bg.jpg') no-repeat center center !important;
+            background-size: contain !important;
+            /* Keep aspect ratio of the paper */
+            background-color: transparent !important;
+            /* No white box behind */
+            box-shadow: none !important;
+            /* Remove shadow to look like paper */
+            border: none !important;
+            color: #333 !important;
+            font-family: 'Courier New', Courier, monospace !important;
+            padding: 60px 40px !important;
+            /* Adjust padding to fit inside the paper image */
+            width: 50vw !important;
+            /* Wider? */
+            height: 70vh !important;
+            /* Taller? */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .special-letter h2 {
+            font-family: 'Courier New', Courier, monospace !important;
+            text-decoration: underline;
+            margin-bottom: 20px;
+        }
     </style>
     <div id="error-console"></div>
     <div id="vinyl-toast">

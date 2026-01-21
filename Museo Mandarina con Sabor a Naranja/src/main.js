@@ -289,7 +289,7 @@ closeLetterBtn.onclick = () => {
 };
 
 
-function showLetter(title, content, isSystem = false) {
+function showLetter(title, content, isSystem = false, customClass = null) {
     isModalOpen = true;
     player.unlock();
     // Hide instructions
@@ -308,10 +308,14 @@ function showLetter(title, content, isSystem = false) {
 
     // Apply System Style if needed
     if (contentBox) {
+        contentBox.classList.remove('system-message');
+        contentBox.classList.remove('special-letter');
+        
         if (isSystem) {
             contentBox.classList.add('system-message');
-        } else {
-            contentBox.classList.remove('system-message');
+        }
+        if (customClass) {
+            contentBox.classList.add(customClass);
         }
     }
 
@@ -399,6 +403,9 @@ function checkInteraction() {
             interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'breakable-vase') {
             interactionMsg.textContent = "Click para romper jarrón";
+            interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'minecraft-block') {
+            interactionMsg.textContent = "Click para leer carta";
             interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
@@ -686,12 +693,18 @@ document.addEventListener('click', () => {
                 soundManager.play('vase_break');
                 const vase = hitObject.userData.parentObj;
                 if (vase && vase.break) {
-                    vase.break();
+                    vase.breakVase();
                 }
                 // Remove from interactables
                 const idx = world.interactables.indexOf(hitObject);
                 if (idx > -1) world.interactables.splice(idx, 1);
-            } else if (hitObject.userData.type === 'pdf') {
+            } else if (hitObject.userData.type === 'minecraft-block') {
+            soundManager.play('click');
+            const title = hitObject.userData.blockId === 'furnace' ? 'Horno' : 'Mesa de Trabajo';
+            // Placeholder text
+            const content = "Una nota antigua yace aquí, escrita con una vieja máquina de escribir..."; 
+            showLetter(title, content, false, 'special-letter');
+        } else if (hitObject.userData.type === 'pdf') {
                 soundManager.play('click');
                 openPdfViewer(hitObject.userData.file);
             } else {
@@ -2052,3 +2065,4 @@ window.addEventListener('keydown', (e) => {
         closePdfViewer();
     }
 });
+

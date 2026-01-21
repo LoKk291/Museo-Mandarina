@@ -2164,10 +2164,12 @@ export class World {
         const craftingTable = new CraftingTable();
         craftingTable.setPosition(-0.5, 0, -3); // Centered left
         this.isolatedRoom.group.add(craftingTable.mesh);
+        this.interactables.push(craftingTable.mesh);
 
         const furnace = new Furnace();
         furnace.setPosition(0.5, 0, -3); // Centered right, touching crafting table
         this.isolatedRoom.group.add(furnace.mesh);
+        this.interactables.push(furnace.mesh);
 
         // --- FILLER WALL (To hide the opening in L3) ---
         const fillerGeo = new THREE.BoxGeometry(4.2, 4, 0.51); // Slightly larger to avoid gaps
@@ -2363,4 +2365,5 @@ export class World {
         this.updateStreetLights(true); // Force update now, passing true (night) but flag will block it acting as OFF
     }
 }
+
 
