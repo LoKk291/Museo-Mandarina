@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton, ArcadeMachine } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton, ArcadeMachine, WallInstrument } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -494,6 +494,18 @@ export class World {
         this.interactables.push(piano.mesh); // Or piano.interactableMesh if set? Yes it has hitBox with userData.
         // this.interactables.push(recordTable.mesh); // Future interaction
 
+        // --- Wall Instruments (South Wall L1) ---
+        // South Wall Z = 7.5. Inner Z approx 7.4. Moved to 7.0 to avoid clipping/invisibility.
+        // Center X = -25. Spacing 3 units.
+        const criolla = new WallInstrument('criolla', -25, 2.5, 7.0, Math.PI); // Center
+        this.scene.add(criolla.mesh);
+
+        const rock = new WallInstrument('rock', -22, 2.5, 7.0, Math.PI); // Right (East of Center)
+        this.scene.add(rock.mesh);
+
+        const violin = new WallInstrument('violin', -28, 2.5, 7.0, Math.PI); // Left (West of Center)
+        this.scene.add(violin.mesh);
+
         // --- ARCADE MACHINE (Room L1) ---
         const arcade = new ArcadeMachine();
         arcade.setPosition(-18, 0, -4); // East wall area
@@ -629,6 +641,10 @@ export class World {
         // Pared Oeste (2 cuadros)
         roomR2.addPaintingToWall('West', 3, 3, 'cuadros/8.jpg', 'P-08', 'Espacio para Cuadro 8', 'Pendiente de asignar', 2, 0);
         roomR2.addPaintingToWall('West', 3, 3, 'cuadros/9.jpg', 'P-09', 'Espacio para Cuadro 9', 'Pendiente de asignar', -2, 0);
+
+        // Pared Norte (2 cuadros: 21, 22 a los lados de la puerta)
+        roomR2.addPaintingToWall('North', 3, 4, 'cuadros/21.jpg', 'P-21', 'Cuadro 21', 'Vertical', -5, 0);
+        roomR2.addPaintingToWall('North', 3, 4, 'cuadros/22.jpg', 'P-22', 'Cuadro 22', 'Vertical', 5, 0);
 
         this.addRoom(roomR2, 'R2');
 

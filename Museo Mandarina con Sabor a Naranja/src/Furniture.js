@@ -3296,6 +3296,73 @@ export class RecordPlayerTable {
     }
 }
 
+export class WallInstrument {
+    constructor(type, x, y, z, rotationY) {
+        this.mesh = new THREE.Group();
+        this.type = type; // 'criolla', 'rock', 'violin'
+
+        this.build();
+        this.setPosition(x, y, z);
+        this.setRotation(rotationY);
+    }
+
+    build() {
+        let texturePath = '';
+        let width = 1;
+        let height = 2; // Default approx aspect ratio
+
+        if (this.type === 'criolla') {
+            texturePath = 'assets/instruments/guitarra_criolla.png';
+            width = 1.2; height = 3.0;
+        } else if (this.type === 'rock') {
+            texturePath = 'assets/instruments/guitarra_rock.png';
+            width = 1.2; height = 3.0; // V-shape is wide
+        } else if (this.type === 'violin') {
+            texturePath = 'assets/instruments/violin.png';
+            width = 0.8; height = 1.8;
+        }
+
+        const textureLoader = new THREE.TextureLoader();
+        const texture = textureLoader.load(texturePath,
+            () => { },
+            undefined,
+            (err) => console.warn(`Failed to load texture: ${texturePath}`, err)
+        );
+
+        // Fallback colors for visibility if texture fails
+        let color = 0xFFFFFF;
+        if (this.type === 'criolla') color = 0x8B4513; // Brown
+        if (this.type === 'rock') color = 0xFF0000;    // Red
+        if (this.type === 'violin') color = 0xCD853F;  // Light Brown
+
+        // Plane Geometry for the image
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            color: color,
+            transparent: true,
+            side: THREE.DoubleSide,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        this.mesh.add(mesh);
+
+        // Add a small Hitbox for potential interaction or just solidity feel
+        // const box = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.1), new THREE.MeshBasicMaterial({visible:false}));
+        // this.mesh.add(box);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}
+
 export class Piano {
     constructor() {
         this.mesh = new THREE.Group();
