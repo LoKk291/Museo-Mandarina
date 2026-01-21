@@ -5357,10 +5357,28 @@ export class MinecraftBed {
         const bedLength = 2;
         const bedHeight = 0.5;
 
-        // Main bed body
+        // UV Mapping for Bed Atlas (Cross Layout)
+        // Image Ratio assumed 2:3 (W=2, H=3)
+        // Flaps: 0.5 unit. Center: 1x2 units.
+        const uvs = {
+            right: { x: 0.75, y: 0.166, w: 0.25, h: 0.666 },  // Right
+            left: { x: 0.0, y: 0.166, w: 0.25, h: 0.666 },    // Left
+            top: { x: 0.25, y: 0.166, w: 0.5, h: 0.666 },     // Top (Center)
+            bottom: { x: 0.25, y: 0.166, w: 0.5, h: 0.666 },  // Bottom (Copy Top)
+            front: { x: 0.25, y: 0.0, w: 0.5, h: 0.166 },     // Foot (Bottom Flap) ?? Verify logic
+            back: { x: 0.25, y: 0.833, w: 0.5, h: 0.166 }     // Head (Top Flap)
+        };
+
+        const materials = [];
+        ['right', 'left', 'top', 'bottom', 'front', 'back'].forEach(face => {
+            const mat = new THREE.MeshStandardMaterial({ map: bedTexture.clone() });
+            mat.map.repeat.set(uvs[face].w, uvs[face].h);
+            mat.map.offset.set(uvs[face].x, uvs[face].y);
+            materials.push(mat);
+        });
+
         const bedGeo = new THREE.BoxGeometry(bedWidth, bedHeight, bedLength);
-        const bedMat = new THREE.MeshStandardMaterial({ map: bedTexture });
-        const bed = new THREE.Mesh(bedGeo, bedMat);
+        const bed = new THREE.Mesh(bedGeo, materials);
         bed.position.y = bedHeight / 2;
         bed.castShadow = true;
         bed.receiveShadow = true;
@@ -5394,8 +5412,6 @@ export class MinecraftBed {
         this.mesh.rotation.y = y;
     }
 }
-
-// ===== BREAKABLE VASE =====
 export class BreakableVase {
     constructor(plantType = 'orchid') {
         this.plantType = plantType;
@@ -5583,3 +5599,8 @@ export class BreakableVase {
         this.mesh.rotation.y = y;
     }
 }
+
+
+
+
+
