@@ -1124,7 +1124,6 @@ export class World {
             p14.mesh.userData.painting.letterData = {
                 title: "La Noche Estrellada",
                 place: "Tus Ojos",
-                date: "19/12/2025",
                 body: "En vos existe la plenitud, en vos existe el universo, tus ojos como soles iluminan mis días, y tu sonrisa como la luna calma el ardor de mi día. Ay amor mío, no ves que la noche es una combinación de las estrellas y la luna? Como no he de estar cómodo en ella?",
                 signature: "Mandarino"
             };
@@ -1503,15 +1502,80 @@ export class World {
         // Distribución R1 (5 Cuadros)
         // Pared Sur (3 cuadros)
         roomR1.addPaintingToWall('South', 2, 2, 'cuadros/1.jpg', 'P-01', 'Espacio para Cuadro 1', 'Pendiente de asignar');
+
+        // Add Letter to Painting 1
+        if (roomR1.paintings.length > 0) {
+            // The last added painting is P-01 (since we just added it and it's the first one in R1?? No wait, check logic)
+            // addPaintingToWall pushes to this.paintings.
+            // If it's the first one in R1, it's at index 0.
+            // CAUTION: existing code might have added paintings before? 
+            // In the snippet, it seems to be the first one.
+            // Let's rely on finding it or just assuming it's the last one added *if* we do it immediately.
+            const p01 = roomR1.paintings[roomR1.paintings.length - 1];
+            // Better safety: In addPaintingToWall we pass ID 'P-01'. 
+            // usage: addPaintingToWall(wall, w, h, tex, id, title, desc, offU, offV)
+
+            p01.mesh.userData.painting.letterData = {
+                title: "No Hace Mucho",
+                place: "Parque de las Naciones",
+                // Date removed
+                body: "Caminando a tu lado descubri que el mundo lo tiene todo para ofrecer, caminando a tu lado la existenica fue mas soportable, caminando a tu lado comencé a soñar, caminando a tu lado mis sueños se hacen realidad.",
+                signature: "David (Grande)"
+            };
+        }
+
         roomR1.addPaintingToWall('South', 2, 2, 'cuadros/2.jpg', 'P-02', 'Espacio para Cuadro 2', 'Pendiente de asignar', 3, 0); // Offset Right
+
+        // Add Letter to Painting 2
+        if (roomR1.paintings.length > 0) {
+            const p02 = roomR1.paintings[roomR1.paintings.length - 1];
+            p02.mesh.userData.painting.letterData = {
+                title: "Celebración de la Vida",
+                place: "Tu casa",
+                body: "Recordas ese dia amor? Que trate de besarte mientras te tenia en mis brazos y que algunos se sorprendieron? Que me uní un poco más a tu familia y a tu circulo? Estabas deslumbrante, preciosa. A veces sueño recreando el momento exacto de esa foto, porque estaba emocionado de participar en algo tan importante como tu cumpleaños.",
+                signature: "Rulitos"
+            };
+        }
         roomR1.addPaintingToWall('South', 2, 2, 'cuadros/3.jpg', 'P-03', 'Espacio para Cuadro 3', 'Pendiente de asignar', -3, 0); // Offset Left
+
+        // Add Letter to Painting 3
+        if (roomR1.paintings.length > 0) {
+            const p03 = roomR1.paintings[roomR1.paintings.length - 1];
+            p03.mesh.userData.painting.letterData = {
+                title: "El Día más Feliz de mi Vida",
+                place: "Mi Casa",
+                body: "Ese día, ese frabulloso día, que me diste el si, que me permitiste ser parte de tu alma mediante una palabra tan sencilla pero tan poderosa, que con nuestras almas sabíamos que no volveriamos a estar solos ni pasar frío ni en el invierno más cruel. Y acá estamos, hace un año de ese día, y quiero que renovemos ese voto de confianza, de amor, una vez más, un año más, te amo mi Naranjita preciosa.",
+                signature: "Tu Novio"
+            };
+        }
 
         // Pared Este (2 cuadros)
         roomR1.addPaintingToWall('East', 3, 3, 'cuadros/4.jpg', 'P-04', 'Espacio para Cuadro 4', 'Pendiente de asignar', 2, 0);
+
+        // Add Letter to Painting 4
+        if (roomR1.paintings.length > 0) {
+            const p04 = roomR1.paintings[roomR1.paintings.length - 1]; // Assuming P-04 is the last added
+            // Better to find by ID if possible, but sequential add works here given context
+            p04.mesh.userData.painting.letterData = {
+                title: "Una Llamadita",
+                place: "Nuestras Casas",
+                body: "ALgo habremos dicho que nos hizo reír, que de tu interior hizo brotar una sonfonía de alegría, que otros vulgarmente llamaría risa.",
+                signature: "El Pelao de Rulos"
+            };
+        }
+
         roomR1.addPaintingToWall('East', 2, 2, 'cuadros/5.jpg', 'P-05', 'Espacio para Cuadro 5', 'Pendiente de asignar', -3, 0);
 
-        roomR1.addPaintingToWall('East', 3, 3, 'cuadros/4.jpg', 'P-04', 'Espacio para Cuadro 4', 'Pendiente de asignar', 2, 0);
-        roomR1.addPaintingToWall('East', 2, 2, 'cuadros/5.jpg', 'P-05', 'Espacio para Cuadro 5', 'Pendiente de asignar', -3, 0);
+        // Add Letter to Painting 5
+        if (roomR1.paintings.length > 0) {
+            const p05 = roomR1.paintings[roomR1.paintings.length - 1];
+            p05.mesh.userData.painting.letterData = {
+                title: "Un Picnic y Empanaditas",
+                place: "Corrientes",
+                body: "Sentaditos comiendo y mirando el paisaje, con la pancita llena y el corazón contento (no me vuelvo a pasar con la sal).",
+                signature: "El Chef"
+            };
+        }
 
         this.addRoom(roomR1, 'R1');
 
@@ -1558,14 +1622,82 @@ export class World {
         // Distribución R2 (4 Cuadros)
         // Pared Este (2 cuadros)
         roomR2.addPaintingToWall('East', 3, 3, 'cuadros/6.jpg', 'P-06', 'Espacio para Cuadro 6', 'Pendiente de asignar', 2, 0);
+
+        // Add Letter to Painting 6
+        if (roomR2.paintings.length > 0) {
+            // P-06 is the first one added to R2
+            // Let's grab the last one just to be consistent with previous pattern, knowing it's the one we just added.
+            const p06 = roomR2.paintings[roomR2.paintings.length - 1];
+            p06.mesh.userData.painting.letterData = {
+                title: "Una Salida Romántica",
+                place: "Corrientes",
+                body: "Te tomaría entre mis brazos mil veces y te daría diez mil besos, para que cuando mi cuerpo se enfríe y mi alma deje este mundo, pueda presumir a los angeles que conocí el paraíso antes de siquiera haber dejado de respirar, que viví mas tiempo en las nubes que todos ellos.",
+                signature: "El de la Camisa"
+            };
+        }
         roomR2.addPaintingToWall('East', 3, 3, 'cuadros/7.jpg', 'P-07', 'Espacio para Cuadro 7', 'Pendiente de asignar', -2, 0);
+
+        // Add Letter to Painting 7
+        if (roomR2.paintings.length > 0) {
+            const p07 = roomR2.paintings[roomR2.paintings.length - 1]; // Assuming P-07 is the last one added
+            p07.mesh.userData.painting.letterData = {
+                title: "Cenita",
+                place: "Tu casa de Corrientes",
+                body: "Fabulosa en su vestido, despanpanante con su brillo, irresistible en su piel. Permiteme adentrarme en tu corazón, y no me dejes salir, pus allí quiero permanecer.",
+                signature: "Io"
+            };
+        }
         // Pared Oeste (2 cuadros)
         roomR2.addPaintingToWall('West', 3, 3, 'cuadros/8.jpg', 'P-08', 'Espacio para Cuadro 8', 'Pendiente de asignar', 2, 0);
+
+        // Add Letter to Painting 8
+        if (roomR2.paintings.length > 0) {
+            const p08 = roomR2.paintings[roomR2.paintings.length - 1]; // Assuming P-08 is the last one added
+            p08.mesh.userData.painting.letterData = {
+                title: "ARARARAR",
+                place: "Cine",
+                body: "PARA ENTENDER LA HISTORIA DE FNAF",
+                signature: "Ñaca Ñaca"
+            };
+        }
         roomR2.addPaintingToWall('West', 3, 3, 'cuadros/9.jpg', 'P-09', 'Espacio para Cuadro 9', 'Pendiente de asignar', -2, 0);
+
+        // Add Letter to Painting 9
+        if (roomR2.paintings.length > 0) {
+            const p09 = roomR2.paintings[roomR2.paintings.length - 1]; // Assuming P-09 is the last one added
+            p09.mesh.userData.painting.letterData = {
+                title: "My Silly Ass GF",
+                place: "Shopping",
+                body: "Tenemos que ir a jugar denuevo si o si.",
+                signature: "Spartan 117"
+            };
+        }
 
         // Pared Norte (2 cuadros: 21, 22 a los lados de la puerta)
         roomR2.addPaintingToWall('North', 3, 4, 'cuadros/21.jpg', 'P-21', 'Cuadro 21', 'Vertical', -5, 0);
+
+        // Add Letter to Painting 21
+        if (roomR2.paintings.length > 0) {
+            const p21 = roomR2.paintings[roomR2.paintings.length - 1]; // Assuming P-21 is the latest
+            p21.mesh.userData.painting.letterData = {
+                title: "Una Fiesta en Familia",
+                place: "Tu Casa de Obe",
+                body: "Gracis por abrirme las puertas de tu familia, gracias por abrirme las puertas de tu corazón, y en la fiesta donde lo que más importa es agradecer y dar, yo estuve y estoy agradecido por tu amor y quiero darte toda mi vida.",
+                signature: "Tu Duende de Navidad"
+            };
+        }
         roomR2.addPaintingToWall('North', 3, 4, 'cuadros/22.jpg', 'P-22', 'Cuadro 22', 'Vertical', 5, 0);
+
+        // Add Letter to Painting 22
+        if (roomR2.paintings.length > 0) {
+            const p22 = roomR2.paintings[roomR2.paintings.length - 1]; // Assuming P-22 is the latest
+            p22.mesh.userData.painting.letterData = {
+                title: "Un Nuevo Año",
+                place: "Alem",
+                body: "COmenzaba u nuevo año, y yo tenía todo lo que necesitaba, tenía todo lo que deseaba. Nada más hermoso que comenzar el año con el amor de mi vida, que empezar un nuevo capitulo con vos, te amo alma mía.",
+                signature: "Tu Mandarino"
+            };
+        }
 
         this.addRoom(roomR2, 'R2');
 
@@ -1583,15 +1715,104 @@ export class World {
         // Distribución R3 (4 Cuadros)
         // Pared Norte (2 cuadros)
         roomR3.addPaintingToWall('North', 2.5, 2.5, 'cuadros/10.jpg', 'P-10', 'Espacio para Cuadro 10', 'Pendiente de asignar', 2, 0);
+
+        // Add Letter to Painting 10
+        if (roomR3.paintings.length > 0) {
+            // P-10 is the first one added to R3
+            const p10 = roomR3.paintings[roomR3.paintings.length - 1];
+            p10.mesh.userData.painting.letterData = {
+                title: "Un Paseo por la Historia",
+                place: "Corrientes",
+                body: "Un tere para el libertador de America, se lo merece despues de tanto esfuerzo no?",
+                signature: "No San Martin"
+            };
+        }
         roomR3.addPaintingToWall('North', 2.5, 2.5, 'cuadros/11.jpg', 'P-11', 'Espacio para Cuadro 11', 'Pendiente de asignar', -2, 0);
+
+        // Add Letter to Painting 11
+        if (roomR3.paintings.length > 0) {
+            const p11 = roomR3.paintings[roomR3.paintings.length - 1]; // Assuming P-11 is the last one added
+            p11.mesh.userData.painting.letterData = {
+                title: "El Mismo Paseito",
+                place: "Corrientes",
+                body: "Comamos Cheesecake denuevo o moriré",
+                signature: "Quesito"
+            };
+        }
         // Pared Este (3 cuadros: 19, 12, 20)
         roomR3.addPaintingToWall('East', 5, 3, 'cuadros/12.jpg', 'P-12', 'Espacio para Cuadro 12', 'Horizontal', 0, 0);
+
+        // Add Letter to Painting 12
+        if (roomR3.paintings.length > 0) {
+            const p12 = roomR3.paintings[roomR3.paintings.length - 1]; // Assuming P-12 is the last one added
+            p12.mesh.userData.painting.letterData = {
+                title: "Un Voto de Amor",
+                place: "Corrientes",
+                body: "Acostados en el pasto, con la inmensidad del cielo por delante, decidimos ser nosotros quines teniamos algo que ofrecerle a el, y le mostramos cuanto nos amamos, unimos nuestras manos y le demostramos que juntos teniamos algo mas hermoso que el mismimo cielo.",
+                signature: "El de la Mano mas Oscura"
+            };
+        }
         roomR3.addPaintingToWall('East', 2, 2, 'cuadros/19.jpg', 'P-19', 'Cuadro 19', 'Cuadrado', -4.5, 0);
+
+        // Add Letter to Painting 19
+        if (roomR3.paintings.length > 0) {
+            const p19 = roomR3.paintings[roomR3.paintings.length - 1]; // Assuming P-19 is the last one added
+            p19.mesh.userData.painting.letterData = {
+                title: "Una Alianza",
+                place: "Corrientes York",
+                body: "Dos pulseras, uan sola unión. Algún día será un anillo en tu dedo, y luego un anillo en el dedo de ambos.",
+                signature: "Tu Aforturnado Admirador"
+            };
+        }
         roomR3.addPaintingToWall('East', 2, 2, 'cuadros/20.jpg', 'P-20', 'Cuadro 20', 'Cuadrado', 4.5, 0);
+
+        // Add Letter to Painting 20
+        if (roomR3.paintings.length > 0) {
+            const p20 = roomR3.paintings[roomR3.paintings.length - 1]; // Assuming P-20 is the latest
+            p20.mesh.userData.painting.letterData = {
+                title: "Un día de Pileta",
+                place: "Una Pileta",
+                body: "Sin dudas de los días más hermosos de todo mi Enero, y que mes tan lindo además, siendo que comienza el año y tambien el amor de mi vida amplía su existencia. No puedo resistirme, por favor, tomame y no me sueltes.",
+                signature: "Tu Empedernido Buscador"
+            };
+        }
         // Pared Oeste (3 cuadros: 16, 13, 17)
         roomR3.addPaintingToWall('West', 3, 4, 'cuadros/13.jpg', 'P-13', 'Espacio para Cuadro 13', 'Pendiente de asignar');
+
+        // Add Letter to Painting 13
+        if (roomR3.paintings.length > 0) {
+            const p13 = roomR3.paintings[roomR3.paintings.length - 1]; // Assuming P-13 is the latest
+            p13.mesh.userData.painting.letterData = {
+                title: "MY GG ASS SILLY AND GORGEOUS WIFE",
+                place: "NO SÉ",
+                body: "MIRÁ LO QUE ES ESA CARITA DIOS MIOOOOOOOOOOOOOOOOOOOOOOOOOOOOO sos UN CARAMELITOOOOOOOOOOOOOOO ÑAM ÑAM",
+                signature: "ÑAM ÑAM ÑAM ÑAM"
+            };
+        }
         roomR3.addPaintingToWall('West', 3, 4, 'cuadros/16.jpg', 'P-16', 'Cuadro 16', 'Lateral', -4, 0);
+
+        // Add Letter to Painting 16
+        if (roomR3.paintings.length > 0) {
+            const p16 = roomR3.paintings[roomR3.paintings.length - 1]; // Assuming P-16 is the latest
+            p16.mesh.userData.painting.letterData = {
+                title: "Un Alfajorcito para un Mes Más",
+                place: "Nuestras Casas",
+                body: "Un alfajorcito, una pelicula, y mucho amor, muchísimo amor, para que con su calor funda las dificultades y nos sirvan para forjar un amor aún más fuerte.",
+                signature: "Tu Amado"
+            };
+        }
         roomR3.addPaintingToWall('West', 3, 4, 'cuadros/17.jpg', 'P-17', 'Cuadro 17', 'Lateral', 4, 0);
+
+        // Add Letter to Painting 17
+        if (roomR3.paintings.length > 0) {
+            const p17 = roomR3.paintings[roomR3.paintings.length - 1]; // Assuming P-17 is the latest
+            p17.mesh.userData.painting.letterData = {
+                title: "Frío y Calor",
+                place: "Camita",
+                body: "Vos con frío, yo con calor, pero siempre con ganas del otro.",
+                signature: "David Vega"
+            };
+        }
 
         this.addRoom(roomR3, 'R3');
 
@@ -1904,6 +2125,19 @@ export class World {
         this.isolatedRoom.setFloorTexture(rockTex);
 
         this.isolatedRoom.group.visible = false;
+
+        // Add Painting 18 (Pelela)
+        this.isolatedRoom.addPaintingToWall('North', 3, 3, 'cuadros/18.jpg', 'P-18', 'Pelela Momento', 'Foto', 0, 0);
+        if (this.isolatedRoom.paintings.length > 0) {
+            const p18 = this.isolatedRoom.paintings[this.isolatedRoom.paintings.length - 1];
+            p18.mesh.userData.painting.letterData = {
+                title: "Pelela Momento",
+                place: "Mi Casa de Alem",
+                body: "Mi veterinaria hermosa con mi gatita preciosa, se llevaron bien y encima Pelela se re mimoseaba, que nino todo.",
+                signature: "El Fotografo"
+            };
+        }
+
         this.addRoom(this.isolatedRoom, 'ISOLATED_ROOM');
 
         // Add Secret Rug to Isolated Room

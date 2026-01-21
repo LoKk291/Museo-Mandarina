@@ -110,7 +110,7 @@ const cheats = {
             if (keyIcon) keyIcon.classList.remove('hidden');
 
             soundManager.play('click');
-            showLetter("Sistema", "CHEAT", "Llave Dorada obtenida mediante código.", true);
+            showLetter("Sistema", "Llave Dorada obtenida mediante código.", true);
 
             // Hide the actual key if it's still in the drawer
             if (world.desk && world.desk.goldenKey) {
@@ -166,7 +166,7 @@ const cheats = {
         if (!player.hasFlashlight) {
             player.equipFlashlight();
             soundManager.play('click');
-            showLetter("Sistema", "CHEAT", "Linterna equipada mediante código. Presiona Q para usarla.", true);
+            showLetter("Sistema", "Linterna equipada mediante código. Presiona Q para usarla.", true);
         }
     },
     // Secret Cheat - Teleport to Secret Room
@@ -183,7 +183,7 @@ const cheats = {
         player.camera.position.set(200, 1.7, 200);
         player.velocity.set(0, 0, 0);
         soundManager.play('click');
-        showLetter("Sistema", "CHEAT", "Teletransportado a la habitación secreta.", true);
+        showLetter("Sistema", "Teletransportado a la habitación secreta.", true);
     },
     // Mangle Cheat - Jumpscare 2
     "mangle": () => {
@@ -289,7 +289,7 @@ closeLetterBtn.onclick = () => {
 };
 
 
-function showLetter(title, date, content, isSystem = false) {
+function showLetter(title, content, isSystem = false) {
     isModalOpen = true;
     player.unlock();
     // Hide instructions
@@ -299,12 +299,11 @@ function showLetter(title, date, content, isSystem = false) {
 
     // Populate Data
     const titleEl = document.getElementById('letter-title');
-    const dateEl = document.getElementById('letter-date');
+    // Date element removed
     const bodyEl = document.getElementById('letter-body');
     const contentBox = document.querySelector('.letter-content');
 
     if (titleEl) titleEl.textContent = title;
-    if (dateEl) dateEl.textContent = date;
     if (bodyEl) bodyEl.innerHTML = `<p>${content}</p>`;
 
     // Apply System Style if needed
@@ -431,7 +430,7 @@ document.addEventListener('click', () => {
                 openPdfViewer(hitObject.userData.file);
             } else if (hitObject.userData.type === 'mad-hatter-hat') {
                 soundManager.play('click');
-                showLetter("El Sombrerero", "10/6", "Nunca pierdas tu muchosidad.", false);
+                showLetter("El Sombrerero", "Nunca pierdas tu muchosidad.", false);
             } else if (hitObject.userData.type === 'desk-lamp') {
                 soundManager.play('interruptor'); // New sound
                 hitObject.userData.parentObj.toggle();
@@ -513,13 +512,13 @@ document.addEventListener('click', () => {
                 startPong();
             } else if (hitObject.userData.type === 'paper-stack') {
                 soundManager.play('click');
-                showLetter("Informe de Estado", "22/01/26", "El comando \"party time\" no funciona, debido al estado actual de los animatronicos, no se recomienda activar el comando, el comportamiento de Foxy y Mangle es algo inestable.<p style='text-align: right; margin-top: 20px;'>- Equipo Mandarina</p>", false);
+                showLetter("Informe de Estado", "El comando \"party time\" no funciona, debido al estado actual de los animatronicos, no se recomienda activar el comando, el comportamiento de Foxy y Mangle es algo inestable.<p style='text-align: right; margin-top: 20px;'>- Equipo Mandarina</p>", false);
             } else if (hitObject.userData.type === 'secret-note') {
                 soundManager.play('click');
-                showLetter("Nota Guardada", "???", "Llamame! 3754-406297", false);
+                showLetter("Nota Guardada", "Llamame! 3754-406297", false);
             } else if (hitObject.userData.type === 'hint-note') {
                 soundManager.play('click');
-                showLetter("Manganeso", "PISTA", "antes de volver, echa un vistazo por ahí", true);
+                showLetter("Manganeso", "antes de volver, echa un vistazo por ahí", true);
             } else if (hitObject.userData.type === 'golden-key') {
                 // Collect Golden Key
                 soundManager.play('click'); // Or play a special collection sound
@@ -549,7 +548,7 @@ document.addEventListener('click', () => {
                 hasGoldenKey = true;
 
                 // Optional: Toast message
-                showLetter("Sistema", "INFO", "Has recogido la Llave Dorada.", true);
+                showLetter("Sistema", "Has recogido la Llave Dorada.", true);
             } else if (hitObject.userData.type === 'secret-bookshelf-door') {
                 if (hasGoldenKey) {
                     soundManager.play('door_open'); // reuse door sound for now
@@ -557,7 +556,7 @@ document.addEventListener('click', () => {
                     world.toggleSecretPassage(isOpen);
                 } else {
                     soundManager.play('click');
-                    showLetter("Sistema", "PISTA", "Esta estantería parece diferente a las demás... Acaso eso libro tiene forma de cerradura?", true);
+                    showLetter("Sistema", "Esta estantería parece diferente a las demás... Acaso eso libro tiene forma de cerradura?", true);
                     // Trigger revelation in desk
                     world.revealGoldenKey();
                 }
@@ -575,7 +574,7 @@ document.addEventListener('click', () => {
                 const idx = world.interactables.indexOf(hitObject);
                 if (idx > -1) world.interactables.splice(idx, 1);
 
-                showLetter("Sistema", "INFO", "Has recogido una Linterna. Presiona Q para usarla. (Atención: Batería Limitada)", true);
+                showLetter("Sistema", "Has recogido una Linterna. Presiona Q para usarla. (Atención: Batería Limitada)", true);
             } else if (hitObject.userData.vinyl) {
                 // soundManager.play('click'); // Optional
 
@@ -1389,10 +1388,10 @@ function openModal(paintingData) {
     document.getElementById('instructions').style.display = 'none';
 
     // Letter Data (Defaults if missing)
+    // Letter Data (Defaults if missing)
     const data = paintingData.letterData || {
         title: "Carta Generica",
         place: "Lugar Desconocido",
-        date: "00/00/00",
         body: "Texto no disponible.",
         signature: "Anónimo"
     };
@@ -1400,12 +1399,10 @@ function openModal(paintingData) {
     // Populate Letter Overlay
     document.getElementById('letter-title').textContent = data.title;
 
-    // Combine Place and Date
-    document.getElementById('letter-date').textContent = `${data.place}          ${data.date}`;
-
-    // Body and Signature
+    // Body and Signature (Include Place here now)
     const bodyContainer = document.getElementById('letter-body');
     bodyContainer.innerHTML = `
+        <p style="color: #ccc; font-size: 0.9em; margin-bottom: 15px;">${data.place}</p>
         <p>${data.body}</p>
         <p style="text-align: right; margin-top: 40px; font-style: italic;">${data.signature}</p>
     `;
