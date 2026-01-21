@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
 export class Player {
-    constructor(camera, domElement, scene, collidables) {
+    constructor(camera, domElement, scene, collidables, world) {
         this.camera = camera;
         this.scene = scene;
         this.domElement = domElement;
         this.collidables = collidables;
+        this.world = world; // Reference to world for height-map
 
         // Configuración
         this.speed = 10.0;
@@ -137,10 +138,13 @@ export class Player {
         const dX = -this.velocity.x * delta * 0.08; // Más velocidad final
         const dZ = -this.velocity.z * delta * 0.08;
 
-        // Check Floor collision (Simple Y plane)
-        if (this.camera.position.y < this.height) {
+        // Check Floor collision (Dynamic Terrain)
+        const groundHeight = this.world ? this.world.getTerrainHeight(this.camera.position.x, this.camera.position.z) : 0;
+        const footingY = groundHeight + this.height;
+
+        if (this.camera.position.y < footingY) {
             this.velocity.y = 0;
-            this.camera.position.y = this.height;
+            this.camera.position.y = footingY;
             if (!this.canJump) this.canJump = true; // Robust reset
         }
 
@@ -148,9 +152,9 @@ export class Player {
         this.camera.position.y += this.velocity.y * delta;
 
         // Ensure floor clamp again
-        if (this.camera.position.y < this.height) {
+        if (this.camera.position.y < footingY) {
             this.velocity.y = 0;
-            this.camera.position.y = this.height;
+            this.camera.position.y = footingY;
             if (!this.canJump) this.canJump = true;
         }
 

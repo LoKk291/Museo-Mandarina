@@ -117,7 +117,7 @@ export class World {
         const bufferSize = 15;
         const museumMinX = -35;
         const museumMaxX = 35;
-        const museumMinZ = -55;
+        const museumMinZ = -60;
         const museumMaxZ = 15;
 
         const boundaryMinX = museumMinX - bufferSize;
@@ -198,13 +198,23 @@ export class World {
                 Math.pow((boundaryMaxZ - boundaryMinZ) / 2, 2)
             );
 
-            // Only apply irregularity OUTSIDE the boundary zone
-            if (distFromCenter > boundaryRadius * 0.8) {
-                // Apply noise-based height variation
-                const heightVariation = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 3 +
-                    Math.sin(x * 0.05) * Math.cos(z * 0.05) * 5 +
-                    Math.random() * 2;
-                vertices[i + 2] = heightVariation;
+            // Only apply irregularity OUTSIDE the actual boundary zone
+            // Visible Boundary is: X: ±50, Z: -75 to 30
+            // Expanded buffer: X: ±60, Z: -90 to 40
+            const isOutsideBoundary = (
+                Math.abs(x) > 60 ||
+                z < -90 || z > 40
+            );
+
+            if (isOutsideBoundary) {
+                // Determine heights using a mix of frequencies (Fully Deterministic)
+                // Base hills
+                const baseHills = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 3 +
+                    Math.sin(x * 0.05) * Math.cos(z * 0.05) * 5;
+                // High-frequency detail (pseudo-random but deterministic)
+                const detail = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 1.5;
+
+                vertices[i + 2] = baseHills + detail;
             }
         }
 
@@ -289,10 +299,14 @@ export class World {
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
 
-            // Check if position is on flat terrain (not in bumpy areas)
-            const distFromCenter = Math.sqrt(x * x + z * z);
-            if (distFromCenter < boundaryRadius * 0.8) {
-                // Skip - this is in the flat area or too close
+            // Check if position is outside boundary (matches terrain irregularities)
+            const isOutsideBoundary = (
+                Math.abs(x) > 60 ||
+                z < -90 || z > 40
+            );
+
+            if (!isOutsideBoundary) {
+                // Skip - this is inside the boundary
                 continue;
             }
 
@@ -397,10 +411,14 @@ export class World {
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
 
-            // Check if position is on flat terrain (not in bumpy areas)
-            const distFromCenter = Math.sqrt(x * x + z * z);
-            if (distFromCenter < boundaryRadius * 0.8) {
-                // Skip - this is in the flat area or too close
+            // Check if position is outside boundary (matches terrain irregularities)
+            const isOutsideBoundary = (
+                Math.abs(x) > 60 ||
+                z < -90 || z > 40
+            );
+
+            if (!isOutsideBoundary) {
+                // Skip - this is inside the boundary
                 continue;
             }
 
@@ -517,13 +535,13 @@ export class World {
     }
 
     createWaterFeatures() {
-        // --- LAKE WITH DEPTH ---
-        const lakeWidth = 50;
+        // --- LAKE WITH DEPTH (ROUNDED SHAPE) ---
+        const lakeRadius = 60; // Circular lake, wider
         const lakeDepth = 70;
         const waterDepth = 3; // Visual depth
 
-        // Lake surface with animated waves - simplified
-        const lakeSurfaceGeo = new THREE.PlaneGeometry(lakeWidth, lakeDepth, 32, 32); // Reduced from 64x64
+        // Lake surface with animated waves - circular shape
+        const lakeSurfaceGeo = new THREE.CircleGeometry(lakeRadius, 64);
         const vertices = lakeSurfaceGeo.attributes.position.array;
         for (let i = 0; i < vertices.length; i += 3) {
             const x = vertices[i];
@@ -546,12 +564,12 @@ export class World {
 
         this.lake = new THREE.Mesh(lakeSurfaceGeo, waterMat);
         this.lake.rotation.x = -Math.PI / 2;
-        this.lake.position.set(0, 0.1, 100); // South side, extends from mountain toward museum
+        this.lake.position.set(0, 0.1, 100); // Positioned beyond boundary (boundary at ~Z=15)
         this.lake.receiveShadow = true;
         this.scene.add(this.lake);
 
-        // Lake bottom (darker, gives depth perception)
-        const lakeBottomGeo = new THREE.PlaneGeometry(lakeWidth, lakeDepth);
+        // Lake bottom (darker, gives depth perception) - circular
+        const lakeBottomGeo = new THREE.CircleGeometry(lakeRadius, 64);
         const bottomMat = new THREE.MeshStandardMaterial({
             color: 0x003366,
             roughness: 0.9
@@ -562,42 +580,82 @@ export class World {
         lakeBottom.receiveShadow = true;
         this.scene.add(lakeBottom);
 
-        // Lake sides for depth
-        const sideGeo1 = new THREE.PlaneGeometry(lakeWidth, waterDepth);
+        // Lake sides for depth - circular ring
+        const ringGeo = new THREE.CylinderGeometry(lakeRadius, lakeRadius, waterDepth, 64, 1, true);
         const sideMat = new THREE.MeshStandardMaterial({ color: 0x004488, side: THREE.DoubleSide });
-        const side1 = new THREE.Mesh(sideGeo1, sideMat);
-        side1.position.set(0, -waterDepth / 2, 100 - lakeDepth / 2);
-        this.scene.add(side1);
+        const lakeSides = new THREE.Mesh(ringGeo, sideMat);
+        lakeSides.position.set(0, -waterDepth / 2, 100);
+        this.scene.add(lakeSides);
 
-        const side2 = side1.clone();
-        side2.position.set(0, -waterDepth / 2, 100 + lakeDepth / 2);
-        this.scene.add(side2);
-
-        const sideGeo2 = new THREE.PlaneGeometry(lakeDepth, waterDepth);
-        const side3 = new THREE.Mesh(sideGeo2, sideMat);
-        side3.rotation.y = Math.PI / 2;
-        side3.position.set(0 - lakeWidth / 2, -waterDepth / 2, 100);
-        this.scene.add(side3);
-
-        const side4 = side3.clone();
-        side4.position.set(0 + lakeWidth / 2, -waterDepth / 2, 100);
-        this.scene.add(side4);
+        // Add dirt/sand area under the lake (no grass texture)
+        const dirtRadius = lakeRadius + 5; // Slightly larger than lake
+        const dirtGeo = new THREE.CircleGeometry(dirtRadius, 64);
+        const dirtMat = new THREE.MeshStandardMaterial({
+            color: 0x8b7355, // Brown dirt/sand color
+            roughness: 0.95,
+            metalness: 0.0
+        });
+        const dirtArea = new THREE.Mesh(dirtGeo, dirtMat);
+        dirtArea.rotation.x = -Math.PI / 2;
+        dirtArea.position.set(0, 0.01, 100); // Below water surface
+        dirtArea.receiveShadow = true;
+        this.scene.add(dirtArea);
 
         // --- MOUNTAIN RANGE IN DISTANCE (MOUNTAINOUS LANDSCAPE) ---
 
-        // Main central mountain (tallest, with waterfall)
+        // Main central mountain (tallest, with waterfall) - darker gray with rocks
         const mountainHeight = 80;
         const mountainWidth = 60;
         const mountainGeo = new THREE.ConeGeometry(mountainWidth, mountainHeight, 8);
-        const mountainMat = new THREE.MeshStandardMaterial({
-            color: 0x5a5a5a,
-            roughness: 0.9,
-            metalness: 0.1
+        const mainMountainMat = new THREE.MeshStandardMaterial({
+            color: 0x4a4a4a, // Darker gray
+            roughness: 0.95,
+            metalness: 0.05
         });
-        const mountain = new THREE.Mesh(mountainGeo, mountainMat);
-        mountain.position.set(0, mountainHeight / 2, 200); // Much farther - was 150
+        const mountain = new THREE.Mesh(mountainGeo, mainMountainMat);
+        mountain.position.set(0, mountainHeight / 2, 200);
         mountain.castShadow = true;
         this.scene.add(mountain);
+
+        // Add rocky outcrops to main mountain
+        for (let i = 0; i < 12; i++) {
+            const rockSize = 3 + Math.random() * 5;
+            const rockGeo = new THREE.BoxGeometry(rockSize, rockSize, rockSize);
+            const rockMat = new THREE.MeshStandardMaterial({
+                color: 0x3a3a3a,
+                roughness: 1.0
+            });
+            const rock = new THREE.Mesh(rockGeo, rockMat);
+            const angle = (i / 12) * Math.PI * 2;
+            const dist = mountainWidth * 0.4 + Math.random() * 15;
+            rock.position.set(
+                Math.cos(angle) * dist,
+                10 + Math.random() * 40,
+                200 + Math.sin(angle) * dist
+            );
+            rock.rotation.set(Math.random(), Math.random(), Math.random());
+            this.scene.add(rock);
+        }
+
+        // Add cracks/crevices to main mountain (dark lines)
+        for (let i = 0; i < 6; i++) {
+            const crackGeo = new THREE.PlaneGeometry(1, 10 + Math.random() * 15);
+            const crackMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                roughness: 1.0,
+                side: THREE.DoubleSide
+            });
+            const crack = new THREE.Mesh(crackGeo, crackMat);
+            const angle = (i / 6) * Math.PI * 2;
+            crack.position.set(
+                Math.cos(angle) * (mountainWidth * 0.3),
+                20 + Math.random() * 20,
+                200 + Math.sin(angle) * (mountainWidth * 0.3)
+            );
+            crack.rotation.y = angle;
+            crack.rotation.z = Math.random() * 0.3 - 0.15;
+            this.scene.add(crack);
+        }
 
         // Snow cap on main mountain
         const snowCapGeo = new THREE.ConeGeometry(mountainWidth * 0.5, mountainHeight * 0.35, 8);
@@ -609,14 +667,36 @@ export class World {
         snowCap.position.set(0, mountainHeight * 0.825, 200);
         this.scene.add(snowCap);
 
-        // Left side mountains (smaller)
+        // Left side mountains (smaller, varied colors)
+        const leftMountainMat1 = new THREE.MeshStandardMaterial({
+            color: 0x5a5050, // Reddish-brown tint
+            roughness: 0.9,
+            metalness: 0.1
+        });
         const leftMountain1 = new THREE.Mesh(
             new THREE.ConeGeometry(25, 40, 7),
-            mountainMat
+            leftMountainMat1
         );
         leftMountain1.position.set(-70, 20, 190);
         leftMountain1.castShadow = true;
         this.scene.add(leftMountain1);
+
+        // Rocks on left mountain 1
+        for (let i = 0; i < 4; i++) {
+            const rockSize = 2 + Math.random() * 2;
+            const rock = new THREE.Mesh(
+                new THREE.BoxGeometry(rockSize, rockSize, rockSize),
+                new THREE.MeshStandardMaterial({ color: 0x4a4040, roughness: 1.0 })
+            );
+            const angle = (i / 4) * Math.PI * 2;
+            rock.position.set(
+                -70 + Math.cos(angle) * 12,
+                8 + Math.random() * 15,
+                190 + Math.sin(angle) * 12
+            );
+            rock.rotation.set(Math.random(), Math.random(), Math.random());
+            this.scene.add(rock);
+        }
 
         const leftSnow1 = new THREE.Mesh(
             new THREE.ConeGeometry(12, 14, 7),
@@ -625,13 +705,35 @@ export class World {
         leftSnow1.position.set(-70, 34, 190);
         this.scene.add(leftSnow1);
 
+        const leftMountainMat2 = new THREE.MeshStandardMaterial({
+            color: 0x505a5a, // Bluish-gray tint
+            roughness: 0.92,
+            metalness: 0.08
+        });
         const leftMountain2 = new THREE.Mesh(
             new THREE.ConeGeometry(22, 35, 6),
-            mountainMat
+            leftMountainMat2
         );
         leftMountain2.position.set(-120, 17.5, 210);
         leftMountain2.castShadow = true;
         this.scene.add(leftMountain2);
+
+        // Rocks on left mountain 2
+        for (let i = 0; i < 3; i++) {
+            const rockSize = 1.5 + Math.random() * 2;
+            const rock = new THREE.Mesh(
+                new THREE.BoxGeometry(rockSize, rockSize, rockSize),
+                new THREE.MeshStandardMaterial({ color: 0x404a4a, roughness: 1.0 })
+            );
+            const angle = (i / 3) * Math.PI * 2;
+            rock.position.set(
+                -120 + Math.cos(angle) * 10,
+                6 + Math.random() * 12,
+                210 + Math.sin(angle) * 10
+            );
+            rock.rotation.set(Math.random(), Math.random(), Math.random());
+            this.scene.add(rock);
+        }
 
         const leftSnow2 = new THREE.Mesh(
             new THREE.ConeGeometry(11, 12, 6),
@@ -640,14 +742,36 @@ export class World {
         leftSnow2.position.set(-120, 29, 210);
         this.scene.add(leftSnow2);
 
-        // Right side mountains (smaller)
+        // Right side mountains (smaller, varied colors)
+        const rightMountainMat1 = new THREE.MeshStandardMaterial({
+            color: 0x5a5a50, // Greenish-gray tint
+            roughness: 0.91,
+            metalness: 0.09
+        });
         const rightMountain1 = new THREE.Mesh(
             new THREE.ConeGeometry(24, 38, 7),
-            mountainMat
+            rightMountainMat1
         );
         rightMountain1.position.set(75, 19, 195);
         rightMountain1.castShadow = true;
         this.scene.add(rightMountain1);
+
+        // Rocks on right mountain 1
+        for (let i = 0; i < 4; i++) {
+            const rockSize = 2 + Math.random() * 2;
+            const rock = new THREE.Mesh(
+                new THREE.BoxGeometry(rockSize, rockSize, rockSize),
+                new THREE.MeshStandardMaterial({ color: 0x4a4a40, roughness: 1.0 })
+            );
+            const angle = (i / 4) * Math.PI * 2;
+            rock.position.set(
+                75 + Math.cos(angle) * 11,
+                7 + Math.random() * 14,
+                195 + Math.sin(angle) * 11
+            );
+            rock.rotation.set(Math.random(), Math.random(), Math.random());
+            this.scene.add(rock);
+        }
 
         const rightSnow1 = new THREE.Mesh(
             new THREE.ConeGeometry(12, 13, 7),
@@ -656,13 +780,35 @@ export class World {
         rightSnow1.position.set(75, 32, 195);
         this.scene.add(rightSnow1);
 
+        const rightMountainMat2 = new THREE.MeshStandardMaterial({
+            color: 0x555555, // Neutral gray
+            roughness: 0.93,
+            metalness: 0.07
+        });
         const rightMountain2 = new THREE.Mesh(
             new THREE.ConeGeometry(20, 32, 6),
-            mountainMat
+            rightMountainMat2
         );
         rightMountain2.position.set(110, 16, 215);
         rightMountain2.castShadow = true;
         this.scene.add(rightMountain2);
+
+        // Rocks on right mountain 2
+        for (let i = 0; i < 3; i++) {
+            const rockSize = 1.5 + Math.random() * 2;
+            const rock = new THREE.Mesh(
+                new THREE.BoxGeometry(rockSize, rockSize, rockSize),
+                new THREE.MeshStandardMaterial({ color: 0x454545, roughness: 1.0 })
+            );
+            const angle = (i / 3) * Math.PI * 2;
+            rock.position.set(
+                110 + Math.cos(angle) * 9,
+                5 + Math.random() * 11,
+                215 + Math.sin(angle) * 9
+            );
+            rock.rotation.set(Math.random(), Math.random(), Math.random());
+            this.scene.add(rock);
+        }
 
         const rightSnow2 = new THREE.Mesh(
             new THREE.ConeGeometry(10, 11, 6),
@@ -671,79 +817,7 @@ export class World {
         rightSnow2.position.set(110, 27, 215);
         this.scene.add(rightSnow2);
 
-        // --- ENHANCED WATERFALL ---
-        const waterfallHeight = 15;
-        const waterfallWidth = 10;
 
-        // Cliff/Rock face (larger, more detailed)
-        const cliffGeo = new THREE.BoxGeometry(waterfallWidth + 4, waterfallHeight + 5, 4);
-        const cliffMat = new THREE.MeshStandardMaterial({
-            color: 0x3a3a3a,
-            roughness: 0.95,
-            metalness: 0.05
-        });
-        const cliff = new THREE.Mesh(cliffGeo, cliffMat);
-        cliff.position.set(0, waterfallHeight / 2, 190); // At base of main mountain
-        cliff.castShadow = true;
-        this.scene.add(cliff);
-
-        // Waterfall cascade with better texture simulation - simplified
-        const cascadeGeo = new THREE.PlaneGeometry(waterfallWidth, waterfallHeight, 16, 32); // Reduced from 32x64
-
-        // Create flowing water effect with vertex displacement
-        const cascadeVertices = cascadeGeo.attributes.position.array;
-        for (let i = 0; i < cascadeVertices.length; i += 3) {
-            const x = cascadeVertices[i];
-            const y = cascadeVertices[i + 1];
-            // Create wavy flowing pattern
-            cascadeVertices[i + 2] = Math.sin(x * 2 + y * 0.5) * 0.2;
-        }
-        cascadeGeo.attributes.position.needsUpdate = true;
-        cascadeGeo.computeVertexNormals();
-
-        const cascadeMat = new THREE.MeshStandardMaterial({
-            color: 0xccffff,
-            transparent: true,
-            opacity: 0.7,
-            roughness: 0.1,
-            metalness: 0.4,
-            side: THREE.DoubleSide,
-            emissive: 0x224466,
-            emissiveIntensity: 0.2
-        });
-
-        this.waterfall = new THREE.Mesh(cascadeGeo, cascadeMat);
-        this.waterfall.position.set(0, waterfallHeight / 2, 192); // Cascades down from mountain
-        this.scene.add(this.waterfall);
-
-        // Mist/spray at bottom of waterfall
-        const mistGeo = new THREE.SphereGeometry(3, 16, 16);
-        const mistMat = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.3,
-            roughness: 1.0
-        });
-        const mist = new THREE.Mesh(mistGeo, mistMat);
-        mist.position.set(0, 1, 192);
-        mist.scale.set(1, 0.5, 1);
-        this.scene.add(mist);
-
-        // Pool at bottom of waterfall (larger, deeper)
-        const poolGeo = new THREE.CylinderGeometry(6, 6, 1, 24);
-        const poolMat = new THREE.MeshStandardMaterial({
-            color: 0x0088cc,
-            transparent: true,
-            opacity: 0.85,
-            roughness: 0.1,
-            metalness: 0.5
-        });
-        const pool = new THREE.Mesh(poolGeo, poolMat);
-        pool.position.set(0, 0.5, 192);
-        this.scene.add(pool);
-
-        // Store for animation
-        this.waterTime = 0;
     }
 
     toggleBoundaryVisibility(visible) {
@@ -1611,6 +1685,25 @@ export class World {
                 console.log("Starting Close Sequence: Ceiling Closing...");
             }
         }
+    }
+
+    getTerrainHeight(x, z) {
+        // Expanded boundary: X: ±60, Z: -90 to 40
+        const isOutsideBoundary = (
+            Math.abs(x) > 60 ||
+            z < -90 || z > 40
+        );
+
+        if (isOutsideBoundary) {
+            // Formula matches createGround exactly for synchronization
+            const baseHills = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 3 +
+                Math.sin(x * 0.05) * Math.cos(z * 0.05) * 5;
+            const detail = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 1.5;
+
+            return baseHills + detail;
+        }
+
+        return 0; // Flat area
     }
 
     getCeilingOpenness() {

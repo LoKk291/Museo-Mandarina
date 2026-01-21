@@ -74,8 +74,8 @@ soundManager.setPlaybackRate('chair_action', 2.5); // Much faster
 const world = new World(scene, soundManager);
 
 // --- JUGADOR ---
-// Pasamos las paredes para colisiones
-const player = new Player(camera, document.body, scene, world.collidables);
+// Pasamos las paredes para colisiones y el mundo para height-map
+const player = new Player(camera, document.body, scene, world.collidables, world);
 player.soundManager = soundManager; // Inject Sound Manager
 
 // --- UI / INTERACCIÓN ---
