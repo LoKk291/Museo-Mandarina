@@ -140,6 +140,30 @@ const cheats = {
                 overlay.classList.add('hidden');
             };
         }
+    },
+    // CMD Cheat - Open PC Terminal
+    "cmd": () => {
+        openPc();
+        // Wait a moment for PC to open, then show terminal
+        setTimeout(() => {
+            pcTerminal.classList.remove('hidden');
+            pcBrowser.classList.add('hidden');
+            document.getElementById('pc-pony').classList.add('hidden');
+            document.getElementById('pc-snake').classList.add('hidden');
+            pcCalc.classList.add('hidden');
+            if (typeof stopSnake === 'function') stopSnake();
+            if (document.getElementById('pony-iframe')) document.getElementById('pony-iframe').src = "";
+            cmdInput.value = "";
+            cmdInput.focus();
+        }, 100);
+    },
+    // Linterna Cheat - Equip Flashlight
+    "linterna": () => {
+        if (!player.hasFlashlight) {
+            player.equipFlashlight();
+            soundManager.play('click');
+            showLetter("Sistema", "CHEAT", "Linterna equipada mediante código. Presiona Q para usarla.", true);
+        }
     }
 };
 
