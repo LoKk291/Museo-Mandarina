@@ -210,7 +210,7 @@ export class SoundManager {
 
         const path = `sounds/vinilos/${id}.mp3`;
         const audio = new Audio(path);
-        audio.volume = 0.5; // Reasonable volume
+        audio.volume = 0.3; // Default 30% per user request
         audio.play().catch(e => console.warn("Vinyl play blocked", e));
 
         this.currentVinyl = audio;

@@ -383,14 +383,47 @@ document.addEventListener('click', () => {
                 // Show Audio Controls
                 if (audioControls) {
                     audioControls.classList.remove('hidden');
-                    // Reset volume slider if needed?
-                    // musicVolumeSlider.value = 0.5;
+                    // Reset volume slider if needed -> User asked for 30%. Slider should reflect that if possible.
+                    if (musicVolumeSlider) musicVolumeSlider.value = 0.3;
+                }
+
+                // Identify Song Title
+                const songTitles = {
+                    1: "Her - The American Dawn",
+                    2: "Contigo - Los Panchos",
+                    3: "La Gloria Eres Tu - Los Tres Diamantes",
+                    4: "Every Breath You Take - The Police",
+                    5: "Labios Rotos - Zoé",
+                    6: "Is This Love - Whitesnake",
+                    7: "Tomando Té - Chava Flores",
+                    8: "Prófugos - Soda Stereo",
+                    9: "Cup of Tea - Wes Reeve",
+                    10: "Hey - Liana Flores",
+                    11: "Golden Hour - JVKE",
+                    12: "Misty - Lesley Gore"
+                };
+
+                const title = songTitles[id] || `Track ${id}`;
+
+                // Show Notification
+                const toast = document.getElementById('vinyl-toast');
+                const toastTitle = document.getElementById('vinyl-song-title');
+                if (toast && toastTitle) {
+                    toastTitle.textContent = title;
+                    toast.classList.add('show');
+
+                    // Hide after 5 seconds
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 5000);
                 }
 
                 // Logic: ID 1-6 map to "1.mp3" ... "6.mp3"
                 soundManager.playVinyl(id, () => {
                     // On Ended
                     if (audioControls) audioControls.classList.add('hidden');
+
+                    if (toast) toast.classList.remove('show'); // Ensure hidden on end
 
                     // Verify if this is still the active vinyl (user might have clicked another one)
                     if (activeVinylFrame === frame) {

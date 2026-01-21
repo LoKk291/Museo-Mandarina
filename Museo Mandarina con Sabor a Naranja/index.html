@@ -94,7 +94,46 @@
 </head>
 
 <body>
+    <style>
+        #vinyl-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(50, 50, 50, 0.9));
+            color: #FFD700;
+            padding: 15px 25px;
+            border-left: 5px solid #FFD700;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Courier New', monospace;
+            z-index: 3000;
+            transform: translateX(120%);
+            transition: transform 0.5s ease-out;
+            max-width: 350px;
+        }
+
+        #vinyl-toast.show {
+            transform: translateX(0);
+        }
+
+        #vinyl-toast h4 {
+            margin: 0;
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        #vinyl-toast p {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
     <div id="error-console"></div>
+    <div id="vinyl-toast">
+        <h4>Ahora estas escuchando: </h4>
+        <p id="vinyl-song-title">Song Name</p>
+    </div>
 
     <!-- Audio Controls -->
     <div id="audio-controls" class="hidden">
