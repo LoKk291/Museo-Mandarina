@@ -409,6 +409,9 @@ function checkInteraction() {
         } else if (hitObject.userData.type === 'breakable-vase') {
             interactionMsg.textContent = "Click para romper jarrón";
             interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'reset-lever') {
+            interactionMsg.textContent = "Click para REINICIAR SISTEMA";
+            interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'minecraft-block') {
             interactionMsg.textContent = "Click para leer carta";
             interactionMsg.style.display = 'block';
@@ -717,6 +720,11 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'pdf') {
                 soundManager.play('click');
                 openPdfViewer(hitObject.userData.file);
+            } else if (hitObject.userData.type === 'reset-lever') {
+                soundManager.play('switch');
+                hitObject.userData.parentObj.toggle();
+                world.resetSystems();
+                showLetter("REINICIO DE SISTEMA", "ADMIN", "Sistemas de iluminación y seguridad restaurados. Animatronicos reiniciados.", true);
             } else {
                 console.error("Objeto interactuable sin tipo o datos definidos:", hitObject);
                 // ...

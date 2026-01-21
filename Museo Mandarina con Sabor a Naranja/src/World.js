@@ -1534,6 +1534,7 @@ export class World {
         mangle.setPosition(-19, 0, -19);
         mangle.setRotation(-Math.PI * 0.75); // Facing NW (Center)
         this.scene.add(mangle.mesh);
+        this.mangle = mangle; // Store reference
 
         // Breakable Vase at L2 Entrance (Right Side)
         // L2 South door is at Z=-17.5, right side (East) would be +X from center
@@ -1954,6 +1955,21 @@ export class World {
 
         // Add Light Switches
         this.addSwitches();
+
+        // --- SYSTEM RESET LEVER (Test Placement on Desk) ---
+        this.resetLever = new Lever();
+        // Position: Left side of Desk (Local Left is Global East +X)
+        // Main Lever is at 1.0, 0.8, -6.4. Let's put reset at -1.5, 0.8, -6.4 (Symmetrical-ish)
+        this.resetLever.setPosition(-1.5, 0.8, -6.4);
+        this.resetLever.setRotation(Math.PI);
+        this.resetLever.mesh.userData = { type: 'reset-lever' };
+        // Traverse to ensure hitbox is tagged
+        this.resetLever.mesh.traverse(child => {
+            if (child.isMesh) child.userData = { type: 'reset-lever', parentObj: this.resetLever };
+        });
+        this.scene.add(this.resetLever.mesh);
+        this.resetLever.mesh.visible = false; // Hidden initially
+        // Do NOT add to interactables yet
     }
 
     addRoom(room, name = null) {
@@ -2653,6 +2669,100 @@ export class World {
         if (this.foxy) {
             console.log("Foxy is now hunting...");
             this.foxy.isChasing = true;
+        }
+
+        // 7. Show Reset Lever
+        if (this.resetLever) {
+            this.resetLever.mesh.visible = true;
+            if (!this.interactables.includes(this.resetLever.interactableMesh)) {
+                this.interactables.push(this.resetLever.interactableMesh);
+            }
+        }
+    }
+
+    resetSystems() {
+        console.log("System Reset! Restoring Power...");
+        this.globalLightState = true;
+        this.isPartyMode = false;
+
+        // 1. Restore Lights
+        this.rooms.forEach(room => {
+            room.toggleLights(true);
+        });
+
+        this.floorLamps.forEach(lamp => {
+            if (lamp.setState) lamp.setState(true);
+            else if (lamp.toggle && !lamp.isOn) lamp.toggle();
+        });
+
+        if (this.deskLamp) {
+            if (this.deskLamp.setState) this.deskLamp.setState(true);
+            else if (this.deskLamp.toggle && !this.deskLamp.isOn) this.deskLamp.toggle();
+        }
+
+        if (this.chandelier && this.chandelier.toggleLight) {
+            this.chandelier.toggleLight(true);
+        }
+
+        // 2. Reset Animatronics
+        if (this.foxy) {
+            this.foxy.isChasing = false;
+            this.foxy.mesh.position.set(-31, 0, -31);
+            this.foxy.mesh.rotation.y = Math.PI / 4;
+        }
+
+        if (this.mangle) {
+            this.mangle.mesh.position.set(-19, 0, -19);
+            this.mangle.mesh.rotation.y = -Math.PI * 0.75;
+        }
+
+        // 3. Hide Reset Lever
+        if (this.resetLever) {
+            this.resetLever.mesh.visible = false;
+            const idx = this.interactables.indexOf(this.resetLever.interactableMesh);
+            if (idx > -1) this.interactables.splice(idx, 1);
+        }
+
+        this.updateStreetLights(false); // Restore normal behavior
+    }
+
+    placeResetLeverRandomly() {
+        // Exclude secret room (200, 200)
+        const validRooms = this.rooms.filter(r => r.name !== 'ISOLATED_ROOM');
+        if (validRooms.length === 0) return;
+
+        const room = validRooms[Math.floor(Math.random() * validRooms.length)];
+
+        // Pick a random wall direction (North, South, East, West)
+        const walls = ['North', 'South', 'East', 'West'];
+        const wall = walls[Math.floor(Math.random() * walls.length)];
+
+        // Calculate position based on room dimensions
+        // room.x, room.z are centers. room.width, room.depth are full dimensions.
+        let lx = room.x;
+        let lz = room.z;
+        let ry = 0;
+
+        const offset = 0.1; // Slightly away from wall
+
+        if (wall === 'North') {
+            lz = room.z - room.depth / 2 + offset;
+            ry = Math.PI;
+        } else if (wall === 'South') {
+            lz = room.z + room.depth / 2 - offset;
+            ry = 0;
+        } else if (wall === 'West') {
+            lx = room.x - room.width / 2 + offset;
+            ry = -Math.PI / 2;
+        } else if (wall === 'East') {
+            lx = room.x + room.width / 2 - offset;
+            ry = Math.PI / 2;
+        }
+
+        // Apply new position
+        if (this.resetLever) {
+            this.resetLever.setPosition(lx, 1.2, lz); // 1.2m height on wall
+            this.resetLever.setRotation(ry);
         }
     }
 }
