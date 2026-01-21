@@ -1276,10 +1276,18 @@ function animate() {
                 soundManager.play('teleport');
                 console.log("Teleporting to Hidden Room...");
 
+                // Add blur effect
+                const gameContainer = document.getElementById('game-container');
+                if (gameContainer) gameContainer.classList.add('teleport-blur');
+
                 // Small delay to let sound start before flash/move
                 setTimeout(() => {
                     player.camera.position.set(200, player.height, 205);
                     showLetter("Sistema", "INFO", "Teletransportado a la Habitación Secreta...", true);
+
+                    // Remove blur effect
+                    if (gameContainer) gameContainer.classList.remove('teleport-blur');
+
                     // Cooldown to prevent immediate bounce back
                     setTimeout(() => { isTeleporting = false; }, 2000);
                 }, 300);
@@ -1289,9 +1297,17 @@ function animate() {
                 soundManager.play('teleport');
                 console.log("Teleporting back to Museum...");
 
+                // Add blur effect
+                const gameContainer = document.getElementById('game-container');
+                if (gameContainer) gameContainer.classList.add('teleport-blur');
+
                 setTimeout(() => {
                     player.camera.position.set(-25, player.height, -64.5);
                     showLetter("Sistema", "INFO", "Regresando al Museo...", true);
+
+                    // Remove blur effect
+                    if (gameContainer) gameContainer.classList.remove('teleport-blur');
+
                     // Cooldown to prevent immediate bounce back
                     setTimeout(() => { isTeleporting = false; }, 2000);
                 }, 300);
