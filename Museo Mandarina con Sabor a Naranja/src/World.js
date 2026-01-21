@@ -382,7 +382,8 @@ export class World {
         roomL1.addDoor('East', 4, 3.5); // Conecta con Recepción
         roomL1.addDoor('North', 4, 3.5); // Conecta con L2
 
-        // Cuadros L1 (ELIMINADOS)
+        // Cuadros L1
+        roomL1.addPaintingToWall('North', 3, 3, 'cuadros/15.jpg', 'P-15', 'Cuadro 15', 'Grande', -4.75, 0);
 
         // Marcos para Vinilos (Grid 2x3 en Pared Oeste)
         // Pared Oeste L1 está en X = -32.5.
@@ -540,7 +541,7 @@ export class World {
         // --- GLOBO TERRÁQUEO ---
         // Center of L2: -25, -25
         const globe = new Globe();
-        globe.setPosition(-25, 0, -25);
+        globe.setPosition(-31, 0, -44); // Moved to L3 SW Corner
         this.scene.add(globe.mesh);
         this.interactables.push(globe.interactableMesh);
 
@@ -646,10 +647,14 @@ export class World {
         // Pared Norte (2 cuadros)
         roomR3.addPaintingToWall('North', 2.5, 2.5, 'cuadros/10.jpg', 'P-10', 'Espacio para Cuadro 10', 'Pendiente de asignar', 2, 0);
         roomR3.addPaintingToWall('North', 2.5, 2.5, 'cuadros/11.jpg', 'P-11', 'Espacio para Cuadro 11', 'Pendiente de asignar', -2, 0);
-        // Pared Este (1 cuadro)
-        roomR3.addPaintingToWall('East', 3, 4, 'cuadros/12.jpg', 'P-12', 'Espacio para Cuadro 12', 'Pendiente de asignar');
-        // Pared Oeste (1 cuadro)
+        // Pared Este (3 cuadros: 19, 12, 20)
+        roomR3.addPaintingToWall('East', 5, 3, 'cuadros/12.jpg', 'P-12', 'Espacio para Cuadro 12', 'Horizontal', 0, 0);
+        roomR3.addPaintingToWall('East', 2, 2, 'cuadros/19.jpg', 'P-19', 'Cuadro 19', 'Cuadrado', -4.5, 0);
+        roomR3.addPaintingToWall('East', 2, 2, 'cuadros/20.jpg', 'P-20', 'Cuadro 20', 'Cuadrado', 4.5, 0);
+        // Pared Oeste (3 cuadros: 16, 13, 17)
         roomR3.addPaintingToWall('West', 3, 4, 'cuadros/13.jpg', 'P-13', 'Espacio para Cuadro 13', 'Pendiente de asignar');
+        roomR3.addPaintingToWall('West', 3, 4, 'cuadros/16.jpg', 'P-16', 'Cuadro 16', 'Lateral', -4, 0);
+        roomR3.addPaintingToWall('West', 3, 4, 'cuadros/17.jpg', 'P-17', 'Cuadro 17', 'Lateral', 4, 0);
 
         this.addRoom(roomR3, 'R3');
 
