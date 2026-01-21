@@ -2350,7 +2350,33 @@ export class World {
         return 0;
     }
 
-    update(delta, time, camera) {
+    checkFoxyCollision(newPos) {
+        const foxyBox = new THREE.Box3();
+        const radius = 0.4;
+        const height = 1.8;
+        const min = new THREE.Vector3(newPos.x - radius, newPos.y, newPos.z - radius);
+        const max = new THREE.Vector3(newPos.x + radius, newPos.y + height, newPos.z + radius);
+        foxyBox.set(min, max);
+
+        for (const wall of this.collidables) {
+            if (!wall.geometry.boundingBox) wall.geometry.computeBoundingBox();
+            const wallBox = new THREE.Box3();
+            wallBox.copy(wall.geometry.boundingBox).applyMatrix4(wall.matrixWorld);
+
+            if (foxyBox.intersectsBox(wallBox)) {
+                // Ignore open doors
+                if (wall.userData && (wall.userData.type === 'double-door' || wall.userData.type === 'secret-bookshelf-door')) {
+                    if (wall.userData.parentObj && wall.userData.parentObj.isOpen) {
+                        continue;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    update(delta, time, camera, player) {
         // Update Components
         if (this.desk) this.desk.update(delta);
         if (this.chandelier) this.chandelier.update(delta);
@@ -2429,6 +2455,33 @@ export class World {
             const playerPos = camera.position;
             const foxyPos = this.foxy.mesh.position;
 
+            // 1. Check if enlightened by flashlight
+            let isStunned = false;
+            if (player && player.flashlightOn) {
+                const toFoxy = new THREE.Vector3().subVectors(foxyPos, playerPos);
+                const distance = toFoxy.length();
+
+                if (distance < 30) { // Max effect distance
+                    const viewDir = new THREE.Vector3();
+                    camera.getWorldDirection(viewDir);
+
+                    const angle = viewDir.angleTo(toFoxy);
+                    if (angle < Math.PI / 8) { // Cone of ~22.5 degrees
+                        isStunned = true;
+                    }
+                }
+            }
+
+            if (isStunned) {
+                // Foxy stops and maybe shakes a bit?
+                this.foxy.mesh.position.add(new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.05,
+                    0,
+                    (Math.random() - 0.5) * 0.05
+                ));
+                return; // Skip movement
+            }
+
             // Calculate distance to player (XZ plane only, ignore Y)
             const dx = playerPos.x - foxyPos.x;
             const dz = playerPos.z - foxyPos.z;
@@ -2448,8 +2501,15 @@ export class World {
                 // Move Foxy toward player
                 const direction = new THREE.Vector3(dx, 0, dz).normalize();
                 const moveDistance = this.foxy.speed * delta;
+                const nextPos = foxyPos.clone().add(direction.clone().multiplyScalar(moveDistance));
 
-                this.foxy.mesh.position.add(direction.multiplyScalar(moveDistance));
+                // 2. Check collision before moving
+                if (!this.checkFoxyCollision(nextPos)) {
+                    this.foxy.mesh.position.copy(nextPos);
+                } else {
+                    // Try sliding or just stop
+                    // For now, let's just stop or try a small offset
+                }
 
                 // Rotate Foxy to face player
                 const angle = Math.atan2(dx, dz);

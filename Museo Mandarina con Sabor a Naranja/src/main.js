@@ -1592,7 +1592,7 @@ function animate() {
     }
 
     // World Update (Pass delta and GameTime)
-    world.update(delta, sky.time, (isModalOpen ? null : camera)); // Disable head bob if modal open by not passing camera? No, world.update handles headbob.
+    world.update(delta, sky.time, (isModalOpen ? null : camera), player); // Disable head bob if modal open by not passing camera? No, world.update handles headbob.
 
     // --- AUTOMATIC EXTERIOR LIGHTS ---
     const time = sky.getGameTime();
