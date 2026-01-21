@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle, CraftingTable, Furnace, MinecraftBed, BreakableVase } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle, CraftingTable, Furnace, MinecraftBed, BreakableVase, CinemaScreen, OldCamera } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -1455,7 +1455,32 @@ export class World {
         this.scene.add(vaseL2.mesh);
         this.interactables.push(vaseL2.interactableMesh);
 
-        this.addRoom(roomL2, 'L2');
+        
+        // --- CINEMA SETUP ---
+        const cinemaScreen = new CinemaScreen();
+        // Room L2 Size 15x15. Center relative to room group is 0,0.
+        // North Wall is at Z = -7.5.
+        // Place screen close to North Wall.
+        cinemaScreen.setPosition(-7.4, 0, 0);
+        cinemaScreen.setRotation(Math.PI / 2); 
+        roomL2.group.add(cinemaScreen.mesh);
+
+        const oldCamera = new OldCamera();
+        // Camera near South Wall (Z = 7.5), facing North (Screen).
+        // Rotate PI to face North? Default often faces +Z. 
+        // If Default faces +Z (South), rotate PI to face -Z (North).
+        // Let's assume Camera lens faces +Z by default?
+        // In my build(): lens.position.set(0, 1.3, 0.4); -> +Z.
+        // So to face North (-Z), rotate PI.
+        oldCamera.setPosition(6, 0, 0); // 5 units back
+        oldCamera.setRotation(-Math.PI / 2); 
+        roomL2.group.add(oldCamera.mesh);
+        
+        // Add Camera to interactables? User didn't ask, but good practice.
+        // Since OldCamera is just a visual prop for now, we leave it.
+        // Unless user wants to look through it? User said 'una camara estilo antiguo'.
+        // Let's just place it.
+this.addRoom(roomL2, 'L2');
 
         // --- GLOBO TERRÁQUEO ---
         // Center of L2: -25, -25
@@ -2365,5 +2390,8 @@ export class World {
         this.updateStreetLights(true); // Force update now, passing true (night) but flag will block it acting as OFF
     }
 }
+
+
+
 
 
