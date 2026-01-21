@@ -236,6 +236,9 @@ export class World {
 
         // --- TREES (Only beyond boundary) ---
         this.createTrees(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ);
+
+        // --- FLOWERS (Can be inside boundary area) ---
+        this.createFlowers(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ);
     }
 
     createGrassTexture() {
@@ -296,46 +299,206 @@ export class World {
     createTree(type) {
         const group = new THREE.Group();
 
-        // Trunk
-        const trunkHeight = 3 + Math.random() * 2;
-        const trunkRadius = 0.2 + Math.random() * 0.1;
+        // Trunk with variation
+        const trunkHeight = 3 + Math.random() * 3;
+        const trunkRadius = 0.15 + Math.random() * 0.15;
+        const trunkColor = Math.random() > 0.5 ? 0x4a3520 : 0x3d2b1f; // Vary trunk color
         const trunkGeo = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.2, trunkHeight, 8);
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.9 });
+        const trunkMat = new THREE.MeshStandardMaterial({ color: trunkColor, roughness: 0.9 });
         const trunk = new THREE.Mesh(trunkGeo, trunkMat);
         trunk.position.y = trunkHeight / 2;
         trunk.castShadow = true;
         group.add(trunk);
 
-        // Foliage based on type
+        // Foliage based on type with more variation
         if (type === 'pine') {
-            // Conical shape
-            const layers = 4;
+            // Conical shape with varied colors
+            const layers = 3 + Math.floor(Math.random() * 3);
+            const greenShade = Math.random() > 0.5 ? 0x1a4d2e : 0x0f3d1f;
             for (let i = 0; i < layers; i++) {
-                const radius = 1.5 - (i * 0.3);
-                const coneGeo = new THREE.ConeGeometry(radius, 2, 8);
-                const coneMat = new THREE.MeshStandardMaterial({ color: 0x1a4d2e, roughness: 0.8 });
+                const radius = (1.2 + Math.random() * 0.6) - (i * 0.25);
+                const coneGeo = new THREE.ConeGeometry(radius, 1.5 + Math.random() * 0.8, 8);
+                const coneMat = new THREE.MeshStandardMaterial({ color: greenShade, roughness: 0.8 });
                 const cone = new THREE.Mesh(coneGeo, coneMat);
-                cone.position.y = trunkHeight - 0.5 + (i * 1.5);
+                cone.position.y = trunkHeight - 0.5 + (i * 1.3);
                 cone.castShadow = true;
                 group.add(cone);
             }
         } else if (type === 'oak') {
-            // Rounded canopy
-            const canopyGeo = new THREE.SphereGeometry(2, 8, 8);
-            const canopyMat = new THREE.MeshStandardMaterial({ color: 0x2d5a1e, roughness: 0.8 });
+            // Rounded canopy with variation
+            const canopySize = 1.5 + Math.random() * 1.2;
+            const greenShade = [0x2d5a1e, 0x3a6b2e, 0x1f4d1a][Math.floor(Math.random() * 3)];
+            const canopyGeo = new THREE.SphereGeometry(canopySize, 8, 8);
+            const canopyMat = new THREE.MeshStandardMaterial({ color: greenShade, roughness: 0.8 });
             const canopy = new THREE.Mesh(canopyGeo, canopyMat);
-            canopy.position.y = trunkHeight + 1;
-            canopy.scale.set(1, 0.8, 1);
+            canopy.position.y = trunkHeight + canopySize * 0.5;
+            canopy.scale.set(1 + Math.random() * 0.3, 0.7 + Math.random() * 0.3, 1 + Math.random() * 0.3);
             canopy.castShadow = true;
             group.add(canopy);
+            // Sometimes add a second canopy layer
+            if (Math.random() > 0.5) {
+                const canopy2 = canopy.clone();
+                canopy2.scale.multiplyScalar(0.7);
+                canopy2.position.y += canopySize * 0.6;
+                group.add(canopy2);
+            }
         } else if (type === 'poplar') {
-            // Tall, narrow
-            const canopyGeo = new THREE.CylinderGeometry(0.8, 1.2, 4, 8);
-            const canopyMat = new THREE.MeshStandardMaterial({ color: 0x3a6b2e, roughness: 0.8 });
+            // Tall, narrow with variation
+            const canopyHeight = 3 + Math.random() * 2;
+            const canopyRadius = 0.6 + Math.random() * 0.4;
+            const greenShade = Math.random() > 0.5 ? 0x3a6b2e : 0x2d5a1e;
+            const canopyGeo = new THREE.CylinderGeometry(canopyRadius * 0.7, canopyRadius * 1.2, canopyHeight, 8);
+            const canopyMat = new THREE.MeshStandardMaterial({ color: greenShade, roughness: 0.8 });
             const canopy = new THREE.Mesh(canopyGeo, canopyMat);
-            canopy.position.y = trunkHeight + 2;
+            canopy.position.y = trunkHeight + canopyHeight / 2;
             canopy.castShadow = true;
             group.add(canopy);
+        }
+
+        // Random slight tilt for more natural look
+        group.rotation.z = (Math.random() - 0.5) * 0.1;
+
+        return group;
+    }
+
+    createFlowers(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ) {
+        const flowerCount = 400; // Many more flowers
+        const boundaryRadius = Math.sqrt(
+            Math.pow((boundaryMaxX - boundaryMinX) / 2, 2) +
+            Math.pow((boundaryMaxZ - boundaryMinZ) / 2, 2)
+        );
+        const minDistance = boundaryRadius * 0.5; // Flowers can be closer to museum
+
+        const flowerTypes = [
+            { type: 'simple', color: 0xff0000 },    // Red simple
+            { type: 'simple', color: 0xffff00 },    // Yellow simple
+            { type: 'simple', color: 0xffffff },    // White simple
+            { type: 'simple', color: 0x9932cc },    // Purple simple
+            { type: 'simple', color: 0xff69b4 },    // Pink simple
+            { type: 'simple', color: 0xffa500 },    // Orange simple
+            { type: 'tulip', color: 0xff0000 },     // Red tulip
+            { type: 'tulip', color: 0xff69b4 },     // Pink tulip
+            { type: 'tulip', color: 0xffff00 },     // Yellow tulip
+            { type: 'daisy', color: 0xffffff },     // White daisy
+            { type: 'rose', color: 0xff0000 },      // Red rose
+            { type: 'rose', color: 0xff69b4 },      // Pink rose
+            { type: 'sunflower', color: 0xffff00 }  // Sunflower
+        ];
+
+        for (let i = 0; i < flowerCount; i++) {
+            // Random position
+            const angle = Math.random() * Math.PI * 2;
+            const distance = minDistance + Math.random() * 60;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+
+            // Random flower type
+            const flowerData = flowerTypes[Math.floor(Math.random() * flowerTypes.length)];
+
+            // Create flower
+            const flower = this.createFlower(flowerData.type, flowerData.color);
+            flower.position.set(x, 0.1, z);
+            flower.rotation.y = Math.random() * Math.PI * 2;
+            this.scene.add(flower);
+        }
+    }
+
+    createFlower(type, color) {
+        const group = new THREE.Group();
+
+        // Stem
+        const stemHeight = 0.2 + Math.random() * 0.2;
+        const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, stemHeight, 4);
+        const stemMat = new THREE.MeshStandardMaterial({ color: 0x2d5a1e, roughness: 0.8 });
+        const stem = new THREE.Mesh(stemGeo, stemMat);
+        stem.position.y = stemHeight / 2;
+        group.add(stem);
+
+        const flowerY = stemHeight;
+
+        if (type === 'tulip') {
+            // Tulip - elongated cup shape
+            const cupGeo = new THREE.ConeGeometry(0.08, 0.15, 6);
+            const cupMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5 });
+            const cup = new THREE.Mesh(cupGeo, cupMat);
+            cup.position.y = flowerY + 0.075;
+            group.add(cup);
+        } else if (type === 'daisy') {
+            // Daisy - many thin petals
+            const petalCount = 12;
+            const petalGeo = new THREE.BoxGeometry(0.05, 0.01, 0.12);
+            const petalMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+            for (let i = 0; i < petalCount; i++) {
+                const angle = (i / petalCount) * Math.PI * 2;
+                const petal = new THREE.Mesh(petalGeo, petalMat);
+                petal.position.set(Math.cos(angle) * 0.08, flowerY, Math.sin(angle) * 0.08);
+                petal.rotation.y = angle;
+                group.add(petal);
+            }
+            // Yellow center
+            const centerGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.02, 8);
+            const centerMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.5 });
+            const center = new THREE.Mesh(centerGeo, centerMat);
+            center.position.y = flowerY;
+            center.rotation.x = Math.PI / 2;
+            group.add(center);
+        } else if (type === 'rose') {
+            // Rose - layered petals
+            const layers = 3;
+            for (let layer = 0; layer < layers; layer++) {
+                const petalCount = 5 + layer;
+                const radius = 0.06 + layer * 0.02;
+                const petalGeo = new THREE.SphereGeometry(0.05, 6, 6);
+                const petalMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.4 });
+                for (let i = 0; i < petalCount; i++) {
+                    const angle = (i / petalCount) * Math.PI * 2;
+                    const petal = new THREE.Mesh(petalGeo, petalMat);
+                    petal.position.set(
+                        Math.cos(angle) * radius,
+                        flowerY + 0.05 - layer * 0.02,
+                        Math.sin(angle) * radius
+                    );
+                    petal.scale.set(1, 0.6, 0.8);
+                    group.add(petal);
+                }
+            }
+        } else if (type === 'sunflower') {
+            // Sunflower - large with brown center
+            const petalCount = 16;
+            const petalGeo = new THREE.BoxGeometry(0.08, 0.02, 0.15);
+            const petalMat = new THREE.MeshStandardMaterial({ color: 0xffdd00, roughness: 0.6 });
+            for (let i = 0; i < petalCount; i++) {
+                const angle = (i / petalCount) * Math.PI * 2;
+                const petal = new THREE.Mesh(petalGeo, petalMat);
+                petal.position.set(Math.cos(angle) * 0.12, flowerY, Math.sin(angle) * 0.12);
+                petal.rotation.y = angle;
+                group.add(petal);
+            }
+            // Brown center
+            const centerGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.03, 12);
+            const centerMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.8 });
+            const center = new THREE.Mesh(centerGeo, centerMat);
+            center.position.y = flowerY;
+            center.rotation.x = Math.PI / 2;
+            group.add(center);
+        } else {
+            // Simple flower - 5 petals
+            const petalCount = 5;
+            const petalGeo = new THREE.SphereGeometry(0.08, 6, 6);
+            const petalMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+            for (let i = 0; i < petalCount; i++) {
+                const angle = (i / petalCount) * Math.PI * 2;
+                const petal = new THREE.Mesh(petalGeo, petalMat);
+                petal.position.set(Math.cos(angle) * 0.1, flowerY, Math.sin(angle) * 0.1);
+                petal.scale.set(1, 0.5, 1);
+                group.add(petal);
+            }
+            // Yellow center
+            const centerGeo = new THREE.SphereGeometry(0.05, 6, 6);
+            const centerMat = new THREE.MeshStandardMaterial({ color: 0xffff00, roughness: 0.5 });
+            const center = new THREE.Mesh(centerGeo, centerMat);
+            center.position.y = flowerY;
+            group.add(center);
         }
 
         return group;
