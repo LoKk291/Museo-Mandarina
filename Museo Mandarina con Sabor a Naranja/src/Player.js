@@ -32,6 +32,7 @@ export class Player {
         // Flashlight State
         this.hasFlashlight = false;
         this.flashlightOn = false;
+        this.flashlightTimer = null; // Timer for auto-off
         // Intensity 2.5 is too low for physical lights if legacy is off.
         // Let's bump to 100.
         this.flashlight = new THREE.SpotLight(0xffffff, 0, 40, Math.PI / 6, 0.5, 2);
@@ -112,34 +113,53 @@ export class Player {
             return;
         }
 
-        this.flashlightOn = !this.flashlightOn;
-        // Intensity 100 for visibility
-        this.flashlight.intensity = this.flashlightOn ? 100 : 0;
+        // If already on, turn off manually
+        if (this.flashlightOn) {
+            this.flashlightOn = false;
+            this.flashlight.intensity = 0;
+            if (this.soundManager) this.soundManager.play('click');
 
+            // Clear the auto-off timer if turning off manually
+            if (this.flashlightTimer) {
+                clearTimeout(this.flashlightTimer);
+                this.flashlightTimer = null;
+            }
+            return;
+        }
+
+        // Turn on
+        this.flashlightOn = true;
+        this.flashlight.intensity = 100;
         if (this.soundManager) this.soundManager.play('click');
 
-        if (this.flashlightOn) {
-            // Count Usage Cycle ONLY on Turn ON
-            this.batteryCycles++;
-            if (this.batteryCycles >= this.cyclesPerBar) {
-                this.batteryLevel--;
-                this.batteryCycles = 0; // Reset cycle count for new bar
-                this.updateBatteryUI();
+        // Count Usage Cycle ONLY on Turn ON
+        this.batteryCycles++;
+        if (this.batteryCycles >= this.cyclesPerBar) {
+            this.batteryLevel--;
+            this.batteryCycles = 0; // Reset cycle count for new bar
+            this.updateBatteryUI();
 
-                // If battery died just now
-                if (this.batteryLevel <= 0) {
-                    // Turn off immediately or let it stay until toggled off?
-                    // User said "duran X encendidos". 
-                    // Let's force off or dim out? 
-                    // Typical game logic: Light dies.
-                    setTimeout(() => {
-                        this.flashlightOn = false;
-                        this.flashlight.intensity = 0;
-                        if (this.soundManager) this.soundManager.play('click'); // Power down sound
-                    }, 500); // 0.5s flicker delay maybe?
-                }
+            // If battery died just now
+            if (this.batteryLevel <= 0) {
+                setTimeout(() => {
+                    this.flashlightOn = false;
+                    this.flashlight.intensity = 0;
+                    if (this.soundManager) this.soundManager.play('click'); // Power down sound
+                }, 500);
+                return; // Don't set auto-off timer if battery died
             }
         }
+
+        // Auto-turn off after 3 seconds
+        if (this.flashlightTimer) {
+            clearTimeout(this.flashlightTimer);
+        }
+        this.flashlightTimer = setTimeout(() => {
+            this.flashlightOn = false;
+            this.flashlight.intensity = 0;
+            if (this.soundManager) this.soundManager.play('click');
+            this.flashlightTimer = null;
+        }, 3000);
     }
 
     updateBatteryUI() {
