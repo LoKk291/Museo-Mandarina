@@ -121,8 +121,13 @@ const cheats = {
     "foxy": () => {
         const overlay = document.getElementById('jumpscare-overlay');
         const video = document.getElementById('jumpscare-video');
+        const video2 = document.getElementById('jumpscare-video2');
 
         if (overlay && video) {
+            // Hide video2, show video1
+            video2.style.display = 'none';
+            video.style.display = 'block';
+
             overlay.classList.remove('hidden');
             video.currentTime = 0;
             video.play().catch(e => console.error("Video play failed:", e));
@@ -130,8 +135,6 @@ const cheats = {
             // Resume game/hide on end
             video.onended = () => {
                 overlay.classList.add('hidden');
-                // Optional: Unlock controls if they were locked? 
-                // User said "in pause menu", so we likely want to stay in pause menu.
             };
 
             // Allow skipping with click
@@ -163,6 +166,49 @@ const cheats = {
             player.equipFlashlight();
             soundManager.play('click');
             showLetter("Sistema", "CHEAT", "Linterna equipada mediante código. Presiona Q para usarla.", true);
+        }
+    },
+    // Secret Cheat - Teleport to Secret Room
+    "secret": () => {
+        // Make secret room visible
+        if (world.isolatedRoom) {
+            world.isolatedRoom.group.visible = true;
+        }
+        if (world.portal2) {
+            world.portal2.mesh.visible = true;
+        }
+
+        // Teleport player to isolated room (200, 200)
+        player.camera.position.set(200, 1.7, 200);
+        player.velocity.set(0, 0, 0);
+        soundManager.play('click');
+        showLetter("Sistema", "CHEAT", "Teletransportado a la habitación secreta.", true);
+    },
+    // Mangle Cheat - Jumpscare 2
+    "mangle": () => {
+        const overlay = document.getElementById('jumpscare-overlay');
+        const video = document.getElementById('jumpscare-video');
+        const video2 = document.getElementById('jumpscare-video2');
+
+        if (overlay && video2) {
+            // Hide video1, show video2
+            video.style.display = 'none';
+            video2.style.display = 'block';
+
+            overlay.classList.remove('hidden');
+            video2.currentTime = 0;
+            video2.play().catch(e => console.error("Video play failed:", e));
+
+            // Resume game/hide on end
+            video2.onended = () => {
+                overlay.classList.add('hidden');
+            };
+
+            // Allow skipping with click
+            overlay.onclick = () => {
+                video2.pause();
+                overlay.classList.add('hidden');
+            };
         }
     }
 };
@@ -290,6 +336,7 @@ let hasGoldenKey = false; // New state for secret door
 let activeVinylFrame = null; // Track playing vinyl
 let lastHoveredSparrow = null;
 let isTeleporting = false; // Fix: use a global variable instead of 'this'
+let hasVisitedSecretRoom = false; // Track if player has been to secret room
 
 // Loop de Raycast para mostrar mensaje "Click para ver"
 function checkInteraction() {
@@ -1218,7 +1265,33 @@ function processCommand(cmd) {
     // Lógica básica (comandos dummy por ahora)
     switch (cmd) {
         case 'HELP':
-            termOutput.innerHTML += `<p>COMANDOS DISPONIBLES:</p><p> - HELP</p><p> - CLS</p><p> - EXIT</p>`;
+            termOutput.innerHTML += "<p>COMANDOS DISPONIBLES:</p>";
+            termOutput.innerHTML += "<p>HELP - Muestra esta ayuda</p>";
+            termOutput.innerHTML += "<p>CLS - Limpia la pantalla</p>";
+            termOutput.innerHTML += "<p>TIME - Muestra la hora del sistema</p>";
+            termOutput.innerHTML += "<p>PARTY TIME - Activa modo fiesta</p>";
+            termOutput.innerHTML += "<p>EXIT - Cierra la terminal</p>";
+            if (hasVisitedSecretRoom) {
+                termOutput.innerHTML += "<p>CHEATS - Muestra códigos secretos</p>";
+            }
+            break;
+        case 'CHEATS':
+            if (!hasVisitedSecretRoom) {
+                termOutput.innerHTML += "<p>ACCESO DENEGADO: Comando no disponible.</p>";
+                termOutput.innerHTML += "<p>PISTA: Explora los rincones más ocultos del museo...</p>";
+            } else {
+                termOutput.innerHTML += "<p>=== CÓDIGOS SECRETOS DEL MENÚ DE PAUSA ===</p>";
+                termOutput.innerHTML += "<p></p>";
+                termOutput.innerHTML += "<p><strong>ORQUIDEA</strong> - Abre imagen de orquídea</p>";
+                termOutput.innerHTML += "<p><strong>GOLDENKEY</strong> - Obtiene la llave dorada</p>";
+                termOutput.innerHTML += "<p><strong>FOXY</strong> - Activa jumpscare de Foxy</p>";
+                termOutput.innerHTML += "<p><strong>MANGLE</strong> - Activa jumpscare de Mangle</p>";
+                termOutput.innerHTML += "<p><strong>CMD</strong> - Abre terminal de PC</p>";
+                termOutput.innerHTML += "<p><strong>LINTERNA</strong> - Equipa linterna (Q para usar)</p>";
+                termOutput.innerHTML += "<p><strong>SECRET</strong> - Teletransporta a habitación secreta</p>";
+                termOutput.innerHTML += "<p></p>";
+                termOutput.innerHTML += "<p>Escribe estos códigos en el menú de pausa (ESC)</p>";
+            }
             break;
         case 'CLS':
         case 'CLEAR':
@@ -1246,6 +1319,48 @@ function processCommand(cmd) {
 
             // Enable Party Mode
             if (world) world.enablePartyMode();
+            break;
+        case 'FOXY':
+            termOutput.innerHTML += "<p>Sorpresita de Julepe...</p>";
+            // Trigger Foxy jumpscare
+            setTimeout(() => {
+                const overlay = document.getElementById('jumpscare-overlay');
+                const video = document.getElementById('jumpscare-video');
+                const video2 = document.getElementById('jumpscare-video2');
+                if (overlay && video) {
+                    video2.style.display = 'none';
+                    video.style.display = 'block';
+                    overlay.classList.remove('hidden');
+                    video.currentTime = 0;
+                    video.play().catch(e => console.error("Video play failed:", e));
+                    video.onended = () => overlay.classList.add('hidden');
+                    overlay.onclick = () => {
+                        video.pause();
+                        overlay.classList.add('hidden');
+                    };
+                }
+            }, 500);
+            break;
+        case 'MANGLE':
+            termOutput.innerHTML += "<p>Sorpresita de Julepe...</p>";
+            // Trigger Mangle jumpscare
+            setTimeout(() => {
+                const overlay = document.getElementById('jumpscare-overlay');
+                const video = document.getElementById('jumpscare-video');
+                const video2 = document.getElementById('jumpscare-video2');
+                if (overlay && video2) {
+                    video.style.display = 'none';
+                    video2.style.display = 'block';
+                    overlay.classList.remove('hidden');
+                    video2.currentTime = 0;
+                    video2.play().catch(e => console.error("Video play failed:", e));
+                    video2.onended = () => overlay.classList.add('hidden');
+                    overlay.onclick = () => {
+                        video2.pause();
+                        overlay.classList.add('hidden');
+                    };
+                }
+            }, 500);
             break;
         case '':
             break;
@@ -1322,13 +1437,26 @@ function animate() {
     let delta = clock.getDelta();
     delta = Math.min(delta, 0.05); // Max 0.05s (20 FPS minimum physics step)
 
-    // Update Weather/Cycle
+    // Update sky
     sky.update(delta);
 
     // Update Clock
     if (world.clock) {
         const time = sky.getGameTime();
         world.clock.setTime(time.hours, time.minutes);
+    }
+
+    // Check if player is in secret room (isolated room at 200, 200)
+    if (!hasVisitedSecretRoom) {
+        const playerPos = player.camera.position;
+        const distToSecretRoom = Math.sqrt(
+            Math.pow(playerPos.x - 200, 2) +
+            Math.pow(playerPos.z - 200, 2)
+        );
+        if (distToSecretRoom < 10) { // Within 10 units of room center
+            hasVisitedSecretRoom = true;
+            console.log("Secret room discovered! CHEATS command unlocked.");
+        }
     }
 
     // World Update (Pass delta and GameTime)

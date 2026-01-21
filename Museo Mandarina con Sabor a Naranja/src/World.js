@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle, CraftingTable, Furnace, MinecraftBed } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -1877,6 +1877,25 @@ export class World {
         this.portal2.mesh.rotation.y = Math.PI; // Face North
         this.portal2.mesh.visible = false;
         this.scene.add(this.portal2.mesh);
+
+        // --- MINECRAFT BLOCKS IN SECRET ROOM ---
+        // Room center: 200, 200. Size: 10x10
+        // Corners: NW(-5,-5), NE(5,-5), SW(-5,5), SE(5,5) relative to room center
+
+        // Crafting Table and Furnace (side by side)
+        const craftingTable = new CraftingTable();
+        craftingTable.setPosition(-2, 0, -3); // Relative to room group
+        this.isolatedRoom.group.add(craftingTable.mesh);
+
+        const furnace = new Furnace();
+        furnace.setPosition(0, 0, -3); // Next to crafting table
+        this.isolatedRoom.group.add(furnace.mesh);
+
+        // Bed in corner (NE corner)
+        const bed = new MinecraftBed();
+        bed.setPosition(3, 0, -3); // NE corner
+        bed.setRotation(Math.PI / 2); // Rotate to fit corner
+        this.isolatedRoom.group.add(bed.mesh);
 
         // --- FILLER WALL (To hide the opening in L3) ---
         const fillerGeo = new THREE.BoxGeometry(4.2, 4, 0.51); // Slightly larger to avoid gaps
