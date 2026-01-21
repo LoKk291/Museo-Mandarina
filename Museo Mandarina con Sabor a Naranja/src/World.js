@@ -2160,20 +2160,14 @@ export class World {
         // Room center: 200, 200. Size: 10x10
         // Corners: NW(-5,-5), NE(5,-5), SW(-5,5), SE(5,5) relative to room center
 
-        // Crafting Table and Furnace (side by side)
+        // Crafting Table and Furnace (side by side, touching)
         const craftingTable = new CraftingTable();
-        craftingTable.setPosition(-2, 0, -3); // Relative to room group
+        craftingTable.setPosition(-0.5, 0, -3); // Centered left
         this.isolatedRoom.group.add(craftingTable.mesh);
 
         const furnace = new Furnace();
-        furnace.setPosition(0, 0, -3); // Next to crafting table
+        furnace.setPosition(0.5, 0, -3); // Centered right, touching crafting table
         this.isolatedRoom.group.add(furnace.mesh);
-
-        // Bed in corner (NE corner)
-        const bed = new MinecraftBed();
-        bed.setPosition(3, 0, -3); // NE corner
-        bed.setRotation(Math.PI / 2); // Rotate to fit corner
-        this.isolatedRoom.group.add(bed.mesh);
 
         // --- FILLER WALL (To hide the opening in L3) ---
         const fillerGeo = new THREE.BoxGeometry(4.2, 4, 0.51); // Slightly larger to avoid gaps
