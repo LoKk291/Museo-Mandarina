@@ -29,6 +29,42 @@ export class World {
 
         this.isCeilingOpen = false; // Logical state for main.js lighting check
 
+        // --- NAVIGATION GRAPH ---
+        this.navNodes = {
+            'CENTRAL': { x: 0, z: 0 },
+            'HALL_CENT_L1': { x: -13.75, z: 0 },
+            'L1': { x: -25, z: 0 },
+            'HALL_L1_L2': { x: -25, z: -12.5 },
+            'L2': { x: -25, z: -25 },
+            'HALL_L2_L3': { x: -25, z: -37.5 },
+            'L3': { x: -25, z: -50 },
+            'HALL_CENT_R1': { x: 13.75, z: 0 },
+            'R1': { x: 25, z: 0 },
+            'HALL_R1_R2': { x: 25, z: -12.5 },
+            'R2': { x: 25, z: -25 },
+            'HALL_R2_R3': { x: 25, z: -37.5 },
+            'R3': { x: 25, z: -50 },
+            'SECRET_CORRIDOR': { x: -25, z: -62.5 },
+            'ISOLATED_ROOM': { x: 200, z: 200 }
+        };
+
+        this.navEdges = {
+            'CENTRAL': ['HALL_CENT_L1', 'HALL_CENT_R1'],
+            'HALL_CENT_L1': ['CENTRAL', 'L1'],
+            'L1': ['HALL_CENT_L1', 'HALL_L1_L2'],
+            'HALL_L1_L2': ['L1', 'L2'],
+            'L2': ['HALL_L1_L2', 'HALL_L2_L3'],
+            'HALL_L2_L3': ['L2', 'L3'],
+            'L3': ['HALL_L2_L3', 'SECRET_CORRIDOR'],
+            'HALL_CENT_R1': ['CENTRAL', 'R1'],
+            'R1': ['HALL_CENT_R1', 'HALL_R1_R2'],
+            'HALL_R1_R2': ['R1', 'R2'],
+            'R2': ['HALL_R1_R2', 'HALL_R2_R3'],
+            'HALL_R2_R3': ['R2', 'R3'],
+            'SECRET_CORRIDOR': ['L3', 'ISOLATED_ROOM'],
+            'ISOLATED_ROOM': ['SECRET_CORRIDOR']
+        };
+
         this.init();
         this.createGarden(); // Add external environment
 
@@ -2451,70 +2487,132 @@ export class World {
         }
 
         // --- FOXY AI CHASE LOGIC ---
-        if (this.foxy && this.foxy.isChasing && camera) {
-            const playerPos = camera.position;
-            const foxyPos = this.foxy.mesh.position;
+        this.updateFoxyAI(delta, camera, player);
+    }
 
-            // 1. Check if enlightened by flashlight
-            let isStunned = false;
-            if (player && player.flashlightOn) {
-                const toFoxy = new THREE.Vector3().subVectors(foxyPos, playerPos);
-                const distance = toFoxy.length();
+    // --- NAVIGATION METHODS ---
+    getClosestNode(pos) {
+        let closest = null;
+        let minDist = Infinity;
+        for (const [name, node] of Object.entries(this.navNodes)) {
+            const distSq = Math.pow(pos.x - node.x, 2) + Math.pow(pos.z - node.z, 2);
+            if (distSq < minDist) {
+                minDist = distSq;
+                closest = name;
+            }
+        }
+        return closest;
+    }
 
-                if (distance < 30) { // Max effect distance
-                    const viewDir = new THREE.Vector3();
-                    camera.getWorldDirection(viewDir);
+    findPath(startNode, endNode) {
+        if (!startNode || !endNode) return null;
+        if (startNode === endNode) return [startNode];
 
-                    const angle = viewDir.angleTo(toFoxy);
-                    if (angle < Math.PI / 8) { // Cone of ~22.5 degrees
-                        isStunned = true;
-                    }
+        const queue = [[startNode]];
+        const visited = new Set([startNode]);
+
+        while (queue.length > 0) {
+            const path = queue.shift();
+            const node = path[path.length - 1];
+
+            if (node === endNode) return path;
+
+            const neighbors = this.navEdges[node] || [];
+            for (const neighbor of neighbors) {
+                if (!visited.has(neighbor)) {
+                    visited.add(neighbor);
+                    queue.push([...path, neighbor]);
                 }
             }
+        }
+        return null;
+    }
 
-            if (isStunned) {
-                // Foxy stops and maybe shakes a bit?
-                this.foxy.mesh.position.add(new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.05,
-                    0,
-                    (Math.random() - 0.5) * 0.05
-                ));
-                return; // Skip movement
+    updateFoxyAI(delta, camera, player) {
+        if (!this.foxy || !this.foxy.isChasing || !camera) return;
+
+        const playerPos = camera.position;
+        const foxyPos = this.foxy.mesh.position;
+
+        // 1. Flashlight Stun Check
+        let isStunned = false;
+        if (player && player.flashlightOn) {
+            const toFoxy = new THREE.Vector3().subVectors(foxyPos, playerPos);
+            const distance = toFoxy.length();
+            if (distance < 30) {
+                const viewDir = new THREE.Vector3();
+                camera.getWorldDirection(viewDir);
+                const angle = viewDir.angleTo(toFoxy);
+                if (angle < Math.PI / 8) isStunned = true;
             }
+        }
 
-            // Calculate distance to player (XZ plane only, ignore Y)
-            const dx = playerPos.x - foxyPos.x;
-            const dz = playerPos.z - foxyPos.z;
-            const distance = Math.sqrt(dx * dx + dz * dz);
+        if (isStunned) {
+            this.foxy.mesh.position.add(new THREE.Vector3(
+                (Math.random() - 0.5) * 0.05,
+                0,
+                (Math.random() - 0.5) * 0.05
+            ));
+            return;
+        }
 
-            // Check if close enough for jumpscare (2 meters)
-            if (distance < 2.0) {
-                // Trigger jumpscare
-                this.foxy.isChasing = false; // Stop chasing
-                console.log("Foxy caught the player! Triggering jumpscare...");
+        // 2. Distance Check for Jumpscare
+        const dx = playerPos.x - foxyPos.x;
+        const dz = playerPos.z - foxyPos.z;
+        const playerDist = Math.sqrt(dx * dx + dz * dz);
 
-                // Call global function to trigger jumpscare (defined in main.js)
-                if (typeof window.triggerFoxyJumpscare === 'function') {
-                    window.triggerFoxyJumpscare();
-                }
+        if (playerDist < 2.0) {
+            this.foxy.isChasing = false;
+            if (typeof window.triggerFoxyJumpscare === 'function') {
+                window.triggerFoxyJumpscare();
+            }
+            return;
+        }
+
+        // 3. Pathfinding
+        const startNode = this.getClosestNode(foxyPos);
+        const endNode = this.getClosestNode(playerPos);
+
+        // Target position
+        let targetPos;
+        if (startNode === endNode) {
+            // Direct pursuit if in the same zone
+            targetPos = playerPos;
+        } else {
+            // Follow waypoints
+            const path = this.findPath(startNode, endNode);
+            if (path && path.length > 1) {
+                const nextNodeName = path[1];
+                const nextNode = this.navNodes[nextNodeName];
+                targetPos = new THREE.Vector3(nextNode.x, 0, nextNode.z);
             } else {
-                // Move Foxy toward player
-                const direction = new THREE.Vector3(dx, 0, dz).normalize();
-                const moveDistance = this.foxy.speed * delta;
-                const nextPos = foxyPos.clone().add(direction.clone().multiplyScalar(moveDistance));
-
-                // 2. Check collision before moving
-                if (!this.checkFoxyCollision(nextPos)) {
-                    this.foxy.mesh.position.copy(nextPos);
-                } else {
-                    // Try sliding or just stop
-                    // For now, let's just stop or try a small offset
-                }
-
-                // Rotate Foxy to face player
-                const angle = Math.atan2(dx, dz);
-                this.foxy.mesh.rotation.y = angle;
+                targetPos = playerPos;
             }
+        }
+
+        // 4. Movement with better collision
+        const dirX = targetPos.x - foxyPos.x;
+        const dirZ = targetPos.z - foxyPos.z;
+        const dirLength = Math.sqrt(dirX * dirX + dirZ * dirZ);
+
+        if (dirLength > 0.1) {
+            const direction = new THREE.Vector3(dirX / dirLength, 0, dirZ / dirLength);
+            const moveDistance = this.foxy.speed * delta;
+
+            // Try moving in X
+            const nextPosX = foxyPos.clone().add(new THREE.Vector3(direction.x * moveDistance, 0, 0));
+            if (!this.checkFoxyCollision(nextPosX)) {
+                this.foxy.mesh.position.x = nextPosX.x;
+            }
+
+            // Try moving in Z
+            const nextPosZ = foxyPos.clone().add(new THREE.Vector3(0, 0, direction.z * moveDistance));
+            if (!this.checkFoxyCollision(nextPosZ)) {
+                this.foxy.mesh.position.z = nextPosZ.z;
+            }
+
+            // Rotate to look at target
+            this.foxy.mesh.rotation.y = Math.atan2(dirX, dirZ);
         }
     }
 
