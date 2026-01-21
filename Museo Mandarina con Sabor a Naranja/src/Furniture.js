@@ -5239,68 +5239,39 @@ export class CraftingTable {
     build() {
         const size = 1;
 
-        // Create canvas for crafting table texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-
-        // Brown wood base
-        ctx.fillStyle = '#8B5A3C';
-        ctx.fillRect(0, 0, 512, 512);
-
-        // Add wood grain
-        for (let i = 0; i < 20; i++) {
-            ctx.strokeStyle = `rgba(139, 90, 60, ${Math.random() * 0.3})`;
-            ctx.lineWidth = Math.random() * 3 + 1;
-            ctx.beginPath();
-            ctx.moveTo(0, Math.random() * 512);
-            ctx.lineTo(512, Math.random() * 512);
-            ctx.stroke();
-        }
-
-        const texture = new THREE.CanvasTexture(canvas);
+        // Load the cubemap texture
+        const loader = new THREE.TextureLoader();
+        const texture = loader.load('textures/minecraft/crafting_table.png');
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
 
-        // Top face - crafting grid
-        const topCanvas = document.createElement('canvas');
-        topCanvas.width = 512;
-        topCanvas.height = 512;
-        const topCtx = topCanvas.getContext('2d');
+        // The texture is a cubemap layout, we need to create materials for each face
+        // Layout: top in center, sides around it
+        // We'll create 6 materials, one for each face, with proper UV mapping
 
-        // Brown background
-        topCtx.fillStyle = '#8B5A3C';
-        topCtx.fillRect(0, 0, 512, 512);
+        const materials = [];
 
-        // Draw 3x3 grid
-        topCtx.strokeStyle = '#654321';
-        topCtx.lineWidth = 8;
-        for (let i = 1; i < 3; i++) {
-            topCtx.beginPath();
-            topCtx.moveTo(i * 170, 0);
-            topCtx.lineTo(i * 170, 512);
-            topCtx.stroke();
+        // Define UV coordinates for each face in the cubemap
+        // The image shows: top (center), front, right, back, left, bottom
+        const faceUVs = {
+            right: { x: 2 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 },   // Right side
+            left: { x: 0 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 },    // Left side  
+            top: { x: 1 / 4, y: 0 / 3, w: 1 / 4, h: 1 / 3 },     // Top (grid)
+            bottom: { x: 1 / 4, y: 2 / 3, w: 1 / 4, h: 1 / 3 },  // Bottom
+            front: { x: 1 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 },   // Front
+            back: { x: 3 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 }     // Back
+        };
 
-            topCtx.beginPath();
-            topCtx.moveTo(0, i * 170);
-            topCtx.lineTo(512, i * 170);
-            topCtx.stroke();
-        }
-
-        const topTexture = new THREE.CanvasTexture(topCanvas);
-        topTexture.magFilter = THREE.NearestFilter;
-        topTexture.minFilter = THREE.NearestFilter;
-
-        // Create materials array [right, left, top, bottom, front, back]
-        const materials = [
-            new THREE.MeshStandardMaterial({ map: texture }), // right
-            new THREE.MeshStandardMaterial({ map: texture }), // left
-            new THREE.MeshStandardMaterial({ map: topTexture }), // top
-            new THREE.MeshStandardMaterial({ map: texture }), // bottom
-            new THREE.MeshStandardMaterial({ map: texture }), // front
-            new THREE.MeshStandardMaterial({ map: texture })  // back
-        ];
+        // Create a material for each face with custom UV mapping
+        ['right', 'left', 'top', 'bottom', 'front', 'back'].forEach(face => {
+            const mat = new THREE.MeshStandardMaterial({
+                map: texture.clone()
+            });
+            mat.map.repeat.set(faceUVs[face].w, faceUVs[face].h);
+            mat.map.offset.set(faceUVs[face].x, faceUVs[face].y);
+            mat.map.needsUpdate = true;
+            materials.push(mat);
+        });
 
         const geometry = new THREE.BoxGeometry(size, size, size);
         const cube = new THREE.Mesh(geometry, materials);
@@ -5325,60 +5296,34 @@ export class Furnace {
     build() {
         const size = 1;
 
-        // Create canvas for stone texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-
-        // Gray stone base
-        ctx.fillStyle = '#7A7A7A';
-        ctx.fillRect(0, 0, 512, 512);
-
-        // Add stone texture
-        for (let i = 0; i < 100; i++) {
-            ctx.fillStyle = `rgba(${100 + Math.random() * 50}, ${100 + Math.random() * 50}, ${100 + Math.random() * 50}, 0.3)`;
-            ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 20, Math.random() * 20);
-        }
-
-        const texture = new THREE.CanvasTexture(canvas);
+        // Load the cubemap texture
+        const loader = new THREE.TextureLoader();
+        const texture = loader.load('textures/minecraft/furnace.png');
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
 
-        // Front face with opening
-        const frontCanvas = document.createElement('canvas');
-        frontCanvas.width = 512;
-        frontCanvas.height = 512;
-        const frontCtx = frontCanvas.getContext('2d');
+        const materials = [];
 
-        // Gray background
-        frontCtx.fillStyle = '#7A7A7A';
-        frontCtx.fillRect(0, 0, 512, 512);
+        // Define UV coordinates for each face in the cubemap
+        const faceUVs = {
+            right: { x: 2 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 },   // Right side
+            left: { x: 0 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 },    // Left side  
+            top: { x: 1 / 4, y: 0 / 3, w: 1 / 4, h: 1 / 3 },     // Top
+            bottom: { x: 1 / 4, y: 2 / 3, w: 1 / 4, h: 1 / 3 },  // Bottom
+            front: { x: 1 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 },   // Front (with opening)
+            back: { x: 3 / 4, y: 1 / 3, w: 1 / 4, h: 1 / 3 }     // Back
+        };
 
-        // Dark opening
-        frontCtx.fillStyle = '#1A1A1A';
-        frontCtx.fillRect(150, 200, 212, 150);
-
-        // Add glow effect
-        const gradient = frontCtx.createRadialGradient(256, 275, 50, 256, 275, 106);
-        gradient.addColorStop(0, 'rgba(255, 100, 0, 0.5)');
-        gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-        frontCtx.fillStyle = gradient;
-        frontCtx.fillRect(150, 200, 212, 150);
-
-        const frontTexture = new THREE.CanvasTexture(frontCanvas);
-        frontTexture.magFilter = THREE.NearestFilter;
-        frontTexture.minFilter = THREE.NearestFilter;
-
-        // Create materials array
-        const materials = [
-            new THREE.MeshStandardMaterial({ map: texture }), // right
-            new THREE.MeshStandardMaterial({ map: texture }), // left
-            new THREE.MeshStandardMaterial({ map: texture }), // top
-            new THREE.MeshStandardMaterial({ map: texture }), // bottom
-            new THREE.MeshStandardMaterial({ map: frontTexture }), // front
-            new THREE.MeshStandardMaterial({ map: texture })  // back
-        ];
+        // Create a material for each face with custom UV mapping
+        ['right', 'left', 'top', 'bottom', 'front', 'back'].forEach(face => {
+            const mat = new THREE.MeshStandardMaterial({
+                map: texture.clone()
+            });
+            mat.map.repeat.set(faceUVs[face].w, faceUVs[face].h);
+            mat.map.offset.set(faceUVs[face].x, faceUVs[face].y);
+            mat.map.needsUpdate = true;
+            materials.push(mat);
+        });
 
         const geometry = new THREE.BoxGeometry(size, size, size);
         const cube = new THREE.Mesh(geometry, materials);
@@ -5401,64 +5346,29 @@ export class MinecraftBed {
     }
 
     build() {
-        // Bed dimensions
+        // Load bed texture
+        const loader = new THREE.TextureLoader();
+        const bedTexture = loader.load('textures/minecraft/bed.png');
+        bedTexture.magFilter = THREE.NearestFilter;
+        bedTexture.minFilter = THREE.NearestFilter;
+
+        // Create bed model matching the reference image
         const bedWidth = 1;
         const bedLength = 2;
         const bedHeight = 0.5;
 
-        // Red wool texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-
-        ctx.fillStyle = '#CC0000';
-        ctx.fillRect(0, 0, 512, 512);
-
-        // Add fabric texture
-        for (let i = 0; i < 50; i++) {
-            ctx.fillStyle = `rgba(${200 + Math.random() * 55}, 0, 0, 0.2)`;
-            ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 10, Math.random() * 10);
-        }
-
-        const redTexture = new THREE.CanvasTexture(canvas);
-        redTexture.magFilter = THREE.NearestFilter;
-        redTexture.minFilter = THREE.NearestFilter;
-
-        // White pillow texture
-        const pillowCanvas = document.createElement('canvas');
-        pillowCanvas.width = 512;
-        pillowCanvas.height = 512;
-        const pillowCtx = pillowCanvas.getContext('2d');
-
-        pillowCtx.fillStyle = '#FFFFFF';
-        pillowCtx.fillRect(0, 0, 512, 512);
-
-        const pillowTexture = new THREE.CanvasTexture(pillowCanvas);
-        pillowTexture.magFilter = THREE.NearestFilter;
-        pillowTexture.minFilter = THREE.NearestFilter;
-
-        // Main bed
+        // Main bed body
         const bedGeo = new THREE.BoxGeometry(bedWidth, bedHeight, bedLength);
-        const bedMat = new THREE.MeshStandardMaterial({ map: redTexture });
+        const bedMat = new THREE.MeshStandardMaterial({ map: bedTexture });
         const bed = new THREE.Mesh(bedGeo, bedMat);
         bed.position.y = bedHeight / 2;
         bed.castShadow = true;
         bed.receiveShadow = true;
         this.mesh.add(bed);
 
-        // Pillow
-        const pillowGeo = new THREE.BoxGeometry(bedWidth * 0.8, bedHeight * 0.4, bedLength * 0.25);
-        const pillowMat = new THREE.MeshStandardMaterial({ map: pillowTexture });
-        const pillow = new THREE.Mesh(pillowGeo, pillowMat);
-        pillow.position.set(0, bedHeight * 0.7, -bedLength * 0.3);
-        pillow.castShadow = true;
-        pillow.receiveShadow = true;
-        this.mesh.add(pillow);
-
-        // Legs (4 corners)
+        // Legs (4 corners) - brown wood
         const legGeo = new THREE.BoxGeometry(0.1, 0.3, 0.1);
-        const legMat = new THREE.MeshStandardMaterial({ color: '#654321' });
+        const legMat = new THREE.MeshStandardMaterial({ color: '#8B6914' });
 
         const positions = [
             [-bedWidth / 2 + 0.1, 0.15, -bedLength / 2 + 0.1],
