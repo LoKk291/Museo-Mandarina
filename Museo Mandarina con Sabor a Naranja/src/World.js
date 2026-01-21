@@ -231,7 +231,8 @@ export class World {
         this.irregularTerrain.receiveShadow = true;
         this.irregularTerrain.castShadow = false;
 
-        // Don't add to collidables - terrain should be walkable, not blocking
+        // Don't add to collidables - terrain should be walkable, not a collision wall
+        // The bumpy surface is visual only, players walk on the flat ground plane
         this.scene.add(this.irregularTerrain);
 
         // --- TREES (Only beyond boundary) ---
@@ -239,6 +240,9 @@ export class World {
 
         // --- FLOWERS (Can be inside boundary area) ---
         this.createFlowers(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ);
+
+        // --- WATERFALL AND LAKE ---
+        this.createWaterFeatures();
     }
 
     createGrassTexture() {
@@ -269,7 +273,7 @@ export class World {
     }
 
     createTrees(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ) {
-        const treeCount = 80; // Many trees
+        const treeCount = 40; // Reduced for performance
         const boundaryRadius = Math.sqrt(
             Math.pow((boundaryMaxX - boundaryMinX) / 2, 2) +
             Math.pow((boundaryMaxZ - boundaryMinZ) / 2, 2)
@@ -284,6 +288,13 @@ export class World {
             const distance = minDistance + Math.random() * 50;
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
+
+            // Check if position is on flat terrain (not in bumpy areas)
+            const distFromCenter = Math.sqrt(x * x + z * z);
+            if (distFromCenter < boundaryRadius * 0.8) {
+                // Skip - this is in the flat area or too close
+                continue;
+            }
 
             // Random tree type
             const type = treeTypes[Math.floor(Math.random() * treeTypes.length)];
@@ -312,12 +323,12 @@ export class World {
 
         // Foliage based on type with more variation
         if (type === 'pine') {
-            // Conical shape with varied colors
-            const layers = 3 + Math.floor(Math.random() * 3);
+            // Conical shape with varied colors - simplified
+            const layers = 3; // Reduced from random 3-6
             const greenShade = Math.random() > 0.5 ? 0x1a4d2e : 0x0f3d1f;
             for (let i = 0; i < layers; i++) {
-                const radius = (1.2 + Math.random() * 0.6) - (i * 0.25);
-                const coneGeo = new THREE.ConeGeometry(radius, 1.5 + Math.random() * 0.8, 8);
+                const radius = (1.2 + Math.random() * 0.4) - (i * 0.25);
+                const coneGeo = new THREE.ConeGeometry(radius, 1.5, 6); // Reduced segments from 8
                 const coneMat = new THREE.MeshStandardMaterial({ color: greenShade, roughness: 0.8 });
                 const cone = new THREE.Mesh(coneGeo, coneMat);
                 cone.position.y = trunkHeight - 0.5 + (i * 1.3);
@@ -325,29 +336,23 @@ export class World {
                 group.add(cone);
             }
         } else if (type === 'oak') {
-            // Rounded canopy with variation
-            const canopySize = 1.5 + Math.random() * 1.2;
+            // Rounded canopy with variation - simplified
+            const canopySize = 1.5 + Math.random() * 1.0;
             const greenShade = [0x2d5a1e, 0x3a6b2e, 0x1f4d1a][Math.floor(Math.random() * 3)];
-            const canopyGeo = new THREE.SphereGeometry(canopySize, 8, 8);
+            const canopyGeo = new THREE.SphereGeometry(canopySize, 6, 6); // Reduced from 8,8
             const canopyMat = new THREE.MeshStandardMaterial({ color: greenShade, roughness: 0.8 });
             const canopy = new THREE.Mesh(canopyGeo, canopyMat);
             canopy.position.y = trunkHeight + canopySize * 0.5;
             canopy.scale.set(1 + Math.random() * 0.3, 0.7 + Math.random() * 0.3, 1 + Math.random() * 0.3);
             canopy.castShadow = true;
             group.add(canopy);
-            // Sometimes add a second canopy layer
-            if (Math.random() > 0.5) {
-                const canopy2 = canopy.clone();
-                canopy2.scale.multiplyScalar(0.7);
-                canopy2.position.y += canopySize * 0.6;
-                group.add(canopy2);
-            }
+            // Removed second canopy layer for performance
         } else if (type === 'poplar') {
-            // Tall, narrow with variation
-            const canopyHeight = 3 + Math.random() * 2;
-            const canopyRadius = 0.6 + Math.random() * 0.4;
+            // Tall, narrow with variation - simplified
+            const canopyHeight = 3 + Math.random() * 1.5;
+            const canopyRadius = 0.6 + Math.random() * 0.3;
             const greenShade = Math.random() > 0.5 ? 0x3a6b2e : 0x2d5a1e;
-            const canopyGeo = new THREE.CylinderGeometry(canopyRadius * 0.7, canopyRadius * 1.2, canopyHeight, 8);
+            const canopyGeo = new THREE.CylinderGeometry(canopyRadius * 0.7, canopyRadius * 1.2, canopyHeight, 6); // Reduced from 8
             const canopyMat = new THREE.MeshStandardMaterial({ color: greenShade, roughness: 0.8 });
             const canopy = new THREE.Mesh(canopyGeo, canopyMat);
             canopy.position.y = trunkHeight + canopyHeight / 2;
@@ -362,12 +367,12 @@ export class World {
     }
 
     createFlowers(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ) {
-        const flowerCount = 400; // Many more flowers
+        const flowerCount = 150; // Reduced for performance
         const boundaryRadius = Math.sqrt(
             Math.pow((boundaryMaxX - boundaryMinX) / 2, 2) +
             Math.pow((boundaryMaxZ - boundaryMinZ) / 2, 2)
         );
-        const minDistance = boundaryRadius * 0.5; // Flowers can be closer to museum
+        const minDistance = boundaryRadius * 0.85; // Flowers start OUTSIDE boundary
 
         const flowerTypes = [
             { type: 'simple', color: 0xff0000 },    // Red simple
@@ -391,6 +396,13 @@ export class World {
             const distance = minDistance + Math.random() * 60;
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
+
+            // Check if position is on flat terrain (not in bumpy areas)
+            const distFromCenter = Math.sqrt(x * x + z * z);
+            if (distFromCenter < boundaryRadius * 0.8) {
+                // Skip - this is in the flat area or too close
+                continue;
+            }
 
             // Random flower type
             const flowerData = flowerTypes[Math.floor(Math.random() * flowerTypes.length)];
@@ -502,6 +514,236 @@ export class World {
         }
 
         return group;
+    }
+
+    createWaterFeatures() {
+        // --- LAKE WITH DEPTH ---
+        const lakeWidth = 50;
+        const lakeDepth = 70;
+        const waterDepth = 3; // Visual depth
+
+        // Lake surface with animated waves - simplified
+        const lakeSurfaceGeo = new THREE.PlaneGeometry(lakeWidth, lakeDepth, 32, 32); // Reduced from 64x64
+        const vertices = lakeSurfaceGeo.attributes.position.array;
+        for (let i = 0; i < vertices.length; i += 3) {
+            const x = vertices[i];
+            const y = vertices[i + 1];
+            vertices[i + 2] = Math.sin(x * 0.2) * Math.cos(y * 0.2) * 0.15;
+        }
+        lakeSurfaceGeo.attributes.position.needsUpdate = true;
+        lakeSurfaceGeo.computeVertexNormals();
+
+        // Enhanced water material with better appearance
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x0077be,
+            transparent: true,
+            opacity: 0.75,
+            roughness: 0.05,
+            metalness: 0.6,
+            side: THREE.DoubleSide,
+            envMapIntensity: 1.5
+        });
+
+        this.lake = new THREE.Mesh(lakeSurfaceGeo, waterMat);
+        this.lake.rotation.x = -Math.PI / 2;
+        this.lake.position.set(0, 0.1, 100); // South side, extends from mountain toward museum
+        this.lake.receiveShadow = true;
+        this.scene.add(this.lake);
+
+        // Lake bottom (darker, gives depth perception)
+        const lakeBottomGeo = new THREE.PlaneGeometry(lakeWidth, lakeDepth);
+        const bottomMat = new THREE.MeshStandardMaterial({
+            color: 0x003366,
+            roughness: 0.9
+        });
+        const lakeBottom = new THREE.Mesh(lakeBottomGeo, bottomMat);
+        lakeBottom.rotation.x = -Math.PI / 2;
+        lakeBottom.position.set(0, -waterDepth, 100);
+        lakeBottom.receiveShadow = true;
+        this.scene.add(lakeBottom);
+
+        // Lake sides for depth
+        const sideGeo1 = new THREE.PlaneGeometry(lakeWidth, waterDepth);
+        const sideMat = new THREE.MeshStandardMaterial({ color: 0x004488, side: THREE.DoubleSide });
+        const side1 = new THREE.Mesh(sideGeo1, sideMat);
+        side1.position.set(0, -waterDepth / 2, 100 - lakeDepth / 2);
+        this.scene.add(side1);
+
+        const side2 = side1.clone();
+        side2.position.set(0, -waterDepth / 2, 100 + lakeDepth / 2);
+        this.scene.add(side2);
+
+        const sideGeo2 = new THREE.PlaneGeometry(lakeDepth, waterDepth);
+        const side3 = new THREE.Mesh(sideGeo2, sideMat);
+        side3.rotation.y = Math.PI / 2;
+        side3.position.set(0 - lakeWidth / 2, -waterDepth / 2, 100);
+        this.scene.add(side3);
+
+        const side4 = side3.clone();
+        side4.position.set(0 + lakeWidth / 2, -waterDepth / 2, 100);
+        this.scene.add(side4);
+
+        // --- MOUNTAIN RANGE IN DISTANCE (MOUNTAINOUS LANDSCAPE) ---
+
+        // Main central mountain (tallest, with waterfall)
+        const mountainHeight = 80;
+        const mountainWidth = 60;
+        const mountainGeo = new THREE.ConeGeometry(mountainWidth, mountainHeight, 8);
+        const mountainMat = new THREE.MeshStandardMaterial({
+            color: 0x5a5a5a,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+        const mountain = new THREE.Mesh(mountainGeo, mountainMat);
+        mountain.position.set(0, mountainHeight / 2, 200); // Much farther - was 150
+        mountain.castShadow = true;
+        this.scene.add(mountain);
+
+        // Snow cap on main mountain
+        const snowCapGeo = new THREE.ConeGeometry(mountainWidth * 0.5, mountainHeight * 0.35, 8);
+        const snowMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.7
+        });
+        const snowCap = new THREE.Mesh(snowCapGeo, snowMat);
+        snowCap.position.set(0, mountainHeight * 0.825, 200);
+        this.scene.add(snowCap);
+
+        // Left side mountains (smaller)
+        const leftMountain1 = new THREE.Mesh(
+            new THREE.ConeGeometry(25, 40, 7),
+            mountainMat
+        );
+        leftMountain1.position.set(-70, 20, 190);
+        leftMountain1.castShadow = true;
+        this.scene.add(leftMountain1);
+
+        const leftSnow1 = new THREE.Mesh(
+            new THREE.ConeGeometry(12, 14, 7),
+            snowMat
+        );
+        leftSnow1.position.set(-70, 34, 190);
+        this.scene.add(leftSnow1);
+
+        const leftMountain2 = new THREE.Mesh(
+            new THREE.ConeGeometry(22, 35, 6),
+            mountainMat
+        );
+        leftMountain2.position.set(-120, 17.5, 210);
+        leftMountain2.castShadow = true;
+        this.scene.add(leftMountain2);
+
+        const leftSnow2 = new THREE.Mesh(
+            new THREE.ConeGeometry(11, 12, 6),
+            snowMat
+        );
+        leftSnow2.position.set(-120, 29, 210);
+        this.scene.add(leftSnow2);
+
+        // Right side mountains (smaller)
+        const rightMountain1 = new THREE.Mesh(
+            new THREE.ConeGeometry(24, 38, 7),
+            mountainMat
+        );
+        rightMountain1.position.set(75, 19, 195);
+        rightMountain1.castShadow = true;
+        this.scene.add(rightMountain1);
+
+        const rightSnow1 = new THREE.Mesh(
+            new THREE.ConeGeometry(12, 13, 7),
+            snowMat
+        );
+        rightSnow1.position.set(75, 32, 195);
+        this.scene.add(rightSnow1);
+
+        const rightMountain2 = new THREE.Mesh(
+            new THREE.ConeGeometry(20, 32, 6),
+            mountainMat
+        );
+        rightMountain2.position.set(110, 16, 215);
+        rightMountain2.castShadow = true;
+        this.scene.add(rightMountain2);
+
+        const rightSnow2 = new THREE.Mesh(
+            new THREE.ConeGeometry(10, 11, 6),
+            snowMat
+        );
+        rightSnow2.position.set(110, 27, 215);
+        this.scene.add(rightSnow2);
+
+        // --- ENHANCED WATERFALL ---
+        const waterfallHeight = 15;
+        const waterfallWidth = 10;
+
+        // Cliff/Rock face (larger, more detailed)
+        const cliffGeo = new THREE.BoxGeometry(waterfallWidth + 4, waterfallHeight + 5, 4);
+        const cliffMat = new THREE.MeshStandardMaterial({
+            color: 0x3a3a3a,
+            roughness: 0.95,
+            metalness: 0.05
+        });
+        const cliff = new THREE.Mesh(cliffGeo, cliffMat);
+        cliff.position.set(0, waterfallHeight / 2, 190); // At base of main mountain
+        cliff.castShadow = true;
+        this.scene.add(cliff);
+
+        // Waterfall cascade with better texture simulation - simplified
+        const cascadeGeo = new THREE.PlaneGeometry(waterfallWidth, waterfallHeight, 16, 32); // Reduced from 32x64
+
+        // Create flowing water effect with vertex displacement
+        const cascadeVertices = cascadeGeo.attributes.position.array;
+        for (let i = 0; i < cascadeVertices.length; i += 3) {
+            const x = cascadeVertices[i];
+            const y = cascadeVertices[i + 1];
+            // Create wavy flowing pattern
+            cascadeVertices[i + 2] = Math.sin(x * 2 + y * 0.5) * 0.2;
+        }
+        cascadeGeo.attributes.position.needsUpdate = true;
+        cascadeGeo.computeVertexNormals();
+
+        const cascadeMat = new THREE.MeshStandardMaterial({
+            color: 0xccffff,
+            transparent: true,
+            opacity: 0.7,
+            roughness: 0.1,
+            metalness: 0.4,
+            side: THREE.DoubleSide,
+            emissive: 0x224466,
+            emissiveIntensity: 0.2
+        });
+
+        this.waterfall = new THREE.Mesh(cascadeGeo, cascadeMat);
+        this.waterfall.position.set(0, waterfallHeight / 2, 192); // Cascades down from mountain
+        this.scene.add(this.waterfall);
+
+        // Mist/spray at bottom of waterfall
+        const mistGeo = new THREE.SphereGeometry(3, 16, 16);
+        const mistMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.3,
+            roughness: 1.0
+        });
+        const mist = new THREE.Mesh(mistGeo, mistMat);
+        mist.position.set(0, 1, 192);
+        mist.scale.set(1, 0.5, 1);
+        this.scene.add(mist);
+
+        // Pool at bottom of waterfall (larger, deeper)
+        const poolGeo = new THREE.CylinderGeometry(6, 6, 1, 24);
+        const poolMat = new THREE.MeshStandardMaterial({
+            color: 0x0088cc,
+            transparent: true,
+            opacity: 0.85,
+            roughness: 0.1,
+            metalness: 0.5
+        });
+        const pool = new THREE.Mesh(poolGeo, poolMat);
+        pool.position.set(0, 0.5, 192);
+        this.scene.add(pool);
+
+        // Store for animation
+        this.waterTime = 0;
     }
 
     toggleBoundaryVisibility(visible) {

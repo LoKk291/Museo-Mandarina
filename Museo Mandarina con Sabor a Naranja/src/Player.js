@@ -97,6 +97,14 @@ export class Player {
         }
     }
 
+    clearMovementKeys() {
+        // Clear all movement states to prevent stuck keys
+        this.moveForward = false;
+        this.moveBackward = false;
+        this.moveLeft = false;
+        this.moveRight = false;
+    }
+
     update(delta) {
         if (!this.isLocked) return;
 

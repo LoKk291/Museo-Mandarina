@@ -128,6 +128,8 @@ player.controls.addEventListener('lock', () => {
 
 player.controls.addEventListener('unlock', () => {
     player.isLocked = false;
+    // Clear movement keys to prevent stuck key bug
+    player.clearMovementKeys();
     // Solo mostrar instrucciones si NO hay un modal abierto
     if (!isModalOpen) {
         instructions.style.display = 'flex';
