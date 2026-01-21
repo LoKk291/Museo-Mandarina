@@ -309,6 +309,65 @@ export class SecretNote {
     }
 }
 
+export class HintNote {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        const geo = new THREE.PlaneGeometry(0.18, 0.12);
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+
+        // Paper background
+        ctx.fillStyle = '#fdfbf7';
+        ctx.fillRect(0, 0, 256, 128);
+
+        // Hint Text
+        ctx.fillStyle = '#222222';
+        ctx.font = 'bold 22px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Multi-line wrap or just small font. 
+        ctx.fillText('antes de volver,', 128, 45);
+        ctx.fillText('echa un vistazo por ahí', 128, 85);
+
+        // Border
+        ctx.strokeStyle = '#d0c0a0';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(0, 0, 256, 128);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.MeshStandardMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            roughness: 0.9,
+            metalness: 0
+        });
+
+        const note = new THREE.Mesh(geo, mat);
+        note.rotation.x = -Math.PI / 2;
+        note.castShadow = true;
+        note.receiveShadow = true;
+
+        // Hitbox for raycasting
+        const hitboxGeo = new THREE.BoxGeometry(0.18, 0.02, 0.12);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+        hitbox.userData = {
+            type: 'hint-note',
+            parentObj: this
+        };
+        note.add(hitbox);
+        this.interactableMesh = hitbox;
+
+        this.mesh.add(note);
+    }
+}
+
 export class Statue {
     constructor(type = 'generic') {
         this.type = type; // 'aphrodite' or 'athena'
@@ -751,12 +810,20 @@ export class Desk {
             drawerR.setOriginalZ(0);
             this.drawers.push(drawerR);
 
-            // Add Items (Key) - Moved to Right
+            // Add Items (Key & Hint Note) - Moved to Right
             if (i === 1) { // Middle
+                // Golden Key (Initially hidden)
                 this.goldenKey = new GoldenKey();
                 this.goldenKey.mesh.position.set(0, -dH_Real / 2 + 0.05, 0);
                 this.goldenKey.mesh.rotation.y = Math.PI / 4;
+                this.goldenKey.mesh.visible = false; // HIDDEN
                 drawerR.addItem(this.goldenKey.mesh);
+
+                // Hint Note (Initially visible)
+                this.hintNote = new HintNote();
+                this.hintNote.mesh.position.set(0, -dH_Real / 2 + 0.02, 0);
+                this.hintNote.mesh.rotation.y = Math.PI / 8;
+                drawerR.addItem(this.hintNote.mesh);
             }
 
             // Secret Note (Top)
@@ -4193,6 +4260,86 @@ export class SecretBookshelfDoor {
 
             this.pivot.rotation.y = this.currentRotation;
         }
+    }
+}
+
+
+export class MinecraftPortal {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.portalMesh = null;
+        this.time = 0;
+        this.build();
+    }
+
+    build() {
+        // Obsidian Material (Dark, slightly purple, rough)
+        const obsidianMat = new THREE.MeshStandardMaterial({
+            color: 0x1a0a2a,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+
+        // Portal Frame (Minecraft Style: 4x5 blocks)
+        const width = 3;
+        const height = 4;
+        const thickness = 0.5;
+        const blockSize = 0.5;
+
+        // Base
+        for (let i = 0; i < width / blockSize; i++) {
+            this.addBlock(i * blockSize - width / 2 + blockSize / 2, blockSize / 2, 0, blockSize, obsidianMat);
+        }
+        // Top
+        for (let i = 0; i < width / blockSize; i++) {
+            this.addBlock(i * blockSize - width / 2 + blockSize / 2, height - blockSize / 2, 0, blockSize, obsidianMat);
+        }
+        // Sides
+        for (let i = 1; i < (height / blockSize) - 1; i++) {
+            this.addBlock(-width / 2 + blockSize / 2, i * blockSize + blockSize / 2, 0, blockSize, obsidianMat);
+            this.addBlock(width / 2 - blockSize / 2, i * blockSize + blockSize / 2, 0, blockSize, obsidianMat);
+        }
+
+        // Portal Plane (The glowing purple part)
+        const portalGeo = new THREE.PlaneGeometry(width - blockSize * 2, height - blockSize * 2);
+        const portalMat = new THREE.MeshStandardMaterial({
+            color: 0x800080,
+            emissive: 0xbf00ff,
+            emissiveIntensity: 2.0,
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide
+        });
+        this.portalMesh = new THREE.Mesh(portalGeo, portalMat);
+        this.portalMesh.position.set(0, height / 2, 0);
+        this.mesh.add(this.portalMesh);
+
+        // Add a PointLight inside the portal
+        const light = new THREE.PointLight(0xbf00ff, 3, 10);
+        light.position.set(0, height / 2, 0);
+        this.mesh.add(light);
+    }
+
+    addBlock(x, y, z, size, mat) {
+        const geo = new THREE.BoxGeometry(size, size, size);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        this.mesh.add(mesh);
+    }
+
+    update(delta) {
+        this.time += delta;
+        // Pulsating effect
+        if (this.portalMesh) {
+            this.portalMesh.material.emissiveIntensity = 2.0 + Math.sin(this.time * 3) * 0.5;
+            this.portalMesh.material.opacity = 0.7 + Math.sin(this.time * 2) * 0.2;
+        }
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
     }
 }
 

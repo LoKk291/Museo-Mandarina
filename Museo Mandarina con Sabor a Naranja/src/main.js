@@ -52,6 +52,8 @@ soundManager.load('phone_ring', 'sounds/phone/ring.mp3');
 soundManager.load('phone_takeoff', 'sounds/phone/takeoff.mp3');
 soundManager.load('phone_guy', 'sounds/phone/phone%20guy.mp3');
 soundManager.load('secret_call', 'sounds/phone/ioamoremio.mp3'); // Secret Call Sound
+soundManager.load('portal_hum', 'sounds/portal_hum.mp3');
+soundManager.load('teleport', 'sounds/teleport.mp3');
 // Tunning Door Sounds
 
 // Tunning Door Sounds
@@ -377,11 +379,17 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'secret-note') {
                 soundManager.play('click');
                 showLetter("Nota Guardada", "???", "Llamame! 3754-406297", false);
+            } else if (hitObject.userData.type === 'hint-note') {
+                soundManager.play('click');
+                showLetter("Manganeso", "PISTA", "antes de volver, echa un vistazo por ahí", true);
             } else if (hitObject.userData.type === 'golden-key') {
                 // Collect Golden Key
                 soundManager.play('click'); // Or play a special collection sound
 
                 // 1. Show in UI
+                const inventoryGui = document.querySelector('#inventory-gui');
+                if (inventoryGui) inventoryGui.style.display = 'flex';
+
                 const keyIcon = document.querySelector('#slot-key .key-icon');
                 if (keyIcon) keyIcon.classList.remove('hidden');
 
@@ -403,10 +411,13 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'secret-bookshelf-door') {
                 if (hasGoldenKey) {
                     soundManager.play('door_open'); // reuse door sound for now
-                    hitObject.userData.parentObj.toggle();
+                    const isOpen = hitObject.userData.parentObj.toggle();
+                    world.toggleSecretPassage(isOpen);
                 } else {
                     soundManager.play('click');
                     showLetter("Sistema", "PISTA", "Esta estantería parece diferente a las demás... pero está bloqueada.", true);
+                    // Trigger revelation in desk
+                    world.revealGoldenKey();
                 }
             } else if (hitObject.userData.vinyl) {
                 // soundManager.play('click'); // Optional
@@ -1216,6 +1227,33 @@ function animate() {
     }
 
     renderer.render(scene, camera);
+
+    // --- PORTAL TELEPORTATION LOGIC ---
+    if (world.portal1 && world.portal2 && !isModalOpen) {
+        const pPos1 = world.portal1.mesh.position;
+        const pPos2 = world.portal2.mesh.position;
+
+        // We only care about X and Z distance for the portal plane
+        const dist1 = player.camera.position.distanceTo(pPos1);
+        const dist2 = player.camera.position.distanceTo(pPos2);
+
+        // Distance threshold to trigger teleport
+        const threshold = 1.2;
+
+        if (dist1 < threshold) {
+            // Teleport to Isolated Room (Position 200, 0, 200)
+            // Destination slightly in front of portal 2
+            player.camera.position.set(200, player.height, 205);
+            soundManager.play('teleport');
+            showLetter("Sistema", "INFO", "Teletransportado a la Habitación Secreta...", true);
+        } else if (dist2 < threshold) {
+            // Teleport back to Secret Corridor (Position -25, 0, -62.5)
+            // Destination slightly in front of portal 1
+            player.camera.position.set(-25, player.height, -64.5);
+            soundManager.play('teleport');
+            showLetter("Sistema", "INFO", "Regresando al Museo...", true);
+        }
+    }
 }
 
 // Resize

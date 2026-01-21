@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -867,19 +867,14 @@ export class World {
                 this.interactables.push(d.interactableMesh);
             });
         }
+
+        // Hint Note interaction
+        if (this.desk.hintNote) {
+            this.interactables.push(this.desk.hintNote.interactableMesh);
+        }
+
         if (this.desk.secretNote) {
             this.interactables.push(this.desk.secretNote.interactableMesh);
-        }
-        if (this.desk.goldenKey) {
-            this.interactables.push(this.desk.goldenKey.mesh);
-        }
-        // Add items inside drawers if any
-        if (this.desk.drawers) {
-            this.desk.drawers.forEach(d => {
-                if (d.interactables) {
-                    this.interactables.push(...d.interactables);
-                }
-            });
         }
 
         // Computadora Retro
@@ -1337,7 +1332,7 @@ export class World {
         // Pos: -25, -50
         const roomL3 = new Room(this.scene, -25, -50, 15, 15, 0xF5F5DC);
         roomL3.addDoor('South', 4, 3.5); // Conecta con L2
-        // Room final, sin puerta norte
+        roomL3.addDoor('North', 4, 4);   // Conecta con el Pasillo Secreto (detrás de estantería)
 
         // Cuadros L3 (ELIMINADOS)
 
@@ -1463,6 +1458,48 @@ export class World {
         room.paintings.forEach(p => {
             if (p.mesh) this.interactables.push(p.mesh);
         });
+    }
+
+    toggleSecretPassage(isOpen) {
+        if (this.fillerWall) {
+            this.fillerWall.visible = !isOpen;
+            // Actualizar colisionables
+            if (isOpen) {
+                const idx = this.collidables.indexOf(this.fillerWall);
+                if (idx > -1) this.collidables.splice(idx, 1);
+            } else {
+                if (!this.collidables.includes(this.fillerWall)) {
+                    this.collidables.push(this.fillerWall);
+                }
+            }
+        }
+
+        if (this.secretCorridor) this.secretCorridor.group.visible = isOpen;
+        if (this.portal1) this.portal1.mesh.visible = isOpen;
+        if (this.isolatedRoom) this.isolatedRoom.group.visible = isOpen;
+        if (this.portal2) this.portal2.mesh.visible = isOpen;
+    }
+
+    revealGoldenKey() {
+        if (!this.desk || !this.desk.goldenKey || !this.desk.hintNote) return;
+        if (this.desk.goldenKey.mesh.visible) return; // Already revealed
+
+        // 1. Hide Note
+        this.desk.hintNote.mesh.visible = false;
+        const noteIdx = this.interactables.indexOf(this.desk.hintNote.interactableMesh);
+        if (noteIdx > -1) this.interactables.splice(noteIdx, 1);
+
+        // 2. Show Key
+        this.desk.goldenKey.mesh.visible = true;
+
+        // Add all key meshes back to interactables for raycasting
+        this.desk.goldenKey.mesh.traverse(child => {
+            if (child.isMesh) {
+                this.interactables.push(child);
+            }
+        });
+
+        console.log("Golden Key revealed in the desk drawer!");
     }
 
     // Toggle logic override/extension for Central Room to include furniture
@@ -1669,8 +1706,45 @@ export class World {
         // Collider for secret door
         const s3Box = new THREE.Mesh(shelfBoxGeo, shelfBoxMat);
         s3Box.position.set(-25, 2, -57);
+        s3Box.userData = { type: 'secret-bookshelf-door', parentObj: this.secretBookshelfDoor };
         this.scene.add(s3Box);
         this.collidables.push(s3Box);
+
+        this.secretCorridor = new Room(this.scene, -25, -62.5, 4, 10, 0x111111); // Dark walls
+        this.secretCorridor.addDoor('South', 4, 4); // Connects to L3 (hidden by shelf)
+        this.secretCorridor.addDoor('North', 4, 4); // Opening for portal
+        this.secretCorridor.group.visible = false;
+        this.addRoom(this.secretCorridor, 'SECRET_CORRIDOR');
+
+        // Minecraft Portal in Corridor
+        this.portal1 = new MinecraftPortal();
+        this.portal1.setPosition(-25, 0, -67.4);
+        this.portal1.mesh.visible = false;
+        this.scene.add(this.portal1.mesh);
+
+        // --- ISOLATED SECRET ROOM (Far Away) ---
+        // Position: 200, 0, 200
+        this.isolatedRoom = new Room(this.scene, 200, 200, 20, 20, 0x000000);
+        this.isolatedRoom.addDoor('South', 4, 4); // Entrance from portal
+        this.isolatedRoom.group.visible = false;
+        this.addRoom(this.isolatedRoom, 'ISOLATED_ROOM');
+
+        // Minecraft Portal in Isolated Room
+        this.portal2 = new MinecraftPortal();
+        this.portal2.setPosition(200, 0, 209.9);
+        this.portal2.mesh.rotation.y = Math.PI; // Face North
+        this.portal2.mesh.visible = false;
+        this.scene.add(this.portal2.mesh);
+
+        // --- FILLER WALL (To hide the opening in L3) ---
+        const fillerGeo = new THREE.BoxGeometry(4.2, 4, 0.51); // Slightly larger to avoid gaps
+        const fillerMat = new THREE.MeshStandardMaterial({ color: 0xF5F5DC });
+        this.fillerWall = new THREE.Mesh(fillerGeo, fillerMat);
+        this.fillerWall.position.set(-25, 2, -57.5);
+        this.fillerWall.castShadow = true;
+        this.fillerWall.receiveShadow = true;
+        this.scene.add(this.fillerWall);
+        this.collidables.push(this.fillerWall);
 
 
         // R1 (25, 0) - West Wall (Entrance from Central)
@@ -1752,6 +1826,9 @@ export class World {
         if (this.secretBookshelfDoor) {
             this.secretBookshelfDoor.update(delta);
         }
+
+        if (this.portal1) this.portal1.update(delta);
+        if (this.portal2) this.portal2.update(delta);
 
         this.rooms.forEach(room => {
             room.updateCeiling(delta);

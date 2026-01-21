@@ -192,7 +192,7 @@ export class Player {
             if (playerBox.intersectsBox(wallBox)) {
                 // FEATURE: Check Door State
                 // If it's a door and it's OPEN, ignore collision
-                if (wall.userData && wall.userData.type === 'double-door') {
+                if (wall.userData && (wall.userData.type === 'double-door' || wall.userData.type === 'secret-bookshelf-door')) {
                     if (wall.userData.parentObj && wall.userData.parentObj.isOpen) {
                         return false; // Pass through
                     }

@@ -1349,7 +1349,8 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    display: flex;
+    display: none;
+    /* Initially hidden until key is found */
     gap: 10px;
     z-index: 2500;
     pointer-events: none;
