@@ -94,16 +94,6 @@ export class GoldenKey {
         this.mesh.add(bitGroup);
 
 
-        // Add interactable hitbox
-        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
-        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
-        this.interactableMesh.position.y = 0.9;
-        this.interactableMesh.userData = {
-            type: 'vhs-camera',
-            parentObj: this
-        };
-        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
 
@@ -2749,16 +2739,6 @@ export class PaperStack {
 
         this.mesh.receiveShadow = true;
 
-        // Add interactable hitbox
-        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
-        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
-        this.interactableMesh.position.y = 0.9;
-        this.interactableMesh.userData = {
-            type: 'vhs-camera',
-            parentObj: this
-        };
-        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
 
@@ -3125,16 +3105,6 @@ export class VinylFrame {
         this.mesh.add(backCheck);
 
 
-        // Add interactable hitbox
-        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
-        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
-        this.interactableMesh.position.y = 0.9;
-        this.interactableMesh.userData = {
-            type: 'vhs-camera',
-            parentObj: this
-        };
-        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
@@ -4623,7 +4593,7 @@ export class ArcadeMachine {
         this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
         this.interactableMesh.position.y = 0.9;
         this.interactableMesh.userData = {
-            type: 'vhs-camera',
+            type: 'arcade-machine',
             parentObj: this
         };
         this.mesh.add(this.interactableMesh);
@@ -4850,16 +4820,6 @@ export class FlashlightItem {
         this.mesh.add(btn);
 
 
-        // Add interactable hitbox
-        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
-        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
-        this.interactableMesh.position.y = 0.9;
-        this.interactableMesh.userData = {
-            type: 'vhs-camera',
-            parentObj: this
-        };
-        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
 
@@ -5071,16 +5031,6 @@ export class Mangle {
 
         // Shadows
 
-        // Add interactable hitbox
-        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
-        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
-        this.interactableMesh.position.y = 0.9;
-        this.interactableMesh.userData = {
-            type: 'vhs-camera',
-            parentObj: this
-        };
-        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
         this.mesh.traverse(c => {
@@ -5290,16 +5240,6 @@ export class Foxy {
         // headGroup.add(strap); // Simple box overlap
 
 
-        // Add interactable hitbox
-        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
-        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
-        this.interactableMesh.position.y = 0.9;
-        this.interactableMesh.userData = {
-            type: 'vhs-camera',
-            parentObj: this
-        };
-        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
         this.mesh.traverse(c => {
@@ -5914,6 +5854,7 @@ export class OldCamera {
         reel2.rotation.z = Math.PI / 2;
         reel2.position.set(-0.25, 1.55, 0.1);
         this.mesh.add(reel2);
+
 
 
         // Add interactable hitbox
