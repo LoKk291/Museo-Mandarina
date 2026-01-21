@@ -1437,6 +1437,13 @@ export class World {
         mangle.setRotation(-Math.PI * 0.75); // Facing NW (Center)
         this.scene.add(mangle.mesh);
 
+        // Breakable Vase at L2 Entrance (Right Side)
+        // L2 South door is at Z=-17.5, right side (East) would be +X from center
+        const vaseL2 = new BreakableVase('snakePlant');
+        vaseL2.setPosition(-23, 0, -17); // Right side of entrance
+        this.scene.add(vaseL2.mesh);
+        this.interactables.push(vaseL2.interactableMesh);
+
         this.addRoom(roomL2, 'L2');
 
         // --- GLOBO TERRÁQUEO ---
@@ -1516,6 +1523,19 @@ export class World {
         hallCent_R1.addDoor('West', 4, 4);
         hallCent_R1.addDoor('East', 4, 4);
         this.addRoom(hallCent_R1, 'HALL_R1');
+
+        // Breakable Vases at R1 Hallway Entrance (Central Room Side)
+        // Hallway West door is at X=10 (13.75 - 7.5/2 = 10)
+        const vaseR1Left = new BreakableVase('sunflower');
+        vaseR1Left.setPosition(8.5, 0, -2);
+        this.scene.add(vaseR1Left.mesh);
+        this.interactables.push(vaseR1Left.interactableMesh);
+
+        const vaseR1Right = new BreakableVase('sunflower');
+        vaseR1Right.setPosition(8.5, 0, 2);
+        vaseR1Right.setRotation(Math.PI / 4);
+        this.scene.add(vaseR1Right.mesh);
+        this.interactables.push(vaseR1Right.interactableMesh);
 
         // --- Room R2 (Norte de R1) ---
         // Pos: 25, -25
