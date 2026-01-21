@@ -93,7 +93,7 @@ export class GoldenKey {
 
         this.mesh.add(bitGroup);
 
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -2748,7 +2748,7 @@ export class PaperStack {
         }
 
         this.mesh.receiveShadow = true;
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -3124,7 +3124,7 @@ export class VinylFrame {
         backCheck.position.z = 0; // Center plane
         this.mesh.add(backCheck);
 
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -4616,7 +4616,7 @@ export class ArcadeMachine {
         marquee.position.set(0, 1.6, 0.36);
         this.mesh.add(marquee);
 
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -4849,7 +4849,7 @@ export class FlashlightItem {
         btn.position.y = 0.045;
         this.mesh.add(btn);
 
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -5070,7 +5070,7 @@ export class Mangle {
         headGroup.add(eyeR);
 
         // Shadows
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -5102,6 +5102,12 @@ export class Mangle {
 export class Foxy {
     constructor() {
         this.mesh = new THREE.Group();
+
+        // AI Chase Properties
+        this.isChasing = false;
+        this.speed = 5.0; // Units per second (faster than player run speed)
+        this.targetPosition = new THREE.Vector3();
+
         this.build();
     }
 
@@ -5283,7 +5289,7 @@ export class Foxy {
         strap.position.set(0, 0.05, 0); // Around head
         // headGroup.add(strap); // Simple box overlap
 
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -5512,7 +5518,7 @@ export class BreakableVase {
     build() {
         // Create vase container group
         this.vase = new THREE.Group();
-        
+
         // Create elegant vase shape using LatheGeometry
         const points = [];
         points.push(new THREE.Vector2(0, 0));
@@ -5524,22 +5530,22 @@ export class BreakableVase {
         points.push(new THREE.Vector2(0.25, 0.9));
         points.push(new THREE.Vector2(0.2, 1.0));
         points.push(new THREE.Vector2(0.22, 1.1));
-        
+
         const geometry = new THREE.LatheGeometry(points, 16);
-        const material = new THREE.MeshStandardMaterial({ 
+        const material = new THREE.MeshStandardMaterial({
             color: 0xD4A574,
             roughness: 0.3,
             metalness: 0.1,
             side: THREE.DoubleSide // Render both sides to avoid transparency
         });
-        
+
         const vaseMesh = new THREE.Mesh(geometry, material);
         vaseMesh.castShadow = true;
         vaseMesh.receiveShadow = true;
         this.vase.add(vaseMesh);
 
         this.addFlowers();
-        
+
         this.vase.position.y = 0;
         this.mesh.add(this.vase);
 
@@ -5558,7 +5564,7 @@ export class BreakableVase {
     addFlowers() {
         const flowerGroup = new THREE.Group();
         flowerGroup.position.y = 0; // Start at bottom of vase
-        
+
         if (this.flowerType === 'orchid') {
             for (let i = 0; i < 3; i++) {
                 const stem = new THREE.Mesh(
@@ -5569,13 +5575,13 @@ export class BreakableVase {
                 stem.position.x = (Math.random() - 0.5) * 0.1;
                 stem.position.z = (Math.random() - 0.5) * 0.1;
                 stem.rotation.z = (Math.random() - 0.5) * 0.3;
-                
+
                 const petalGeo = new THREE.SphereGeometry(0.08, 8, 8);
-                const petalMat = new THREE.MeshStandardMaterial({ 
+                const petalMat = new THREE.MeshStandardMaterial({
                     color: 0x9370DB,
                     roughness: 0.4
                 });
-                
+
                 for (let j = 0; j < 5; j++) {
                     const petal = new THREE.Mesh(petalGeo, petalMat);
                     const angle = (j / 5) * Math.PI * 2;
@@ -5585,23 +5591,23 @@ export class BreakableVase {
                     petal.scale.set(1, 0.5, 0.7);
                     stem.add(petal);
                 }
-                
+
                 flowerGroup.add(stem);
             }
         } else if (this.flowerType === 'sunflower') {
             const stem = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.03, 0.03, 1.4), // Much longer stem
-                new THREE.MeshStandardMaterial({ 
+                new THREE.MeshStandardMaterial({
                     color: 0x4a7c2c,
                     roughness: 0.7
                 })
             );
             stem.position.y = 0.7; // Half of stem length
-            
+
             // Brown center
             const center = new THREE.Mesh(
                 new THREE.SphereGeometry(0.15, 16, 16),
-                new THREE.MeshStandardMaterial({ 
+                new THREE.MeshStandardMaterial({
                     color: 0x5C4033,
                     roughness: 0.9
                 })
@@ -5609,14 +5615,14 @@ export class BreakableVase {
             center.position.y = 0.7; // At top of stem
             center.scale.set(1, 0.6, 1);
             stem.add(center);
-            
+
             // Yellow petals
             const petalGeo = new THREE.BoxGeometry(0.12, 0.25, 0.03);
-            const petalMat = new THREE.MeshStandardMaterial({ 
+            const petalMat = new THREE.MeshStandardMaterial({
                 color: 0xFFD700,
                 roughness: 0.5
             });
-            
+
             for (let i = 0; i < 16; i++) {
                 const petal = new THREE.Mesh(petalGeo, petalMat);
                 const angle = (i / 16) * Math.PI * 2;
@@ -5628,11 +5634,11 @@ export class BreakableVase {
                 petal.rotation.x = -0.3;
                 stem.add(petal);
             }
-            
+
             // Leaves on stem
             for (let i = 0; i < 2; i++) {
                 const leafGeo = new THREE.BoxGeometry(0.15, 0.08, 0.02);
-                const leafMat = new THREE.MeshStandardMaterial({ 
+                const leafMat = new THREE.MeshStandardMaterial({
                     color: 0x2d5016,
                     roughness: 0.6
                 });
@@ -5642,12 +5648,12 @@ export class BreakableVase {
                 leaf.rotation.z = i % 2 === 0 ? -0.5 : 0.5;
                 stem.add(leaf);
             }
-            
+
             flowerGroup.add(stem);
         } else if (this.flowerType === 'snake_plant') {
             for (let i = 0; i < 5; i++) {
                 const leafGeo = new THREE.BoxGeometry(0.08, 1.1, 0.02); // Longer leaves
-                const leafMat = new THREE.MeshStandardMaterial({ 
+                const leafMat = new THREE.MeshStandardMaterial({
                     color: 0x2d5016,
                     roughness: 0.6
                 });
@@ -5661,7 +5667,7 @@ export class BreakableVase {
                 flowerGroup.add(leaf);
             }
         }
-        
+
         this.vase.add(flowerGroup);
     }
 
@@ -5670,70 +5676,70 @@ export class BreakableVase {
 
         this.vase.visible = false;
         this.animating = true;
-        
+
         // Create shards with physics
         const shardGeo = new THREE.TetrahedronGeometry(0.15);
-        const shardMat = new THREE.MeshStandardMaterial({ 
+        const shardMat = new THREE.MeshStandardMaterial({
             color: 0xD4A574,
             roughness: 0.3
         });
-        
+
         // Get world position of vase
         const worldPos = new THREE.Vector3();
         this.mesh.getWorldPosition(worldPos);
-        
+
         for (let i = 0; i < 12; i++) {
             const shard = new THREE.Mesh(shardGeo, shardMat);
             shard.position.set(worldPos.x, worldPos.y + 0.5, worldPos.z);
-            
+
             const angle = (i / 12) * Math.PI * 2;
             shard.userData.velocity = new THREE.Vector3(
                 Math.cos(angle) * 0.15,
                 Math.random() * 0.15 + 0.1,
                 Math.sin(angle) * 0.15
             );
-            
+
             shard.userData.angularVelocity = new THREE.Vector3(
                 (Math.random() - 0.5) * 0.2,
                 (Math.random() - 0.5) * 0.2,
                 (Math.random() - 0.5) * 0.2
             );
-            
+
             shard.castShadow = true;
             this.mesh.add(shard);
             this.shards.push(shard);
         }
-        
+
         // Disable interaction
         if (this.interactableMesh) {
             this.mesh.remove(this.interactableMesh);
             this.interactableMesh = null;
         }
-        
+
         // Start animation
         this.animateShards();
     }
-    
+
     animateShards() {
         if (this.shards.length === 0) {
             this.animating = false;
             return;
         }
-        
+
         let allStopped = true;
         const gravity = 0.008;
-        
+
         this.shards.forEach(shard => {
             if (shard.position.y > 0.1) {
                 // Apply physics
                 shard.userData.velocity.y -= gravity;
                 shard.position.add(shard.userData.velocity);
-                
+
                 // Apply rotation
                 shard.rotation.x += shard.userData.angularVelocity.x;
                 shard.rotation.y += shard.userData.angularVelocity.y;
                 shard.rotation.z += shard.userData.angularVelocity.z;
-                
+
                 allStopped = false;
             } else {
                 // Stop at ground
@@ -5741,7 +5747,7 @@ export class BreakableVase {
                 shard.userData.velocity.set(0, 0, 0);
             }
         });
-        
+
         if (allStopped) {
             // Fade out and remove shards
             setTimeout(() => {
@@ -5755,7 +5761,7 @@ export class BreakableVase {
             requestAnimationFrame(() => this.animateShards());
         }
     }
-    
+
     break() {
         this.breakVase();
     }
@@ -5780,15 +5786,15 @@ export class CinemaScreen {
         const screenWidth = 6;
         const screenHeight = 3.375;
         const screenDepth = 0.05;
-        
+
         const screenGeo = new THREE.BoxGeometry(screenWidth, screenHeight, screenDepth);
-        const screenMat = new THREE.MeshStandardMaterial({ 
+        const screenMat = new THREE.MeshStandardMaterial({
             color: 0xFFFFFF,
             emissive: 0x000000,
             roughness: 0.9,
             metalness: 0
         });
-        
+
         this.screenMesh = new THREE.Mesh(screenGeo, screenMat);
         this.screenMesh.position.y = 2.5;
         this.screenMesh.castShadow = true;
@@ -5798,31 +5804,31 @@ export class CinemaScreen {
         // Black frame
         const frameThickness = 0.2;
         const frameMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
-        
+
         // Top
         const topFrame = new THREE.Mesh(
             new THREE.BoxGeometry(screenWidth + frameThickness * 2, frameThickness, screenDepth),
             frameMat
         );
-        topFrame.position.set(0, 2.5 + screenHeight/2 + frameThickness/2, 0);
+        topFrame.position.set(0, 2.5 + screenHeight / 2 + frameThickness / 2, 0);
         this.mesh.add(topFrame);
-        
+
         // Bottom
         const bottomFrame = topFrame.clone();
-        bottomFrame.position.y = 2.5 - screenHeight/2 - frameThickness/2;
+        bottomFrame.position.y = 2.5 - screenHeight / 2 - frameThickness / 2;
         this.mesh.add(bottomFrame);
-        
+
         // Left
         const leftFrame = new THREE.Mesh(
             new THREE.BoxGeometry(frameThickness, screenHeight + frameThickness * 2, screenDepth),
             frameMat
         );
-        leftFrame.position.set(-screenWidth/2 - frameThickness/2, 2.5, 0);
+        leftFrame.position.set(-screenWidth / 2 - frameThickness / 2, 2.5, 0);
         this.mesh.add(leftFrame);
-        
+
         // Right
         const rightFrame = leftFrame.clone();
-        rightFrame.position.x = screenWidth/2 + frameThickness/2;
+        rightFrame.position.x = screenWidth / 2 + frameThickness / 2;
         this.mesh.add(rightFrame);
     }
 
@@ -5898,7 +5904,7 @@ export class OldCamera {
         // Reels (Two circles on top)
         const reelGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.05);
         const reelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-        
+
         const reel1 = new THREE.Mesh(reelGeo, reelMat);
         reel1.rotation.z = Math.PI / 2;
         reel1.position.set(-0.25, 1.55, -0.1);
@@ -5909,7 +5915,7 @@ export class OldCamera {
         reel2.position.set(-0.25, 1.55, 0.1);
         this.mesh.add(reel2);
 
-        
+
         // Add interactable hitbox
         const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -5927,11 +5933,11 @@ export class OldCamera {
         this.projectorLight.target.position.set(0, 1.5, -10);
         this.mesh.add(this.projectorLight);
         this.mesh.add(this.projectorLight.target);
-        
+
         // Light indicator on camera (small glowing sphere)
         this.lightIndicator = new THREE.Mesh(
             new THREE.SphereGeometry(0.05),
-            new THREE.MeshStandardMaterial({ 
+            new THREE.MeshStandardMaterial({
                 color: 0xFF0000,
                 emissive: 0x000000
             })

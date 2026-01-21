@@ -1489,6 +1489,8 @@ export class World {
         foxy.setPosition(-31, 0, -31);
         foxy.setRotation(Math.PI / 4); // Facing SE (Center)
         this.scene.add(foxy.mesh);
+        this.foxy = foxy; // Store reference for AI chase logic
+
 
         // --- MANGLE (The Mangle) ---
         // SE Corner of L2
@@ -2421,6 +2423,39 @@ export class World {
                 }
                 break;
         }
+
+        // --- FOXY AI CHASE LOGIC ---
+        if (this.foxy && this.foxy.isChasing && camera) {
+            const playerPos = camera.position;
+            const foxyPos = this.foxy.mesh.position;
+
+            // Calculate distance to player (XZ plane only, ignore Y)
+            const dx = playerPos.x - foxyPos.x;
+            const dz = playerPos.z - foxyPos.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+
+            // Check if close enough for jumpscare (2 meters)
+            if (distance < 2.0) {
+                // Trigger jumpscare
+                this.foxy.isChasing = false; // Stop chasing
+                console.log("Foxy caught the player! Triggering jumpscare...");
+
+                // Call global function to trigger jumpscare (defined in main.js)
+                if (typeof window.triggerFoxyJumpscare === 'function') {
+                    window.triggerFoxyJumpscare();
+                }
+            } else {
+                // Move Foxy toward player
+                const direction = new THREE.Vector3(dx, 0, dz).normalize();
+                const moveDistance = this.foxy.speed * delta;
+
+                this.foxy.mesh.position.add(direction.multiplyScalar(moveDistance));
+
+                // Rotate Foxy to face player
+                const angle = Math.atan2(dx, dz);
+                this.foxy.mesh.rotation.y = angle;
+            }
+        }
     }
 
     enablePartyMode() {
@@ -2455,6 +2490,12 @@ export class World {
 
         // 5. Street Lights (Handled by updateStreetLights flag)
         this.updateStreetLights(true); // Force update now, passing true (night) but flag will block it acting as OFF
+
+        // 6. Activate Foxy AI Chase
+        if (this.foxy) {
+            console.log("Foxy is now hunting...");
+            this.foxy.isChasing = true;
+        }
     }
 }
 

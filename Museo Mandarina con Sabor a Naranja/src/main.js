@@ -2174,7 +2174,41 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
+// --- FOXY JUMPSCARE TRIGGER (Called from World.js when Foxy catches player) ---
+window.triggerFoxyJumpscare = function () {
+    console.log("Triggering Foxy jumpscare from party mode chase...");
 
+    const overlay = document.getElementById('jumpscare-overlay');
+    const video = document.getElementById('jumpscare-video');
+    const video2 = document.getElementById('jumpscare-video2');
+
+    if (overlay && video) {
+        // Hide Mangle video, show Foxy video
+        video2.style.display = 'none';
+        video.style.display = 'block';
+
+        // Show overlay
+        overlay.classList.remove('hidden');
+
+        // Play video
+        video.currentTime = 0;
+        video.play().catch(e => console.error("Video play failed:", e));
+
+        // When video ends, restart the game
+        video.onended = () => {
+            console.log("Jumpscare ended. Restarting game...");
+            // Reload the page to restart
+            location.reload();
+        };
+
+        // Also allow click to restart immediately
+        overlay.onclick = () => {
+            video.pause();
+            console.log("Jumpscare skipped. Restarting game...");
+            location.reload();
+        };
+    }
+};
 
 
 
