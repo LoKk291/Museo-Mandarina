@@ -1408,6 +1408,32 @@ body {
     }
 }
 
+/* Fixed Inventory Order & Layout */
+#slot-key {
+    order: 1;
+}
+
+#slot-flashlight {
+    order: 2;
+}
+
+/* Override generic hidden for slots to reserve space */
+#inventory-gui .inventory-slot.hidden {
+    display: flex !important;
+    /* Keep layout footprint */
+    visibility: hidden;
+    /* Hide content */
+    opacity: 0;
+    /* Ensure invisible */
+    pointer-events: none;
+    /* No interaction */
+    border-color: transparent;
+    /* Hide border if persistent */
+    background: transparent;
+    /* Hide background */
+    box-shadow: none;
+}
+
 /* Jumpscare Overlay */
 #jumpscare-overlay {
     position: fixed;
