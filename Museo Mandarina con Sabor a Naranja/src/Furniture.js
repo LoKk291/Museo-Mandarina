@@ -4323,11 +4323,11 @@ export class MinecraftPortal {
         // Portal Plane (The glowing purple part)
         const portalGeo = new THREE.PlaneGeometry(width - blockSize * 2, height - blockSize * 2);
         const portalMat = new THREE.MeshStandardMaterial({
-            color: 0x800080,
-            emissive: 0xbf00ff,
-            emissiveIntensity: 2.0,
-            transparent: true,
-            opacity: 0.8,
+            color: 0x400040, // Darker purple for more "mass" look
+            emissive: 0x800080, // Less aggressive emissive
+            emissiveIntensity: 1.5,
+            transparent: false, // Opaque
+            opacity: 1.0,
             side: THREE.DoubleSide
         });
         this.portalMesh = new THREE.Mesh(portalGeo, portalMat);
@@ -4351,10 +4351,9 @@ export class MinecraftPortal {
 
     update(delta) {
         this.time += delta;
-        // Pulsating effect
+        // Pulsating emissive effect (Keep intensity wave but removed opacity wave)
         if (this.portalMesh) {
-            this.portalMesh.material.emissiveIntensity = 2.0 + Math.sin(this.time * 3) * 0.5;
-            this.portalMesh.material.opacity = 0.7 + Math.sin(this.time * 2) * 0.2;
+            this.portalMesh.material.emissiveIntensity = 1.0 + Math.sin(this.time * 2) * 0.3;
         }
     }
 

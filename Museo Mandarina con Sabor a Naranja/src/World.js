@@ -1724,14 +1724,19 @@ export class World {
 
         // --- ISOLATED SECRET ROOM (Far Away) ---
         // Position: 200, 0, 200
-        this.isolatedRoom = new Room(this.scene, 200, 200, 20, 20, 0x000000);
+        this.isolatedRoom = new Room(this.scene, 200, 200, 10, 10, 0xDDDDDD);
         this.isolatedRoom.addDoor('South', 4, 4); // Entrance from portal
+
+        // Apply custom cracked rock floor
+        const rockTex = this.isolatedRoom.generateCrackedRockTexture();
+        this.isolatedRoom.setFloorTexture(rockTex);
+
         this.isolatedRoom.group.visible = false;
         this.addRoom(this.isolatedRoom, 'ISOLATED_ROOM');
 
         // Minecraft Portal in Isolated Room
         this.portal2 = new MinecraftPortal();
-        this.portal2.setPosition(200, 0, 209.9);
+        this.portal2.setPosition(200, 0, 204.9); // Adjusted for smaller room depth
         this.portal2.mesh.rotation.y = Math.PI; // Face North
         this.portal2.mesh.visible = false;
         this.scene.add(this.portal2.mesh);

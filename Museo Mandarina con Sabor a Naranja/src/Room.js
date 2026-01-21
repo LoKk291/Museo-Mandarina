@@ -628,4 +628,73 @@ export class Room {
         const texture = new THREE.CanvasTexture(canvas);
         return texture;
     }
+
+    setFloorTexture(texture) {
+        if (this.group.children[0] && this.group.children[0].material) {
+            this.group.children[0].material.map = texture;
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(this.width, this.depth);
+            this.group.children[0].material.needsUpdate = true;
+        }
+    }
+
+    generateCrackedRockTexture() {
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Base Rock Color (Dark Grey)
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(0, 0, size, size);
+
+        // Add Noise/Grit
+        for (let i = 0; i < 5000; i++) {
+            const x = Math.random() * size;
+            const y = Math.random() * size;
+            const shade = 20 + Math.random() * 30;
+            ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+            ctx.fillRect(x, y, 1, 1);
+        }
+
+        // Cracked Lines
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+
+        const numCracks = 15;
+        for (let i = 0; i < numCracks; i++) {
+            let cx = Math.random() * size;
+            let cy = Math.random() * size;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+
+            const segments = 10 + Math.random() * 10;
+            for (let j = 0; j < segments; j++) {
+                cx += (Math.random() - 0.5) * 50;
+                cy += (Math.random() - 0.5) * 50;
+                ctx.lineTo(cx, cy);
+            }
+            ctx.stroke();
+        }
+
+        // Add some highlights
+        ctx.strokeStyle = '#444444';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < 10; i++) {
+            let cx = Math.random() * size;
+            let cy = Math.random() * size;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            cx += (Math.random() - 0.5) * 100;
+            cy += (Math.random() - 0.5) * 100;
+            ctx.lineTo(cx, cy);
+            ctx.stroke();
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return texture;
+    }
 }

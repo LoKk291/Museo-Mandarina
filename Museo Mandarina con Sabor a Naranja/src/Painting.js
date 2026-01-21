@@ -73,7 +73,11 @@ export class Painting {
         const placeholderTex = this.createPlaceholderTexture(this.id);
         this.canvasMat = new THREE.MeshStandardMaterial({
             map: placeholderTex,
-            roughness: 0.8,
+            emissiveMap: placeholderTex, // Initialize with placeholder
+            roughness: 0.6,
+            metalness: 0.1,
+            emissive: 0xffffff, // White base allows the texture colors to show through
+            emissiveIntensity: 0.2, // Low intensity to just "lift" the visibility without being a light source
             side: THREE.FrontSide
         });
 
@@ -101,6 +105,7 @@ export class Painting {
             t.colorSpace = THREE.SRGBColorSpace;
             if (this.canvasMat) {
                 this.canvasMat.map = t;
+                this.canvasMat.emissiveMap = t; // Use the texture itself for emission so colors pop
                 this.canvasMat.needsUpdate = true;
             }
         };

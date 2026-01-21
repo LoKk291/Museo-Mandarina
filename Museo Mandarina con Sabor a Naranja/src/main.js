@@ -1282,7 +1282,8 @@ function animate() {
 
                 // Small delay to let sound start before flash/move
                 setTimeout(() => {
-                    player.camera.position.set(200, player.height, 205);
+                    // Teleport to Center of Secret Room (200, 200) - Portal is at Z ~ 205
+                    player.camera.position.set(200, player.height, 200);
                     showLetter("Sistema", "INFO", "Teletransportado a la Habitación Secreta...", true);
 
                     // Remove blur effect
@@ -1302,7 +1303,9 @@ function animate() {
                 if (gameContainer) gameContainer.classList.add('teleport-blur');
 
                 setTimeout(() => {
-                    player.camera.position.set(-25, player.height, -64.5);
+                    // Portal 1 is at (-25, 0, -67.4). Corridor starts at -62.5.
+                    // Teleport closer to the entrance of the corridor (-58) to be safe.
+                    player.camera.position.set(-25, player.height, -58);
                     showLetter("Sistema", "INFO", "Regresando al Museo...", true);
 
                     // Remove blur effect
