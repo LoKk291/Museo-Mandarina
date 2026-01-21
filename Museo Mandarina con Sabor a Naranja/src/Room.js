@@ -536,7 +536,7 @@ export class Room {
             this.ceiling.add(panel);
 
             // Add Powerful PointLight
-            const light = new THREE.PointLight(0xFFCC66, 2.0, 50); // Intensity 2.0, Range 50
+            const light = new THREE.PointLight(0xFFCC66, 3.5, 50); // Increased Intensity 2.0 -> 3.5
             light.position.set(0, 0, 0.5); // Slightly below panel
 
             panel.add(light);
@@ -560,7 +560,7 @@ export class Room {
             this.lightsOn = !this.lightsOn;
         }
 
-        const intensity = this.lightsOn ? 2.0 : 0;
+        const intensity = this.lightsOn ? 3.5 : 0; // Increased switch intensity 2.0 -> 3.5
         const color = this.lightsOn ? 0xFFFFFF : 0x333333;
 
         this.lights.forEach(light => {

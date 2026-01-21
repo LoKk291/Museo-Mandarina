@@ -1084,7 +1084,7 @@ export class RetroComputer {
         }
         if (this.monitorLight) {
             this.monitorLight.color.setHex(0x88ccff); // Light Blue Light
-            this.monitorLight.intensity = 3.0;
+            this.monitorLight.intensity = 6.0; // Increased from 3.0
             this.monitorLight.distance = 8;
         }
     }
@@ -1099,7 +1099,7 @@ export class RetroComputer {
         // Keep a small glow light
         if (this.monitorLight) {
             this.monitorLight.color.setHex(0x0033aa); // Deep Blue Light
-            this.monitorLight.intensity = 2.0;
+            this.monitorLight.intensity = 3.0; // Increased from 2.0
             this.monitorLight.distance = 5;
         }
     }
@@ -1251,7 +1251,7 @@ export class DeskLamp {
     setState(isOn) {
         this.isOn = isOn;
         if (this.isOn) {
-            this.light.intensity = 2.0;
+            this.light.intensity = 5.0; // Increased from 2.0
             this.bulbMat.color.setHex(0xffffee);
         } else {
             this.light.intensity = 0;
@@ -1446,7 +1446,7 @@ export class FloorLamp {
         this.mesh.add(bulb);
 
         // Point Light (Warm)
-        this.light = new THREE.PointLight(0xFFDDAA, 0.8, 8);
+        this.light = new THREE.PointLight(0xFFDDAA, 2.5, 12); // Increased intensity from 0.8 to 2.5, range 8 to 12
         this.light.position.y = centerHeight + 0.3 + (shadeHeight / 2);
         this.light.castShadow = true;
         this.mesh.add(this.light);
@@ -1479,7 +1479,7 @@ export class FloorLamp {
     setState(isOn) {
         this.isOn = isOn;
         if (this.isOn) {
-            this.light.intensity = 0.8;
+            this.light.intensity = 2.5; // Increased from 0.8
             this.shadeMat.color.setHex(0xffffee);
             this.shadeMat.emissive.setHex(0x554433);
         } else {
@@ -4300,9 +4300,9 @@ export class MinecraftPortal {
             metalness: 0.1
         });
 
-        // Portal Frame (Minecraft Style: 4x5 blocks)
-        const width = 3;
-        const height = 4;
+        // Portal Frame (Minecraft Style: Wide enough to cover 4 units wide corridor)
+        const width = 4.5;
+        const height = 5;
         const thickness = 0.5;
         const blockSize = 0.5;
 
