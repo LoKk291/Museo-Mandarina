@@ -110,6 +110,83 @@ export class World {
         ground.receiveShadow = true;
 
         this.scene.add(ground);
+
+        // --- MUSEUM BOUNDARY (15m buffer around perimeter) ---
+        // Museum extends approximately from X: -35 to +35, Z: -55 to +15
+        // Add 15m buffer on each side
+        const bufferSize = 15;
+        const museumMinX = -35;
+        const museumMaxX = 35;
+        const museumMinZ = -55;
+        const museumMaxZ = 15;
+
+        const boundaryMinX = museumMinX - bufferSize;
+        const boundaryMaxX = museumMaxX + bufferSize;
+        const boundaryMinZ = museumMinZ - bufferSize;
+        const boundaryMaxZ = museumMaxZ + bufferSize;
+
+        const wallHeight = 10;
+        const wallThickness = 1;
+
+        // Create semi-transparent material for boundaries (initially invisible)
+        const boundaryMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff6600,
+            transparent: true,
+            opacity: 0,
+            side: THREE.DoubleSide
+        });
+
+        // Store boundary walls for toggling visibility
+        this.boundaryWalls = [];
+
+        // North boundary wall
+        const northWall = new THREE.Mesh(
+            new THREE.BoxGeometry(boundaryMaxX - boundaryMinX, wallHeight, wallThickness),
+            boundaryMaterial
+        );
+        northWall.position.set((boundaryMinX + boundaryMaxX) / 2, wallHeight / 2, boundaryMinZ);
+        this.collidables.push(northWall);
+        this.boundaryWalls.push(northWall);
+        this.scene.add(northWall);
+
+        // South boundary wall
+        const southWall = new THREE.Mesh(
+            new THREE.BoxGeometry(boundaryMaxX - boundaryMinX, wallHeight, wallThickness),
+            boundaryMaterial.clone()
+        );
+        southWall.position.set((boundaryMinX + boundaryMaxX) / 2, wallHeight / 2, boundaryMaxZ);
+        this.collidables.push(southWall);
+        this.boundaryWalls.push(southWall);
+        this.scene.add(southWall);
+
+        // West boundary wall
+        const westWall = new THREE.Mesh(
+            new THREE.BoxGeometry(wallThickness, wallHeight, boundaryMaxZ - boundaryMinZ),
+            boundaryMaterial.clone()
+        );
+        westWall.position.set(boundaryMinX, wallHeight / 2, (boundaryMinZ + boundaryMaxZ) / 2);
+        this.collidables.push(westWall);
+        this.boundaryWalls.push(westWall);
+        this.scene.add(westWall);
+
+        // East boundary wall
+        const eastWall = new THREE.Mesh(
+            new THREE.BoxGeometry(wallThickness, wallHeight, boundaryMaxZ - boundaryMinZ),
+            boundaryMaterial.clone()
+        );
+        eastWall.position.set(boundaryMaxX, wallHeight / 2, (boundaryMinZ + boundaryMaxZ) / 2);
+        this.collidables.push(eastWall);
+        this.boundaryWalls.push(eastWall);
+        this.scene.add(eastWall);
+    }
+
+    toggleBoundaryVisibility(visible) {
+        if (!this.boundaryWalls) return;
+
+        const targetOpacity = visible ? 0.3 : 0;
+        this.boundaryWalls.forEach(wall => {
+            wall.material.opacity = targetOpacity;
+        });
     }
 
     init() {

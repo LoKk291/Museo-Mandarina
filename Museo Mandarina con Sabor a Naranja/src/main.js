@@ -109,6 +109,16 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// --- TAB KEY: Toggle Boundary Visibility ---
+let boundaryVisible = false;
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+        e.preventDefault(); // Prevent default tab behavior
+        boundaryVisible = !boundaryVisible;
+        world.toggleBoundaryVisibility(boundaryVisible);
+    }
+});
+
 // UI Logic moved from Player.js to here for better control
 player.controls.addEventListener('lock', () => {
     player.isLocked = true;
