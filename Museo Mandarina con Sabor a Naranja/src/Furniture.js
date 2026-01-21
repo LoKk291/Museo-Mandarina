@@ -1783,6 +1783,12 @@ export class DoubleDoor {
         // Animation handled in update
         // Target: 90 degrees (PI/2) roughly
         this.targetRotation = this.isOpen ? Math.PI / 2 : 0;
+
+        // Call callback if set (for collision handling)
+        if (this.onToggle) {
+            this.onToggle(this.isOpen);
+        }
+
         return this.isOpen;
     }
 

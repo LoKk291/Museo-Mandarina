@@ -145,7 +145,7 @@ export class World {
             boundaryMaterial
         );
         northWall.position.set((boundaryMinX + boundaryMaxX) / 2, wallHeight / 2, boundaryMinZ);
-        this.collidables.push(northWall);
+        // NOT added to collidables - passable boundary
         this.boundaryWalls.push(northWall);
         this.scene.add(northWall);
 
@@ -155,7 +155,7 @@ export class World {
             boundaryMaterial.clone()
         );
         southWall.position.set((boundaryMinX + boundaryMaxX) / 2, wallHeight / 2, boundaryMaxZ);
-        this.collidables.push(southWall);
+        // NOT added to collidables - passable boundary
         this.boundaryWalls.push(southWall);
         this.scene.add(southWall);
 
@@ -165,7 +165,7 @@ export class World {
             boundaryMaterial.clone()
         );
         westWall.position.set(boundaryMinX, wallHeight / 2, (boundaryMinZ + boundaryMaxZ) / 2);
-        this.collidables.push(westWall);
+        // NOT added to collidables - passable boundary
         this.boundaryWalls.push(westWall);
         this.scene.add(westWall);
 
@@ -175,9 +175,170 @@ export class World {
             boundaryMaterial.clone()
         );
         eastWall.position.set(boundaryMaxX, wallHeight / 2, (boundaryMinZ + boundaryMaxZ) / 2);
-        this.collidables.push(eastWall);
+        // NOT added to collidables - passable boundary
         this.boundaryWalls.push(eastWall);
         this.scene.add(eastWall);
+
+        // --- IRREGULAR TERRAIN BEYOND BOUNDARY ---
+        // Create bumpy terrain outside the boundary zone
+        const irregularSize = 200;
+        const irregularSegments = 100;
+        const irregularGeo = new THREE.PlaneGeometry(irregularSize, irregularSize, irregularSegments, irregularSegments);
+
+        // Modify vertices to create hills and valleys ONLY beyond boundary
+        const vertices = irregularGeo.attributes.position.array;
+        for (let i = 0; i < vertices.length; i += 3) {
+            const x = vertices[i];
+            const z = vertices[i + 1];
+
+            // Calculate distance from center
+            const distFromCenter = Math.sqrt(x * x + z * z);
+            const boundaryRadius = Math.sqrt(
+                Math.pow((boundaryMaxX - boundaryMinX) / 2, 2) +
+                Math.pow((boundaryMaxZ - boundaryMinZ) / 2, 2)
+            );
+
+            // Only apply irregularity OUTSIDE the boundary zone
+            if (distFromCenter > boundaryRadius * 0.8) {
+                // Apply noise-based height variation
+                const heightVariation = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 3 +
+                    Math.sin(x * 0.05) * Math.cos(z * 0.05) * 5 +
+                    Math.random() * 2;
+                vertices[i + 2] = heightVariation;
+            }
+        }
+
+        irregularGeo.attributes.position.needsUpdate = true;
+        irregularGeo.computeVertexNormals();
+
+        // Create grass-like texture (reuse from ground)
+        const grassTexture = this.createGrassTexture();
+        grassTexture.wrapS = THREE.RepeatWrapping;
+        grassTexture.wrapT = THREE.RepeatWrapping;
+        grassTexture.repeat.set(50, 50);
+
+        const irregularMat = new THREE.MeshStandardMaterial({
+            map: grassTexture,
+            color: 0x4a7c3a,
+            roughness: 1.0,
+            metalness: 0.0,
+            wireframe: false
+        });
+
+        this.irregularTerrain = new THREE.Mesh(irregularGeo, irregularMat);
+        this.irregularTerrain.rotation.x = -Math.PI / 2;
+        this.irregularTerrain.position.y = -0.1;
+        this.irregularTerrain.receiveShadow = true;
+        this.irregularTerrain.castShadow = false;
+
+        // Don't add to collidables - terrain should be walkable, not blocking
+        this.scene.add(this.irregularTerrain);
+
+        // --- TREES (Only beyond boundary) ---
+        this.createTrees(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ);
+    }
+
+    createGrassTexture() {
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Base grass color
+        ctx.fillStyle = '#2d5a1e';
+        ctx.fillRect(0, 0, size, size);
+
+        // Add grass blades (noise)
+        for (let i = 0; i < 8000; i++) {
+            const x = Math.random() * size;
+            const y = Math.random() * size;
+            const w = Math.random() * 2 + 0.5;
+            const h = Math.random() * 4 + 1;
+            const hue = 80 + Math.random() * 40;
+            const light = 25 + Math.random() * 20;
+            ctx.fillStyle = `hsl(${hue}, 60%, ${light}%)`;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
+    }
+
+    createTrees(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ) {
+        const treeCount = 80; // Many trees
+        const boundaryRadius = Math.sqrt(
+            Math.pow((boundaryMaxX - boundaryMinX) / 2, 2) +
+            Math.pow((boundaryMaxZ - boundaryMinZ) / 2, 2)
+        );
+        const minDistance = boundaryRadius * 0.85; // Trees start beyond boundary
+
+        const treeTypes = ['pine', 'oak', 'poplar'];
+
+        for (let i = 0; i < treeCount; i++) {
+            // Random position in a large area
+            const angle = Math.random() * Math.PI * 2;
+            const distance = minDistance + Math.random() * 50;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+
+            // Random tree type
+            const type = treeTypes[Math.floor(Math.random() * treeTypes.length)];
+
+            // Create tree
+            const tree = this.createTree(type);
+            tree.position.set(x, 0, z);
+            tree.rotation.y = Math.random() * Math.PI * 2;
+            this.scene.add(tree);
+        }
+    }
+
+    createTree(type) {
+        const group = new THREE.Group();
+
+        // Trunk
+        const trunkHeight = 3 + Math.random() * 2;
+        const trunkRadius = 0.2 + Math.random() * 0.1;
+        const trunkGeo = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.2, trunkHeight, 8);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.9 });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = trunkHeight / 2;
+        trunk.castShadow = true;
+        group.add(trunk);
+
+        // Foliage based on type
+        if (type === 'pine') {
+            // Conical shape
+            const layers = 4;
+            for (let i = 0; i < layers; i++) {
+                const radius = 1.5 - (i * 0.3);
+                const coneGeo = new THREE.ConeGeometry(radius, 2, 8);
+                const coneMat = new THREE.MeshStandardMaterial({ color: 0x1a4d2e, roughness: 0.8 });
+                const cone = new THREE.Mesh(coneGeo, coneMat);
+                cone.position.y = trunkHeight - 0.5 + (i * 1.5);
+                cone.castShadow = true;
+                group.add(cone);
+            }
+        } else if (type === 'oak') {
+            // Rounded canopy
+            const canopyGeo = new THREE.SphereGeometry(2, 8, 8);
+            const canopyMat = new THREE.MeshStandardMaterial({ color: 0x2d5a1e, roughness: 0.8 });
+            const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+            canopy.position.y = trunkHeight + 1;
+            canopy.scale.set(1, 0.8, 1);
+            canopy.castShadow = true;
+            group.add(canopy);
+        } else if (type === 'poplar') {
+            // Tall, narrow
+            const canopyGeo = new THREE.CylinderGeometry(0.8, 1.2, 4, 8);
+            const canopyMat = new THREE.MeshStandardMaterial({ color: 0x3a6b2e, roughness: 0.8 });
+            const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+            canopy.position.y = trunkHeight + 2;
+            canopy.castShadow = true;
+            group.add(canopy);
+        }
+
+        return group;
     }
 
     toggleBoundaryVisibility(visible) {
@@ -187,6 +348,23 @@ export class World {
         this.boundaryWalls.forEach(wall => {
             wall.material.opacity = targetOpacity;
         });
+    }
+
+    toggleEntranceDoorCollision(isOpen) {
+        if (!this.entranceDoorCollision) return;
+
+        if (isOpen && this.entranceDoorClosed) {
+            // Door opening - remove collision
+            const index = this.collidables.indexOf(this.entranceDoorCollision);
+            if (index > -1) {
+                this.collidables.splice(index, 1);
+            }
+            this.entranceDoorClosed = false;
+        } else if (!isOpen && !this.entranceDoorClosed) {
+            // Door closing - add collision back
+            this.collidables.push(this.entranceDoorCollision);
+            this.entranceDoorClosed = true;
+        }
     }
 
     init() {
@@ -380,6 +558,23 @@ export class World {
         this.mainDoor.setPosition(0, 0, 10);
         this.scene.add(this.mainDoor.mesh);
         this.interactables.push(this.mainDoor.interactableMesh);
+
+        // Entrance Door Collision Box (blocks passage when door is closed)
+        const doorCollisionGeo = new THREE.BoxGeometry(4, 3.5, 0.3);
+        this.entranceDoorCollision = new THREE.Mesh(
+            doorCollisionGeo,
+            new THREE.MeshBasicMaterial({ visible: false })
+        );
+        this.entranceDoorCollision.position.set(0, 1.75, 10);
+        this.scene.add(this.entranceDoorCollision);
+        // Add to collidables initially (door starts closed)
+        this.collidables.push(this.entranceDoorCollision);
+        this.entranceDoorClosed = true; // Track door state
+
+        // Set callback to toggle collision when door opens/closes
+        this.mainDoor.onToggle = (isOpen) => {
+            this.toggleEntranceDoorCollision(isOpen);
+        };
 
         // Ventanas Sur
         centralRoom.addCenteredWindow('South_L', 2, 2.5, 2);
