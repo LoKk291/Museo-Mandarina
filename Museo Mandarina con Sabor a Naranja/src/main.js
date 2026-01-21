@@ -275,8 +275,9 @@ function checkInteraction() {
             lastHoveredSparrow = hitObject.userData.parentObj;
             interactionMsg.style.display = 'none'; // Label is enough
             return hitObject;
-            interactionMsg.style.display = 'none'; // Label is enough
-            return hitObject;
+        } else if (hitObject.userData.type === 'pdf') {
+            interactionMsg.textContent = "Click para leer \"Alicia en el País de las Maravillas\"";
+            interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'paper-stack') {
             interactionMsg.textContent = "Click para leer";
             interactionMsg.style.display = 'block';
@@ -290,7 +291,10 @@ function checkInteraction() {
             interactionMsg.textContent = "Click para recoger Llave Dorada";
             interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'secret-bookshelf-door') {
-            interactionMsg.textContent = hasGoldenKey ? "Click para Abrir Pasaje Secreto" : "Una repisa de libros muy firme...";
+            interactionMsg.textContent = hasGoldenKey ? "Click para Abrir Pasaje Secreto" : "Click para ver";
+            interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'mad-hatter-hat') {
+            interactionMsg.textContent = "Click para ver Sombrero";
             interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
@@ -317,6 +321,12 @@ document.addEventListener('click', () => {
             if (hitObject.userData.type === 'computer') {
                 soundManager.play('click_mouse'); // Specific mouse click sound
                 openPc();
+            } else if (hitObject.userData.type === 'pdf') {
+                soundManager.play('click');
+                openPdfViewer(hitObject.userData.file);
+            } else if (hitObject.userData.type === 'mad-hatter-hat') {
+                soundManager.play('click');
+                showLetter("El Sombrerero", "10/6", "Nunca pierdas tu muchosidad.", false);
             } else if (hitObject.userData.type === 'desk-lamp') {
                 soundManager.play('interruptor'); // New sound
                 hitObject.userData.parentObj.toggle();
@@ -438,7 +448,7 @@ document.addEventListener('click', () => {
                     world.toggleSecretPassage(isOpen);
                 } else {
                     soundManager.play('click');
-                    showLetter("Sistema", "PISTA", "Esta estantería parece diferente a las demás... pero está bloqueada.", true);
+                    showLetter("Sistema", "PISTA", "Esta estantería parece diferente a las demás... Acaso eso libro tiene forma de cerradura?", true);
                     // Trigger revelation in desk
                     world.revealGoldenKey();
                 }
@@ -549,6 +559,9 @@ document.addEventListener('click', () => {
                 // OR add specific listener here:
                 // Actually, let's update the global ESC listener to handle map-modal too if needed, 
                 // or just rely on manual close for now.
+            } else if (hitObject.userData.type === 'pdf') {
+                soundManager.play('click');
+                openPdfViewer(hitObject.userData.file);
             } else {
                 console.error("Objeto interactuable sin tipo o datos definidos:", hitObject);
                 // ...
@@ -1769,5 +1782,42 @@ window.addEventListener('keyup', (e) => {
             // Visual Off
             keyMap[keyChar].classList.remove('active');
         }
+    }
+});
+
+
+// --- PDF VIEWER ---
+const pdfOverlay = document.getElementById('pdf-overlay');
+const pdfFrame = document.getElementById('pdf-frame');
+const pdfClose = document.getElementById('pdf-close');
+
+function openPdfViewer(fileUrl) {
+    if (!pdfOverlay) return;
+
+    isModalOpen = true;
+    player.unlock();
+    document.getElementById('instructions').style.display = 'none';
+
+    pdfFrame.src = fileUrl;
+    pdfOverlay.classList.remove('hidden');
+}
+
+function closePdfViewer() {
+    if (!pdfOverlay) return;
+
+    pdfOverlay.classList.add('hidden');
+    pdfFrame.src = ""; // Stop charging/release resource
+    isModalOpen = false;
+    player.lock();
+}
+
+if (pdfClose) {
+    pdfClose.onclick = closePdfViewer;
+}
+
+// Add ESC support for PDF
+window.addEventListener('keydown', (e) => {
+    if (isModalOpen && e.key === 'Escape' && pdfOverlay && !pdfOverlay.classList.contains('hidden')) {
+        closePdfViewer();
     }
 });

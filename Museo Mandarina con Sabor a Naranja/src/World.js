@@ -1699,8 +1699,13 @@ export class World {
         // --- MAD HATTER HAT (Room L3 Center) ---
         const hatSculpture = new MadHatterHat();
         hatSculpture.setPosition(-25, 0, -50);
+        hatSculpture.mesh.traverse(child => {
+            if (child.isMesh) {
+                child.userData = { type: 'mad-hatter-hat' };
+            }
+        });
         this.scene.add(hatSculpture.mesh);
-        this.interactables.push(hatSculpture.mesh); // Make clickable? Maybe just decorative.
+        this.interactables.push(hatSculpture.mesh);
 
         // Add Collider for Hat Pedestal
         const hatBox = new THREE.Mesh(
@@ -1721,6 +1726,15 @@ export class World {
         const shelf1 = new Bookshelf();
         shelf1.setPosition(-30, 0, -57);
         this.scene.add(shelf1.mesh);
+
+        // Make Shelf1 Interactable for PDF
+        shelf1.mesh.traverse(child => {
+            if (child.isMesh) {
+                child.userData = { type: 'pdf', file: 'books/Alicia.pdf' };
+            }
+        });
+        this.interactables.push(shelf1.mesh);
+
         // this.collidables.push(shelf1.mesh); // REMOVED: Groups crash Player physics. Used manual box below.
 
         const shelf2 = new Bookshelf();
