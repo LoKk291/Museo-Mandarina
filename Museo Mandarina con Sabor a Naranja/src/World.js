@@ -1784,10 +1784,18 @@ export class World {
     }
 
     getTerrainHeight(x, z) {
-        // Expanded boundary: X: ±60, Z: -90 to 40
+        // --- SAFE ZONES (Flat Floors) ---
+
+        // 1. Secret Room Zone (Around 200, 200)
+        if (x > 180 && x < 220 && z > 180 && z < 230) {
+            return 0;
+        }
+
+        // 2. Main Museum Boundary
+        // Expanded boundary to cover all wings and corridors
         const isOutsideBoundary = (
             Math.abs(x) > 60 ||
-            z < -90 || z > 40
+            z < -100 || z > 40
         );
 
         if (isOutsideBoundary) {

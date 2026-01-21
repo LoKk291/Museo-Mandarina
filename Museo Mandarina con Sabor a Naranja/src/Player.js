@@ -176,10 +176,9 @@ export class Player {
 
     checkCollision() {
         const playerPos = this.camera.position;
-        // Creamos una caja alrededor del jugador
         const playerBox = new THREE.Box3();
-        const min = new THREE.Vector3(playerPos.x - this.radius, playerPos.y - 1, playerPos.z - this.radius);
-        const max = new THREE.Vector3(playerPos.x + this.radius, playerPos.y + 1, playerPos.z + this.radius);
+        const min = new THREE.Vector3(playerPos.x - this.radius, playerPos.y - this.height, playerPos.z - this.radius);
+        const max = new THREE.Vector3(playerPos.x + this.radius, playerPos.y + 0.3, playerPos.z + this.radius);
         playerBox.set(min, max);
 
         for (const wall of this.collidables) {

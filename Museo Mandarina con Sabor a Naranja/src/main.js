@@ -53,7 +53,7 @@ soundManager.load('phone_takeoff', 'sounds/phone/takeoff.mp3');
 soundManager.load('phone_guy', 'sounds/phone/phone%20guy.mp3');
 soundManager.load('secret_call', 'sounds/phone/ioamoremio.mp3'); // Secret Call Sound
 soundManager.load('portal_hum', 'sounds/portal_hum.mp3');
-soundManager.load('teleport', 'sounds/teleport.mp3');
+soundManager.load('teleport', 'sounds/tele.mp3');
 // Tunning Door Sounds
 
 // Tunning Door Sounds
@@ -213,6 +213,7 @@ let isModalOpen = false;
 let hasGoldenKey = false; // New state for secret door
 let activeVinylFrame = null; // Track playing vinyl
 let lastHoveredSparrow = null;
+let isTeleporting = false; // Fix: use a global variable instead of 'this'
 
 // Loop de Raycast para mostrar mensaje "Click para ver"
 function checkInteraction() {
@@ -1230,28 +1231,49 @@ function animate() {
 
     // --- PORTAL TELEPORTATION LOGIC ---
     if (world.portal1 && world.portal2 && !isModalOpen) {
-        const pPos1 = world.portal1.mesh.position;
-        const pPos2 = world.portal2.mesh.position;
+        // Use camera position but ignore Y for simple proximity
+        const p1 = world.portal1.mesh.position;
+        const p2 = world.portal2.mesh.position;
+        const playerPos = player.camera.position;
 
-        // We only care about X and Z distance for the portal plane
-        const dist1 = player.camera.position.distanceTo(pPos1);
-        const dist2 = player.camera.position.distanceTo(pPos2);
+        // XZ Distance only (more robust)
+        const dx1 = playerPos.x - p1.x;
+        const dz1 = playerPos.z - p1.z;
+        const distSq1 = dx1 * dx1 + dz1 * dz1;
 
-        // Distance threshold to trigger teleport
-        const threshold = 1.2;
+        const dx2 = playerPos.x - p2.x;
+        const dz2 = playerPos.z - p2.z;
+        const distSq2 = dx2 * dx2 + dz2 * dz2;
 
-        if (dist1 < threshold) {
-            // Teleport to Isolated Room (Position 200, 0, 200)
-            // Destination slightly in front of portal 2
-            player.camera.position.set(200, player.height, 205);
-            soundManager.play('teleport');
-            showLetter("Sistema", "INFO", "Teletransportado a la Habitación Secreta...", true);
-        } else if (dist2 < threshold) {
-            // Teleport back to Secret Corridor (Position -25, 0, -62.5)
-            // Destination slightly in front of portal 1
-            player.camera.position.set(-25, player.height, -64.5);
-            soundManager.play('teleport');
-            showLetter("Sistema", "INFO", "Regresando al Museo...", true);
+        const thresholdSq = 1.4 * 1.4; // Slightly larger threshold
+
+        // Use a cooldown or state to prevent infinite sound loop during teleport
+        if (!isTeleporting) {
+            if (distSq1 < thresholdSq) {
+                isTeleporting = true;
+                soundManager.play('teleport');
+                console.log("Teleporting to Hidden Room...");
+
+                // Small delay to let sound start before flash/move
+                setTimeout(() => {
+                    player.camera.position.set(200, player.height, 205);
+                    showLetter("Sistema", "INFO", "Teletransportado a la Habitación Secreta...", true);
+                    // Cooldown to prevent immediate bounce back
+                    setTimeout(() => { isTeleporting = false; }, 2000);
+                }, 300);
+
+            } else if (distSq2 < thresholdSq) {
+                isTeleporting = true;
+                soundManager.play('teleport');
+                console.log("Teleporting back to Museum...");
+
+                setTimeout(() => {
+                    player.camera.position.set(-25, player.height, -64.5);
+                    showLetter("Sistema", "INFO", "Regresando al Museo...", true);
+                    // Cooldown to prevent immediate bounce back
+                    setTimeout(() => { isTeleporting = false; }, 2000);
+                }, 300);
+            }
         }
     }
 }
