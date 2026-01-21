@@ -257,6 +257,9 @@ export class World {
 
         // --- WATERFALL AND LAKE ---
         this.createWaterFeatures();
+
+        // --- FACADE LIGHTS ---
+        this.createFacadeLights();
     }
 
     createStreetLights() {
@@ -292,10 +295,52 @@ export class World {
     updateStreetLights(isNight) {
         this.streetLights.forEach(light => {
             if (isNight) {
-                light.turnOn();
+                if (light.turnOn) light.turnOn();
             } else {
-                light.turnOff();
+                if (light.turnOff) light.turnOff();
             }
+        });
+    }
+
+    createFacadeLights() {
+        // Discrete powerful lights above windows (or where windows would be)
+        // L1/R1 South Wall Z=7.5
+
+        const facadeZ = 7.8;
+        const lightY = 3.5;
+
+        // Windows at L1 (-30, -20) and R1 (20, 30)
+        const positions = [-30, -20, 20, 30];
+
+        positions.forEach(x => {
+            const boxGeo = new THREE.BoxGeometry(0.4, 0.2, 0.4);
+            const boxMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8 });
+            const mesh = new THREE.Mesh(boxGeo, boxMat);
+            mesh.position.set(x, lightY, facadeZ);
+            this.scene.add(mesh);
+
+            // Light: SpotLight
+            const spot = new THREE.SpotLight(0xffaa00, 20.0);
+            spot.distance = 25;
+            spot.angle = Math.PI / 4;
+            spot.penumbra = 0.5;
+            spot.decay = 1;
+
+            const target = new THREE.Object3D();
+            target.position.set(x, 1, 7.5);
+            this.scene.add(target);
+            spot.target = target;
+
+            mesh.add(spot);
+
+            const facadeLight = {
+                mesh: mesh,
+                light: spot,
+                turnOn: () => { spot.intensity = 20.0; },
+                turnOff: () => { spot.intensity = 0; }
+            };
+
+            this.streetLights.push(facadeLight);
         });
     }
 
@@ -1400,10 +1445,10 @@ export class World {
         roomR1.addDoor('North', 4, 3.5); // Conecta con R2
 
         // Distribución R1 (5 Cuadros)
-        // Pared Sur (3 cuadros)
-        roomR1.addPaintingToWall('South', 2, 2, 'cuadros/1.jpg', 'P-01', 'Espacio para Cuadro 1', 'Pendiente de asignar');
-        roomR1.addPaintingToWall('South', 2, 2, 'cuadros/2.jpg', 'P-02', 'Espacio para Cuadro 2', 'Pendiente de asignar', 3, 0); // Offset Right
-        roomR1.addPaintingToWall('South', 2, 2, 'cuadros/3.jpg', 'P-03', 'Espacio para Cuadro 3', 'Pendiente de asignar', -3, 0); // Offset Left
+        // Distribución R1 (5 Cuadros)
+        // Pared Sur (Ventana Central)
+        // roomR1.addPaintingToWall('South', ...); // Paintings REMOVED for Window
+        roomR1.addCenteredWindow('South', 6, 2.5, 2);
 
         // Pared Este (2 cuadros)
         roomR1.addPaintingToWall('East', 3, 3, 'cuadros/4.jpg', 'P-04', 'Espacio para Cuadro 4', 'Pendiente de asignar', 2, 0);
