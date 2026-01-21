@@ -90,6 +90,108 @@
             width: 100px;
             cursor: pointer;
         }
+
+        #vhs-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+        }
+
+        #vhs-selector.hidden {
+            display: none !important;
+        }
+
+        .vhs-menu {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #FFD700;
+        }
+
+        .vhs-menu h2 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 30px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .vhs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .vhs-item {
+            background: #2a2a2a;
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .vhs-item:hover {
+            border-color: #FFD700;
+            transform: scale(1.05);
+        }
+
+        .vhs-label {
+            color: #FFD700;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+        }
+
+        #close-vhs-selector {
+            width: 100%;
+            padding: 15px;
+            background: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #cinema-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 30px;
+            border-radius: 10px;
+            border: 2px solid #FFD700;
+            display: flex;
+            gap: 20px;
+            z-index: 4000;
+        }
+
+        #cinema-controls.hidden {
+            display: none !important;
+        }
+
+        #stop-cinema {
+            padding: 10px 20px;
+            background: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .volume-control {
+            display: flex;
+            gap: 10px;
+            color: #FFD700;
+        }
     </style>
 </head>
 
@@ -173,6 +275,42 @@
             <input type="range" id="music-volume" min="0" max="1" step="0.1" value="0.5">
         </div>
     </div>
+
+    <!-- VHS Selector UI -->
+    <div id="vhs-selector" class="hidden">
+        <div class="vhs-menu">
+            <h2>Selecciona un VHS</h2>
+            <div class="vhs-grid">
+                <div class="vhs-item" data-video="1">
+                    <div class="vhs-label">VHS 1</div>
+                </div>
+                <div class="vhs-item" data-video="2">
+                    <div class="vhs-label">VHS 2</div>
+                </div>
+                <div class="vhs-item" data-video="3">
+                    <div class="vhs-label">VHS 3</div>
+                </div>
+                <div class="vhs-item" data-video="4">
+                    <div class="vhs-label">VHS 4</div>
+                </div>
+                <div class="vhs-item" data-video="5">
+                    <div class="vhs-label">VHS 5</div>
+                </div>
+            </div>
+            <button id="close-vhs-selector" class="close-btn">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Cinema Video Player Controls -->
+    <div id="cinema-controls" class="hidden">
+        <button id="stop-cinema">⏹ STOP</button>
+        <div class="volume-control">
+            <label for="cinema-volume">VOL:</label>
+            <input type="range" id="cinema-volume" min="0" max="100" value="50">
+            <span id="cinema-volume-label">50%</span>
+        </div>
+    </div>
+
     <script>
         let errorTimeout;
         function showTempError(content) {

@@ -310,7 +310,7 @@ function showLetter(title, content, isSystem = false, customClass = null) {
     if (contentBox) {
         contentBox.classList.remove('system-message');
         contentBox.classList.remove('special-letter');
-        
+
         if (isSystem) {
             contentBox.classList.add('system-message');
         }
@@ -336,7 +336,12 @@ document.addEventListener('mousedown', (e) => {
 });
 
 let isModalOpen = false;
-let hasGoldenKey = false; // New state for secret door
+let hasGoldenKey = false;
+
+// VHS Cinema System
+let cinemaVideo = null;
+let cinemaVideoTexture = null;
+let currentlyPlayingVHS = false; // New state for secret door
 let activeVinylFrame = null; // Track playing vinyl
 let lastHoveredSparrow = null;
 let isTeleporting = false; // Fix: use a global variable instead of 'this'
@@ -406,6 +411,9 @@ function checkInteraction() {
             interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'minecraft-block') {
             interactionMsg.textContent = "Click para leer carta";
+            interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'vhs-camera') {
+            interactionMsg.textContent = "Click para seleccionar VHS";
             interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
@@ -699,12 +707,14 @@ document.addEventListener('click', () => {
                 const idx = world.interactables.indexOf(hitObject);
                 if (idx > -1) world.interactables.splice(idx, 1);
             } else if (hitObject.userData.type === 'minecraft-block') {
-            soundManager.play('click');
-            const title = hitObject.userData.blockId === 'furnace' ? 'Horno' : 'Mesa de Trabajo';
-            // Placeholder text
-            const content = "Una nota antigua yace aquí, escrita con una vieja máquina de escribir..."; 
-            showLetter(title, content, false, 'special-letter');
-        } else if (hitObject.userData.type === 'pdf') {
+                soundManager.play('click');
+                const title = hitObject.userData.blockId === 'furnace' ? 'Horno' : 'Mesa de Trabajo';
+                const content = "Una nota antigua yace aquí, escrita con una vieja máquina de escribir...";
+                showLetter(title, content, false, 'special-letter');
+            } else if (hitObject.userData.type === 'vhs-camera') {
+                soundManager.play('click');
+                openVHSSelector();
+            } else if (hitObject.userData.type === 'pdf') {
                 soundManager.play('click');
                 openPdfViewer(hitObject.userData.file);
             } else {
@@ -1454,6 +1464,104 @@ window.addEventListener('keydown', (e) => {
 // --- GAME LOOP ---
 const clock = new THREE.Clock();
 
+
+// === VHS CINEMA SYSTEM ===
+function openVHSSelector() {
+    player.unlock();
+    const selector = document.getElementById('vhs-selector');
+    selector.classList.remove('hidden');
+}
+
+function closeVHSSelector() {
+    const selector = document.getElementById('vhs-selector');
+    selector.classList.add('hidden');
+    player.lock();
+}
+
+function playVHS(videoNumber) {
+    if (!cinemaVideo) {
+        cinemaVideo = document.createElement('video');
+        cinemaVideo.crossOrigin = 'anonymous';
+        cinemaVideo.loop = false;
+        cinemaVideo.volume = 0.5;
+    }
+
+    // Stop any current playback
+    if (currentlyPlayingVHS) {
+        cinemaVideo.pause();
+        cinemaVideo.currentTime = 0;
+    }
+
+    cinemaVideo.src = `videos/vhs${videoNumber}.mp4`;
+    cinemaVideo.load();
+
+    cinemaVideoTexture = new THREE.VideoTexture(cinemaVideo);
+    cinemaVideoTexture.minFilter = THREE.LinearFilter;
+    cinemaVideoTexture.magFilter = THREE.LinearFilter;
+
+    if (world.cinemaScreen && world.cinemaScreen.screenMesh) {
+        world.cinemaScreen.screenMesh.material.map = cinemaVideoTexture;
+        world.cinemaScreen.screenMesh.material.emissive.setHex(0x000000); // No emissive for clear video
+        world.cinemaScreen.screenMesh.material.needsUpdate = true;
+    }
+
+    // Play with error handling
+    cinemaVideo.play().catch(err => {
+        console.log('Video play interrupted, retrying...');
+        setTimeout(() => cinemaVideo.play(), 100);
+    });
+
+    // Turn on camera projector light
+    if (world.oldCamera) {
+        world.oldCamera.turnOnLight();
+    }
+
+    currentlyPlayingVHS = true;
+    document.getElementById('cinema-controls').classList.remove('hidden');
+    closeVHSSelector();
+}
+
+function stopCinema() {
+    if (cinemaVideo) {
+        cinemaVideo.pause();
+        cinemaVideo.currentTime = 0;
+    }
+
+    if (world.cinemaScreen && world.cinemaScreen.screenMesh) {
+        world.cinemaScreen.screenMesh.material.map = null;
+        world.cinemaScreen.screenMesh.material.emissive.setHex(0x000000); // No glow when off
+        world.cinemaScreen.screenMesh.material.color.setHex(0xFFFFFF);
+        world.cinemaScreen.screenMesh.material.needsUpdate = true;
+    }
+
+    // Turn off camera projector light
+    if (world.oldCamera) {
+        world.oldCamera.turnOffLight();
+    }
+
+    currentlyPlayingVHS = false;
+    document.getElementById('cinema-controls').classList.add('hidden');
+}
+
+// VHS UI Event Listeners
+document.querySelectorAll('.vhs-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const videoNum = item.getAttribute('data-video');
+        playVHS(videoNum);
+    });
+});
+
+document.getElementById('close-vhs-selector').addEventListener('click', closeVHSSelector);
+document.getElementById('stop-cinema').addEventListener('click', stopCinema);
+
+document.getElementById('cinema-volume').addEventListener('input', (e) => {
+    const volume = e.target.value / 100;
+    if (cinemaVideo) {
+        cinemaVideo.volume = volume;
+    }
+    document.getElementById('cinema-volume-label').textContent = e.target.value + '%';
+});
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -2065,4 +2173,8 @@ window.addEventListener('keydown', (e) => {
         closePdfViewer();
     }
 });
+
+
+
+
 

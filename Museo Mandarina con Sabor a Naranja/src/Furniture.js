@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+ï»¿import * as THREE from 'three';
 
 export class GoldenKey {
     constructor() {
@@ -92,6 +92,18 @@ export class GoldenKey {
         bitGroup.add(t2);
 
         this.mesh.add(bitGroup);
+
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
 
@@ -333,7 +345,7 @@ export class HintNote {
         ctx.textBaseline = 'middle';
         // Multi-line wrap or just small font. 
         ctx.fillText('antes de volver,', 128, 45);
-        ctx.fillText('echa un vistazo por ahí', 128, 85);
+        ctx.fillText('echa un vistazo por ahï¿½', 128, 85);
 
         // Border
         ctx.strokeStyle = '#d0c0a0';
@@ -2736,6 +2748,18 @@ export class PaperStack {
         }
 
         this.mesh.receiveShadow = true;
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
+
         this.mesh.castShadow = true;
 
         // Hitbox for interaction
@@ -3099,6 +3123,18 @@ export class VinylFrame {
         const backCheck = new THREE.Mesh(new THREE.PlaneGeometry(w - thickness * 2, h - thickness * 2), new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 1.0 }));
         backCheck.position.z = 0; // Center plane
         this.mesh.add(backCheck);
+
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
@@ -4580,6 +4616,18 @@ export class ArcadeMachine {
         marquee.position.set(0, 1.6, 0.36);
         this.mesh.add(marquee);
 
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
+
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
     }
@@ -4801,6 +4849,18 @@ export class FlashlightItem {
         btn.position.y = 0.045;
         this.mesh.add(btn);
 
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
+
         this.mesh.castShadow = true;
 
         // Hitbox
@@ -5010,6 +5070,18 @@ export class Mangle {
         headGroup.add(eyeR);
 
         // Shadows
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
+
         this.mesh.castShadow = true;
         this.mesh.traverse(c => {
             if (c.isMesh) {
@@ -5210,6 +5282,18 @@ export class Foxy {
         const strap = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.02, 0.42), blackMat);
         strap.position.set(0, 0.05, 0); // Around head
         // headGroup.add(strap); // Simple box overlap
+
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
 
         this.mesh.castShadow = true;
         this.mesh.traverse(c => {
@@ -5687,29 +5771,59 @@ export class BreakableVase {
 export class CinemaScreen {
     constructor() {
         this.mesh = new THREE.Group();
+        this.screenMesh = null;
         this.build();
     }
 
     build() {
-        // Simple white screen
-        const geo = new THREE.PlaneGeometry(8, 4.5);
-        const mat = new THREE.MeshStandardMaterial({ 
-            color: 0xFFFFFF, 
-            roughness: 0.9, 
-            emisive: 0x111111 
+        // Simple box screen - guaranteed visible from all angles
+        const screenWidth = 6;
+        const screenHeight = 3.375;
+        const screenDepth = 0.05;
+        
+        const screenGeo = new THREE.BoxGeometry(screenWidth, screenHeight, screenDepth);
+        const screenMat = new THREE.MeshStandardMaterial({ 
+            color: 0xFFFFFF,
+            emissive: 0x000000,
+            roughness: 0.9,
+            metalness: 0
         });
-        const screen = new THREE.Mesh(geo, mat);
-        screen.position.y = 2.5; // Height
-        screen.castShadow = true;
-        screen.receiveShadow = true;
-        this.mesh.add(screen);
+        
+        this.screenMesh = new THREE.Mesh(screenGeo, screenMat);
+        this.screenMesh.position.y = 2.5;
+        this.screenMesh.castShadow = true;
+        this.screenMesh.receiveShadow = true;
+        this.mesh.add(this.screenMesh);
 
-        // Frame
-        const frameGeo = new THREE.BoxGeometry(8.2, 4.7, 0.1);
-        const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-        const frame = new THREE.Mesh(frameGeo, frameMat);
-        frame.position.set(0, 2.5, -0.06);
-        this.mesh.add(frame);
+        // Black frame
+        const frameThickness = 0.2;
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
+        
+        // Top
+        const topFrame = new THREE.Mesh(
+            new THREE.BoxGeometry(screenWidth + frameThickness * 2, frameThickness, screenDepth),
+            frameMat
+        );
+        topFrame.position.set(0, 2.5 + screenHeight/2 + frameThickness/2, 0);
+        this.mesh.add(topFrame);
+        
+        // Bottom
+        const bottomFrame = topFrame.clone();
+        bottomFrame.position.y = 2.5 - screenHeight/2 - frameThickness/2;
+        this.mesh.add(bottomFrame);
+        
+        // Left
+        const leftFrame = new THREE.Mesh(
+            new THREE.BoxGeometry(frameThickness, screenHeight + frameThickness * 2, screenDepth),
+            frameMat
+        );
+        leftFrame.position.set(-screenWidth/2 - frameThickness/2, 2.5, 0);
+        this.mesh.add(leftFrame);
+        
+        // Right
+        const rightFrame = leftFrame.clone();
+        rightFrame.position.x = screenWidth/2 + frameThickness/2;
+        this.mesh.add(rightFrame);
     }
 
     setPosition(x, y, z) {
@@ -5721,8 +5835,6 @@ export class CinemaScreen {
     }
 }
 
-
-// ===== OLD CAMERA =====
 export class OldCamera {
     constructor() {
         this.mesh = new THREE.Group();
@@ -5797,7 +5909,55 @@ export class OldCamera {
         reel2.position.set(-0.25, 1.55, 0.1);
         this.mesh.add(reel2);
 
+        
+        // Add interactable hitbox
+        const hitboxGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.9;
+        this.interactableMesh.userData = {
+            type: 'vhs-camera',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
+
+        // Projector Light (initially off)
+        this.projectorLight = new THREE.SpotLight(0xFFFFAA, 0, 15, Math.PI / 6, 0.5);
+        this.projectorLight.position.set(0, 1.5, 0);
+        this.projectorLight.target.position.set(0, 1.5, -10);
+        this.mesh.add(this.projectorLight);
+        this.mesh.add(this.projectorLight.target);
+        
+        // Light indicator on camera (small glowing sphere)
+        this.lightIndicator = new THREE.Mesh(
+            new THREE.SphereGeometry(0.05),
+            new THREE.MeshStandardMaterial({ 
+                color: 0xFF0000,
+                emissive: 0x000000
+            })
+        );
+        this.lightIndicator.position.set(0.15, 1.6, 0.3);
+        this.mesh.add(this.lightIndicator);
+
         this.mesh.castShadow = true;
+    }
+
+    turnOnLight() {
+        if (this.projectorLight) {
+            this.projectorLight.intensity = 2;
+        }
+        if (this.lightIndicator) {
+            this.lightIndicator.material.emissive.setHex(0xFF0000);
+        }
+    }
+
+    turnOffLight() {
+        if (this.projectorLight) {
+            this.projectorLight.intensity = 0;
+        }
+        if (this.lightIndicator) {
+            this.lightIndicator.material.emissive.setHex(0x000000);
+        }
     }
 
     setPosition(x, y, z) {
@@ -5808,6 +5968,14 @@ export class OldCamera {
         this.mesh.rotation.y = y;
     }
 }
+
+
+
+
+
+
+
+
 
 
 

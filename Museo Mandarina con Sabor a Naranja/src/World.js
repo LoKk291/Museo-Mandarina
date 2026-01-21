@@ -1455,14 +1455,14 @@ export class World {
         this.scene.add(vaseL2.mesh);
         this.interactables.push(vaseL2.interactableMesh);
 
-        
+
         // --- CINEMA SETUP ---
         const cinemaScreen = new CinemaScreen();
         // Room L2 Size 15x15. Center relative to room group is 0,0.
         // North Wall is at Z = -7.5.
         // Place screen close to North Wall.
-        cinemaScreen.setPosition(-7.4, 0, 0);
-        cinemaScreen.setRotation(Math.PI / 2); 
+        cinemaScreen.setPosition(-7.3, 0, 0); // West wall (left side of room)
+        cinemaScreen.setRotation(Math.PI / 2); // Face East 
         roomL2.group.add(cinemaScreen.mesh);
 
         const oldCamera = new OldCamera();
@@ -1473,14 +1473,19 @@ export class World {
         // In my build(): lens.position.set(0, 1.3, 0.4); -> +Z.
         // So to face North (-Z), rotate PI.
         oldCamera.setPosition(6, 0, 0); // 5 units back
-        oldCamera.setRotation(-Math.PI / 2); 
+        oldCamera.setRotation(-Math.PI / 2);
         roomL2.group.add(oldCamera.mesh);
-        
+        this.interactables.push(oldCamera.interactableMesh); // Make camera clickable
+
+        // Store references for video playback
+        this.cinemaScreen = cinemaScreen;
+        this.oldCamera = oldCamera;
+
         // Add Camera to interactables? User didn't ask, but good practice.
         // Since OldCamera is just a visual prop for now, we leave it.
         // Unless user wants to look through it? User said 'una camara estilo antiguo'.
         // Let's just place it.
-this.addRoom(roomL2, 'L2');
+        this.addRoom(roomL2, 'L2');
 
         // --- GLOBO TERRÁQUEO ---
         // Center of L2: -25, -25
@@ -2390,6 +2395,10 @@ this.addRoom(roomL2, 'L2');
         this.updateStreetLights(true); // Force update now, passing true (night) but flag will block it acting as OFF
     }
 }
+
+
+
+
 
 
 
