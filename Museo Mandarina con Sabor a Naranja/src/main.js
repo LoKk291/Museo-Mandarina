@@ -91,21 +91,43 @@ const closeModalBtn = document.getElementById('close-modal');
 const instructions = document.getElementById('instructions');
 const crosshair = document.getElementById('crosshair');
 
-// --- EASTER EGG: ORQUIDEA ---
-let eggBuffer = "";
-const eggCode = "orquidea";
+// --- CHEAT CODES & EASTER EGGS ---
+let cheatBuffer = "";
+const cheats = {
+    "orquidea": () => {
+        window.open("https://upload.wikimedia.org/wikipedia/commons/d/df/Orchid_high_resolution.jpg", "_blank");
+    },
+    "goldenkey": () => {
+        if (!hasGoldenKey) {
+            hasGoldenKey = true;
+            const inventoryGui = document.getElementById('inventory-gui');
+            if (inventoryGui) inventoryGui.style.display = 'flex';
+            soundManager.play('click');
+            showLetter("Sistema", "CHEAT", "Llave Dorada obtenida mediante código.", true);
+
+            // Hide the actual key if it's still in the drawer
+            if (world.desk && world.desk.goldenKey) {
+                world.desk.hideGoldenKey();
+            }
+        }
+    }
+};
+
 document.addEventListener('keydown', (e) => {
     // Only works if NOT playing (Controls Unlocked / Menu Visible)
     if (!player.isLocked) {
-        // Simple buffer check
-        if (e.key.length === 1) { // Ignore modifiers
-            eggBuffer += e.key.toLowerCase();
-            if (eggBuffer.length > eggCode.length) {
-                eggBuffer = eggBuffer.slice(-eggCode.length);
-            }
-            if (eggBuffer === eggCode) {
-                window.open("https://upload.wikimedia.org/wikipedia/commons/d/df/Orchid_high_resolution.jpg", "_blank");
-                eggBuffer = ""; // Reset
+        if (e.key.length === 1) {
+            cheatBuffer += e.key.toLowerCase();
+            // Keep buffer reasonable (max length of longest cheat)
+            if (cheatBuffer.length > 20) cheatBuffer = cheatBuffer.slice(-20);
+
+            // Check for any match
+            for (const code in cheats) {
+                if (cheatBuffer.endsWith(code)) {
+                    cheats[code]();
+                    cheatBuffer = ""; // Clear after use
+                    break;
+                }
             }
         }
     }

@@ -848,6 +848,26 @@ export class Desk {
     update(delta) {
         this.drawers.forEach(d => d.update(delta));
     }
+
+    hideGoldenKey() {
+        if (this.goldenKey && this.goldenKey.mesh) {
+            this.goldenKey.mesh.visible = false;
+        }
+        // Also hide hint note if key is "obtained" via cheat
+        if (this.hintNote && this.hintNote.mesh) {
+            this.hintNote.mesh.visible = false;
+        }
+    }
+
+    revealGoldenKey() {
+        if (this.goldenKey && this.goldenKey.mesh) {
+            this.goldenKey.mesh.visible = true;
+        }
+        // Hide hint note when key is revealed
+        if (this.hintNote && this.hintNote.mesh) {
+            this.hintNote.mesh.visible = false;
+        }
+    }
 }
 
 export class RetroComputer {
