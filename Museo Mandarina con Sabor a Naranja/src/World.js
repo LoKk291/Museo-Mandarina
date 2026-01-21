@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -1638,28 +1638,39 @@ export class World {
         // We want back at -57.4 or so. Center at -57.
 
         const shelf1 = new Bookshelf();
-        shelf1.setPosition(-28, 0, -57);
+        shelf1.setPosition(-30, 0, -57);
         this.scene.add(shelf1.mesh);
         // this.collidables.push(shelf1.mesh); // REMOVED: Groups crash Player physics. Used manual box below.
 
         const shelf2 = new Bookshelf();
-        shelf2.setPosition(-22, 0, -57);
+        shelf2.setPosition(-20, 0, -57);
         this.scene.add(shelf2.mesh);
         // this.collidables.push(shelf2.mesh);
+
+        this.secretBookshelfDoor = new SecretBookshelfDoor();
+        this.secretBookshelfDoor.setPosition(-25, 0, -57);
+        this.scene.add(this.secretBookshelfDoor.mesh);
+        this.interactables.push(this.secretBookshelfDoor.interactableMesh);
 
         // Manual Colliders for Shelves (Groups don't collide well with simple logic usually)
         const shelfBoxGeo = new THREE.BoxGeometry(3, 4, 1);
         const shelfBoxMat = new THREE.MeshBasicMaterial({ visible: false });
 
         const s1Box = new THREE.Mesh(shelfBoxGeo, shelfBoxMat);
-        s1Box.position.set(-28, 2, -57);
+        s1Box.position.set(-30, 2, -57);
         this.scene.add(s1Box);
         this.collidables.push(s1Box);
 
         const s2Box = new THREE.Mesh(shelfBoxGeo, shelfBoxMat);
-        s2Box.position.set(-22, 2, -57);
+        s2Box.position.set(-20, 2, -57);
         this.scene.add(s2Box);
         this.collidables.push(s2Box);
+
+        // Collider for secret door
+        const s3Box = new THREE.Mesh(shelfBoxGeo, shelfBoxMat);
+        s3Box.position.set(-25, 2, -57);
+        this.scene.add(s3Box);
+        this.collidables.push(s3Box);
 
 
         // R1 (25, 0) - West Wall (Entrance from Central)
@@ -1736,6 +1747,11 @@ export class World {
         if (this.sparrow) this.sparrow.update(delta, camera);
         if (this.recordPlayer) this.recordPlayer.update(delta);
 
+
+
+        if (this.secretBookshelfDoor) {
+            this.secretBookshelfDoor.update(delta);
+        }
 
         this.rooms.forEach(room => {
             room.updateCeiling(delta);

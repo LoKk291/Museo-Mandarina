@@ -4070,6 +4070,132 @@ export class Bookshelf {
     }
 }
 
+
+export class SecretBookshelfDoor {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.isOpen = false;
+        this.currentRotation = 0;
+        this.targetRotation = 0;
+        this.interactableMesh = null;
+        this.build();
+    }
+
+    build() {
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+        const width = 3;
+        const height = 4;
+        const depth = 0.8;
+        const thickness = 0.1;
+
+        // Visual Part (The Shelf itself)
+        this.doorGroup = new THREE.Group();
+
+        // Pivot point at the right side to swing open
+        this.pivot = new THREE.Group();
+        this.pivot.position.set(width / 2, 0, 0);
+        this.mesh.add(this.pivot);
+        this.pivot.add(this.doorGroup);
+        // Offset shelf so it rotates around the right edge
+        this.doorGroup.position.set(-width / 2, 0, 0);
+
+        // --- Build Shelf (Reuse Bookshelf logic but inside doorGroup) ---
+        const frame = new THREE.Group();
+
+        const sideGeo = new THREE.BoxGeometry(thickness, height, depth);
+        const leftSide = new THREE.Mesh(sideGeo, woodMat);
+        leftSide.position.set(-width / 2 + thickness / 2, height / 2, 0);
+        frame.add(leftSide);
+
+        const rightSide = new THREE.Mesh(sideGeo, woodMat);
+        rightSide.position.set(width / 2 - thickness / 2, height / 2, 0);
+        frame.add(rightSide);
+
+        const topBotGeo = new THREE.BoxGeometry(width, thickness, depth);
+        const bottom = new THREE.Mesh(topBotGeo, woodMat);
+        bottom.position.set(0, thickness / 2, 0);
+        frame.add(bottom);
+
+        const top = new THREE.Mesh(topBotGeo, woodMat);
+        top.position.set(0, height - thickness / 2, 0);
+        frame.add(top);
+
+        const backGeo = new THREE.BoxGeometry(width, height, thickness);
+        const back = new THREE.Mesh(backGeo, woodMat);
+        back.position.set(0, height / 2, -depth / 2 + thickness / 2);
+        frame.add(back);
+
+        const numShelves = 4;
+        const shelfSpacing = (height - thickness * 2) / numShelves;
+        const shelfGeo = new THREE.BoxGeometry(width - thickness * 2, thickness, depth - thickness);
+
+        for (let i = 1; i < numShelves; i++) {
+            const shelf = new THREE.Mesh(shelfGeo, woodMat);
+            const y = thickness / 2 + i * shelfSpacing;
+            shelf.position.set(0, y, 0);
+            frame.add(shelf);
+            this.fillShelf(frame, y + thickness / 2, width - thickness * 2, depth - thickness);
+        }
+        this.fillShelf(frame, thickness / 2 + thickness / 2, width - thickness * 2, depth - thickness);
+
+        this.doorGroup.add(frame);
+
+        // Interaction Hitbox
+        const hitBoxGeo = new THREE.BoxGeometry(width, height, depth + 0.1);
+        const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+        this.interactableMesh.position.set(0, height / 2, 0);
+        this.interactableMesh.userData = { type: 'secret-bookshelf-door', parentObj: this };
+        this.doorGroup.add(this.interactableMesh);
+    }
+
+    fillShelf(target, yPos, shelfWidth, shelfDepth) {
+        let currentX = -shelfWidth / 2 + 0.1;
+        const maxX = shelfWidth / 2 - 0.1;
+        while (currentX < maxX) {
+            const bookWidth = 0.05 + Math.random() * 0.1;
+            const bookHeight = 0.4 + Math.random() * 0.3;
+            const bookDepth = shelfDepth * (0.8 + Math.random() * 0.15);
+            if (currentX + bookWidth > maxX) break;
+            const bookMat = new THREE.MeshStandardMaterial({
+                color: Math.random() * 0xffffff,
+                roughness: 0.4
+            });
+            const bookGeo = new THREE.BoxGeometry(bookWidth, bookHeight, bookDepth);
+            const book = new THREE.Mesh(bookGeo, bookMat);
+            const zOffset = (Math.random() - 0.5) * 0.1;
+            book.position.set(currentX + bookWidth / 2, yPos + bookHeight / 2, zOffset);
+            if (Math.random() < 0.1) book.rotation.z = (Math.random() - 0.5) * 0.2;
+            target.add(book);
+            currentX += bookWidth + 0.005;
+        }
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    toggle() {
+        this.isOpen = !this.isOpen;
+        this.targetRotation = this.isOpen ? Math.PI / 2 : 0;
+        return this.isOpen;
+    }
+
+    update(delta) {
+        // Smooth transition
+        const speed = 2.0;
+        if (this.currentRotation !== this.targetRotation) {
+            const dir = Math.sign(this.targetRotation - this.currentRotation);
+            this.currentRotation += dir * speed * delta;
+
+            if (dir > 0 && this.currentRotation > this.targetRotation) this.currentRotation = this.targetRotation;
+            if (dir < 0 && this.currentRotation < this.targetRotation) this.currentRotation = this.targetRotation;
+
+            this.pivot.rotation.y = this.currentRotation;
+        }
+    }
+}
+
 export class HorseSkeleton {
     constructor() {
         this.mesh = new THREE.Group();

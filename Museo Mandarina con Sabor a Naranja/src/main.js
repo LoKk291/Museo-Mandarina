@@ -208,6 +208,7 @@ document.addEventListener('mousedown', (e) => {
 });
 
 let isModalOpen = false;
+let hasGoldenKey = false; // New state for secret door
 let activeVinylFrame = null; // Track playing vinyl
 let lastHoveredSparrow = null;
 
@@ -262,6 +263,9 @@ function checkInteraction() {
             interactionMsg.style.display = 'block';
         } else if (hitObject.userData.type === 'golden-key') {
             interactionMsg.textContent = "Click para recoger Llave Dorada";
+            interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'secret-bookshelf-door') {
+            interactionMsg.textContent = hasGoldenKey ? "Click para Abrir Pasaje Secreto" : "Una repisa de libros muy firme...";
             interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
@@ -391,8 +395,19 @@ document.addEventListener('click', () => {
                 const idx = world.interactables.indexOf(hitObject);
                 if (idx > -1) world.interactables.splice(idx, 1);
 
+                // Track state
+                hasGoldenKey = true;
+
                 // Optional: Toast message
                 showLetter("Sistema", "INFO", "Has recogido la Llave Dorada.", true);
+            } else if (hitObject.userData.type === 'secret-bookshelf-door') {
+                if (hasGoldenKey) {
+                    soundManager.play('door_open'); // reuse door sound for now
+                    hitObject.userData.parentObj.toggle();
+                } else {
+                    soundManager.play('click');
+                    showLetter("Sistema", "PISTA", "Esta estantería parece diferente a las demás... pero está bloqueada.", true);
+                }
             } else if (hitObject.userData.vinyl) {
                 // soundManager.play('click'); // Optional
 
