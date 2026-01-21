@@ -1142,6 +1142,18 @@ export class World {
             this.toggleEntranceDoorCollision(isOpen);
         };
 
+        // Breakable Vases at Entrance (Inside)
+        const vaseLeft = new BreakableVase('orchid');
+        vaseLeft.setPosition(-2.5, 0, 9);
+        this.scene.add(vaseLeft.mesh);
+        this.interactables.push(vaseLeft.interactableMesh);
+
+        const vaseRight = new BreakableVase('orchid');
+        vaseRight.setPosition(2.5, 0, 9);
+        vaseRight.setRotation(Math.PI / 6); // Slight rotation for variety
+        this.scene.add(vaseRight.mesh);
+        this.interactables.push(vaseRight.interactableMesh);
+
         // Ventanas Sur
         centralRoom.addCenteredWindow('South_L', 2, 2.5, 2);
         centralRoom.addCenteredWindow('South_R', 2, 2.5, 2);

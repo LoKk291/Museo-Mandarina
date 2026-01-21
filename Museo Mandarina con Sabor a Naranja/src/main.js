@@ -398,6 +398,9 @@ function checkInteraction() {
         } else if (hitObject.userData.type === 'mad-hatter-hat') {
             interactionMsg.textContent = "Click para ver Sombrero";
             interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'breakable-vase') {
+            interactionMsg.textContent = "Click para romper jarrón";
+            interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
             interactionMsg.style.display = 'block';
@@ -680,6 +683,15 @@ document.addEventListener('click', () => {
                 // OR add specific listener here:
                 // Actually, let's update the global ESC listener to handle map-modal too if needed, 
                 // or just rely on manual close for now.
+            } else if (hitObject.userData.type === 'breakable-vase') {
+                soundManager.play('vase_break');
+                const vase = hitObject.userData.parentObj;
+                if (vase && vase.break) {
+                    vase.break();
+                }
+                // Remove from interactables
+                const idx = world.interactables.indexOf(hitObject);
+                if (idx > -1) world.interactables.splice(idx, 1);
             } else if (hitObject.userData.type === 'pdf') {
                 soundManager.play('click');
                 openPdfViewer(hitObject.userData.file);
