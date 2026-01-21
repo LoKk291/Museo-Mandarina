@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -260,39 +260,33 @@ export class World {
     }
 
     createStreetLights() {
-        // Place lights along the path leading South (+Z) from the entrance (0,0,0 approx, entrance at +Z=~7?)
-        // Entrance is at South side of Reception Room (Room L1).
-        // Reception is at (0,0,-45). Size 20x15. South wall at -45 + 15/2 = -37.5?
-        // Wait, Reception is "Main Room"? No. 
-        // Let's check Main creation in World... Room L1 at (0, -45) size 20,15. 
-        // South Wall Z = -45 + 7.5 = -37.5.
-        // It connects to Courtyard? (0, -10).
-        // Courtyard South Wall is at -10 + 10 = 0.
-        // Entrance to Museum is roughly at Z=0?
-        // User starts at (0, 1.7, 7). Facing North (-Z).
-        // So Z > 0 is "Outside" leading up to door.
-        // Let's place lights from Z=5 to Z=40 along X=+/- 4.
+        // PERIMETER LIGHTS (Outside the Museum Walls)
+        // Museum Bounds approx: X[-35, 35], Z[-60, 15]
 
-        const zStart = 5;
-        const zEnd = 40;
-        const zStep = 10;
-        const xOffset = 4;
+        const corners = [
+            { x: -40, z: 20, rot: -Math.PI / 4 }, // Front Left (South-West)
+            { x: 40, z: 20, rot: Math.PI / 4 },   // Front Right (South-East)
+            { x: 40, z: -70, rot: 3 * Math.PI / 4 }, // Back Right (North-East) - Behind secret room
+            { x: -40, z: -70, rot: -3 * Math.PI / 4 } // Back Left (North-West)
+        ];
 
-        for (let z = zStart; z <= zEnd; z += zStep) {
-            // Left Light
-            const l1 = new StreetLight();
-            l1.setPosition(-xOffset, 0, z);
-            l1.setRotation(Math.PI / 2); // Point inward
-            this.scene.add(l1.mesh);
-            this.streetLights.push(l1);
+        // Adding mid-points for better lighting
+        const midPoints = [
+            // { x: 0, z: 20, rot: 0 }, // Front Center REMOVED (User Request)
+            { x: 0, z: -70, rot: Math.PI }, // Back Center
+            { x: -40, z: -25, rot: -Math.PI / 2 }, // Left Center
+            { x: 40, z: -25, rot: Math.PI / 2 } // Right Center
+        ];
 
-            // Right Light
-            const l2 = new StreetLight();
-            l2.setPosition(xOffset, 0, z);
-            l2.setRotation(-Math.PI / 2); // Point inward
-            this.scene.add(l2.mesh);
-            this.streetLights.push(l2);
-        }
+        const placements = [...corners, ...midPoints];
+
+        placements.forEach(p => {
+            const l = new StreetLight();
+            l.setPosition(p.x, 0, p.z);
+            l.setRotation(p.rot);
+            this.scene.add(l.mesh);
+            this.streetLights.push(l);
+        });
     }
 
     updateStreetLights(isNight) {
@@ -1783,6 +1777,15 @@ export class World {
 
         this.isolatedRoom.group.visible = false;
         this.addRoom(this.isolatedRoom, 'ISOLATED_ROOM');
+
+        // Add Secret Rug to Isolated Room
+        const secretRug = new SecretRug();
+        secretRug.setPosition(0, 0, 0); // Local to room group
+        // Note: Room group is at (200, 0, 200). If I add to room group, pos needs to be relative.
+        // Room class creates group at (x,0,z).
+        // So I should add to this.isolatedRoom.group.
+        // Rug position should be 0,0,0 (center of room).
+        this.isolatedRoom.group.add(secretRug.mesh);
 
         // Minecraft Portal in Isolated Room
         this.portal2 = new MinecraftPortal();

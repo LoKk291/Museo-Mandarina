@@ -1231,7 +1231,8 @@ function animate() {
 
     // --- AUTOMATIC EXTERIOR LIGHTS ---
     const time = sky.getGameTime();
-    const isNight = (time.continuousHour >= 19.5 || time.continuousHour < 6.5);
+    // User Request: ON at 18:00, OFF at 06:00
+    const isNight = (time.continuousHour >= 18.0 || time.continuousHour < 6.0);
     world.updateStreetLights(isNight);
 
     // --- FIX: Progressive Interior Lighting ---

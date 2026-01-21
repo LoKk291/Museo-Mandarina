@@ -4712,7 +4712,7 @@ export class StreetLight {
     turnOn() {
         if (!this.isOn) {
             this.isOn = true;
-            this.light.intensity = 5.0; // Bright street light
+            this.light.intensity = 15.0; // Boost to very bright
             this.bulbMat.color.setHex(0xffaa55);
         }
     }
@@ -4723,5 +4723,43 @@ export class StreetLight {
             this.light.intensity = 0;
             this.bulbMat.color.setHex(0x333333);
         }
+    }
+}
+
+export class SecretRug {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Dimensions
+        const width = 6;
+        const depth = 6;
+
+        const textureLoader = new THREE.TextureLoader();
+        const texture = textureLoader.load('textures/secret_rug.png');
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(3, 3); // Repeat pattern for detail
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        const geometry = new THREE.PlaneGeometry(width, depth);
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            side: THREE.FrontSide,
+            roughness: 1.0,
+            metalness: 0.0
+        });
+
+        const rug = new THREE.Mesh(geometry, material);
+        rug.rotation.x = -Math.PI / 2;
+        rug.position.y = 0.02; // Just above floor
+        rug.receiveShadow = true;
+        this.mesh.add(rug);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
     }
 }
