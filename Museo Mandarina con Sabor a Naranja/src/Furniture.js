@@ -5105,7 +5105,7 @@ export class Foxy {
 
         // AI Chase Properties
         this.isChasing = false;
-        this.speed = 5.0; // Units per second (faster than player run speed)
+        this.speed = 9.6; // Units per second (matches player speed)
         this.targetPosition = new THREE.Vector3();
 
         this.build();
