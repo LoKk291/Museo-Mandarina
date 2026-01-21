@@ -1569,45 +1569,39 @@ function animate() {
     let delta = clock.getDelta();
     delta = Math.min(delta, 0.05); // Max 0.05s (20 FPS minimum physics step)
 
-    // Update sky
-    sky.update(delta);
+    // --- UPDATE LOOP (Paused if Menu/Modal Open) ---
+    if (player.isLocked) {
+        // Update sky
+        sky.update(delta);
 
-    // Update Clock
-    if (world.clock) {
-        const time = sky.getGameTime();
-        world.clock.setTime(time.hours, time.minutes);
-    }
-
-    // Check if player is in secret room (isolated room at 200, 200)
-    if (!hasVisitedSecretRoom) {
-        const playerPos = player.camera.position;
-        const distToSecretRoom = Math.sqrt(
-            Math.pow(playerPos.x - 200, 2) +
-            Math.pow(playerPos.z - 200, 2)
-        );
-        if (distToSecretRoom < 10) { // Within 10 units of room center
-            hasVisitedSecretRoom = true;
-            console.log("Secret room discovered! CHEATS command unlocked.");
+        // Update Clock
+        if (world.clock) {
+            const time = sky.getGameTime();
+            world.clock.setTime(time.hours, time.minutes);
         }
-    }
 
-    // World Update (Pass delta and GameTime)
-    world.update(delta, sky.time, (isModalOpen ? null : camera), player); // Disable head bob if modal open by not passing camera? No, world.update handles headbob.
+        // Check if player is in secret room (isolated room at 200, 200)
+        if (!hasVisitedSecretRoom) {
+            const playerPos = player.camera.position;
+            const distToSecretRoom = Math.sqrt(
+                Math.pow(playerPos.x - 200, 2) +
+                Math.pow(playerPos.z - 200, 2)
+            );
+            if (distToSecretRoom < 10) { // Within 10 units of room center
+                hasVisitedSecretRoom = true;
+                console.log("Secret room discovered! CHEATS command unlocked.");
+            }
+        }
 
-    // --- AUTOMATIC EXTERIOR LIGHTS ---
-    const time = sky.getGameTime();
-    // User Request: ON at 18:00, OFF at 06:00
-    const isNight = (time.continuousHour >= 18.0 || time.continuousHour < 6.0);
-    world.updateStreetLights(isNight);
+        // World Update (Pass delta and GameTime)
+        world.update(delta, sky.time, camera, player);
 
-    // --- FIX: Progressive Interior Lighting ---
-    // REMOVED: Interior/Exterior blending logic.
-    // Reason: User requested total independence.
-    // Sky.js controls Global Ambient/Sun (Time based).
-    // World.js controls PointLights (Source based).
-    // No "Position Based" magic.
+        // --- AUTOMATIC EXTERIOR LIGHTS ---
+        const time = sky.getGameTime();
+        // User Request: ON at 18:00, OFF at 06:00
+        const isNight = (time.continuousHour >= 18.0 || time.continuousHour < 6.0);
+        world.updateStreetLights(isNight);
 
-    if (!isModalOpen) {
         player.update(delta);
         checkInteraction(); // Actualizar UI de "Click para ver"
 
@@ -1618,76 +1612,75 @@ function animate() {
             const distEl = document.getElementById('dist-center');
             if (distEl) distEl.textContent = dist.toFixed(2);
         }
-    }
+        // --- PORTAL TELEPORTATION LOGIC ---
+        if (world.portal1 && world.portal2 && !isModalOpen) {
+            // Use camera position but ignore Y for simple proximity
+            const p1 = world.portal1.mesh.position;
+            const p2 = world.portal2.mesh.position;
+            const playerPos = player.camera.position;
 
-    renderer.render(scene, camera);
+            // XZ Distance only (more robust)
+            const dx1 = playerPos.x - p1.x;
+            const dz1 = playerPos.z - p1.z;
+            const distSq1 = dx1 * dx1 + dz1 * dz1;
 
-    // --- PORTAL TELEPORTATION LOGIC ---
-    if (world.portal1 && world.portal2 && !isModalOpen) {
-        // Use camera position but ignore Y for simple proximity
-        const p1 = world.portal1.mesh.position;
-        const p2 = world.portal2.mesh.position;
-        const playerPos = player.camera.position;
+            const dx2 = playerPos.x - p2.x;
+            const dz2 = playerPos.z - p2.z;
+            const distSq2 = dx2 * dx2 + dz2 * dz2;
 
-        // XZ Distance only (more robust)
-        const dx1 = playerPos.x - p1.x;
-        const dz1 = playerPos.z - p1.z;
-        const distSq1 = dx1 * dx1 + dz1 * dz1;
+            const thresholdSq = 1.4 * 1.4; // Slightly larger threshold
 
-        const dx2 = playerPos.x - p2.x;
-        const dz2 = playerPos.z - p2.z;
-        const distSq2 = dx2 * dx2 + dz2 * dz2;
+            // Use a cooldown or state to prevent infinite sound loop during teleport
+            if (!isTeleporting) {
+                if (distSq1 < thresholdSq) {
+                    isTeleporting = true;
+                    soundManager.play('teleport');
+                    console.log("Teleporting to Hidden Room...");
 
-        const thresholdSq = 1.4 * 1.4; // Slightly larger threshold
+                    // Add blur effect
+                    const gameContainer = document.getElementById('game-container');
+                    if (gameContainer) gameContainer.classList.add('teleport-blur');
 
-        // Use a cooldown or state to prevent infinite sound loop during teleport
-        if (!isTeleporting) {
-            if (distSq1 < thresholdSq) {
-                isTeleporting = true;
-                soundManager.play('teleport');
-                console.log("Teleporting to Hidden Room...");
+                    // Small delay to let sound start before flash/move
+                    setTimeout(() => {
+                        // Teleport to Center of Secret Room (200, 200) - Portal is at Z ~ 205
+                        player.camera.position.set(200, player.height, 200);
+                        showLetter("Sistema", "INFO", "Teletransportado a la Habitación Secreta...", true);
 
-                // Add blur effect
-                const gameContainer = document.getElementById('game-container');
-                if (gameContainer) gameContainer.classList.add('teleport-blur');
+                        // Remove blur effect
+                        if (gameContainer) gameContainer.classList.remove('teleport-blur');
 
-                // Small delay to let sound start before flash/move
-                setTimeout(() => {
-                    // Teleport to Center of Secret Room (200, 200) - Portal is at Z ~ 205
-                    player.camera.position.set(200, player.height, 200);
-                    showLetter("Sistema", "INFO", "Teletransportado a la Habitación Secreta...", true);
+                        // Cooldown to prevent immediate bounce back
+                        setTimeout(() => { isTeleporting = false; }, 2000);
+                    }, 300);
 
-                    // Remove blur effect
-                    if (gameContainer) gameContainer.classList.remove('teleport-blur');
+                } else if (distSq2 < thresholdSq) {
+                    isTeleporting = true;
+                    soundManager.play('teleport');
+                    console.log("Teleporting back to Museum...");
 
-                    // Cooldown to prevent immediate bounce back
-                    setTimeout(() => { isTeleporting = false; }, 2000);
-                }, 300);
+                    // Add blur effect
+                    const gameContainer = document.getElementById('game-container');
+                    if (gameContainer) gameContainer.classList.add('teleport-blur');
 
-            } else if (distSq2 < thresholdSq) {
-                isTeleporting = true;
-                soundManager.play('teleport');
-                console.log("Teleporting back to Museum...");
+                    setTimeout(() => {
+                        // Portal 1 is at (-25, 0, -67.4). Corridor starts at -62.5.
+                        // Teleport closer to the entrance of the corridor (-58) to be safe.
+                        player.camera.position.set(-25, player.height, -58);
+                        showLetter("Sistema", "INFO", "Regresando al Museo...", true);
 
-                // Add blur effect
-                const gameContainer = document.getElementById('game-container');
-                if (gameContainer) gameContainer.classList.add('teleport-blur');
+                        // Remove blur effect
+                        if (gameContainer) gameContainer.classList.remove('teleport-blur');
 
-                setTimeout(() => {
-                    // Portal 1 is at (-25, 0, -67.4). Corridor starts at -62.5.
-                    // Teleport closer to the entrance of the corridor (-58) to be safe.
-                    player.camera.position.set(-25, player.height, -58);
-                    showLetter("Sistema", "INFO", "Regresando al Museo...", true);
-
-                    // Remove blur effect
-                    if (gameContainer) gameContainer.classList.remove('teleport-blur');
-
-                    // Cooldown to prevent immediate bounce back
-                    setTimeout(() => { isTeleporting = false; }, 2000);
-                }, 300);
+                        // Cooldown to prevent immediate bounce back
+                        setTimeout(() => { isTeleporting = false; }, 2000);
+                    }, 300);
+                }
             }
         }
     }
+
+    renderer.render(scene, camera);
 }
 
 // Resize
