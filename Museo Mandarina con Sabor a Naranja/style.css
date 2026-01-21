@@ -9,6 +9,10 @@ body {
     color: white;
 }
 
+.hidden {
+    display: none !important;
+}
+
 #game-container.teleport-blur {
     filter: blur(15px);
     transition: filter 0.3s ease;
