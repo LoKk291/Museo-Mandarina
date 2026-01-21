@@ -4630,3 +4630,98 @@ export class CentralRug {
         this.mesh.rotation.y = y;
     }
 }
+
+export class StreetLight {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.light = null;
+        this.bulbMat = null;
+        this.isOn = false;
+        this.build();
+    }
+
+    build() {
+        // Materials
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6, metalness: 0.8 });
+        const glassMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.1,
+            metalness: 0.1,
+            transparent: true,
+            opacity: 0.3
+        });
+        this.bulbMat = new THREE.MeshBasicMaterial({ color: 0x333333 }); // Off state
+
+        // 1. Pole (Tall)
+        const poleGeo = new THREE.CylinderGeometry(0.1, 0.15, 6, 8);
+        const pole = new THREE.Mesh(poleGeo, metalMat);
+        pole.position.y = 3;
+        pole.castShadow = true;
+        this.mesh.add(pole);
+
+        // 2. Arm (Top Horizontal)
+        const armGeo = new THREE.BoxGeometry(0.1, 0.1, 1.5);
+        const arm = new THREE.Mesh(armGeo, metalMat);
+        arm.position.set(0.5, 5.8, 0); // Stick out to side
+        this.mesh.add(arm);
+
+        // 3. Lamp Head
+        const headGroup = new THREE.Group();
+        headGroup.position.set(1.1, 5.6, 0); // End of arm, hanging down
+        this.mesh.add(headGroup);
+
+        // Cap
+        const capGeo = new THREE.CylinderGeometry(0.3, 0.1, 0.1, 6);
+        const cap = new THREE.Mesh(capGeo, metalMat);
+        headGroup.add(cap);
+
+        // Glass Enclosure
+        const glassGeo = new THREE.CylinderGeometry(0.2, 0.3, 0.5, 6, 1, true);
+        const glass = new THREE.Mesh(glassGeo, glassMat);
+        glass.position.y = -0.3;
+        headGroup.add(glass);
+
+        // Bulb
+        const bulbGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const bulb = new THREE.Mesh(bulbGeo, this.bulbMat);
+        bulb.position.y = -0.2;
+        headGroup.add(bulb);
+
+        // Light Source (Point or Spot)
+        // Point is easier for omni, Spot for cone. Streetlights usually cone down.
+        // Let's use SpotLight for nice shadow/pool on ground.
+        this.light = new THREE.SpotLight(0xffaa55, 0); // Start Off
+        this.light.position.set(0, 0, 0); // Inside head
+        this.light.target.position.set(0, -10, 0); // Down
+        this.light.angle = Math.PI / 3;
+        this.light.penumbra = 0.5;
+        this.light.castShadow = true;
+        this.light.shadow.bias = -0.0001;
+        headGroup.add(this.light);
+        headGroup.add(this.light.target);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+
+    turnOn() {
+        if (!this.isOn) {
+            this.isOn = true;
+            this.light.intensity = 5.0; // Bright street light
+            this.bulbMat.color.setHex(0xffaa55);
+        }
+    }
+
+    turnOff() {
+        if (this.isOn) {
+            this.isOn = false;
+            this.light.intensity = 0;
+            this.bulbMat.color.setHex(0x333333);
+        }
+    }
+}

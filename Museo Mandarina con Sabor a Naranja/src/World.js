@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -251,8 +251,58 @@ export class World {
         // --- FLOWERS (Can be inside boundary area) ---
         this.createFlowers(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ);
 
+        // --- STREET LIGHTS ---
+        this.streetLights = []; // Initialize array
+        this.createStreetLights();
+
         // --- WATERFALL AND LAKE ---
         this.createWaterFeatures();
+    }
+
+    createStreetLights() {
+        // Place lights along the path leading South (+Z) from the entrance (0,0,0 approx, entrance at +Z=~7?)
+        // Entrance is at South side of Reception Room (Room L1).
+        // Reception is at (0,0,-45). Size 20x15. South wall at -45 + 15/2 = -37.5?
+        // Wait, Reception is "Main Room"? No. 
+        // Let's check Main creation in World... Room L1 at (0, -45) size 20,15. 
+        // South Wall Z = -45 + 7.5 = -37.5.
+        // It connects to Courtyard? (0, -10).
+        // Courtyard South Wall is at -10 + 10 = 0.
+        // Entrance to Museum is roughly at Z=0?
+        // User starts at (0, 1.7, 7). Facing North (-Z).
+        // So Z > 0 is "Outside" leading up to door.
+        // Let's place lights from Z=5 to Z=40 along X=+/- 4.
+
+        const zStart = 5;
+        const zEnd = 40;
+        const zStep = 10;
+        const xOffset = 4;
+
+        for (let z = zStart; z <= zEnd; z += zStep) {
+            // Left Light
+            const l1 = new StreetLight();
+            l1.setPosition(-xOffset, 0, z);
+            l1.setRotation(Math.PI / 2); // Point inward
+            this.scene.add(l1.mesh);
+            this.streetLights.push(l1);
+
+            // Right Light
+            const l2 = new StreetLight();
+            l2.setPosition(xOffset, 0, z);
+            l2.setRotation(-Math.PI / 2); // Point inward
+            this.scene.add(l2.mesh);
+            this.streetLights.push(l2);
+        }
+    }
+
+    updateStreetLights(isNight) {
+        this.streetLights.forEach(light => {
+            if (isNight) {
+                light.turnOn();
+            } else {
+                light.turnOff();
+            }
+        });
     }
 
     createGrassTexture() {
