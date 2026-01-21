@@ -1118,6 +1118,18 @@ export class World {
         // Placeholder Grande 14 (Pared Oeste, Lado Sur)
         centralRoom.addPaintingToWall('West', 3, 3, 'cuadros/14.jpg', 'P-14', 'Cuadro 14', 'Grande', -5, 0);
 
+        // Add Letter to Painting 14
+        if (centralRoom.paintings.length > 0) {
+            const p14 = centralRoom.paintings[centralRoom.paintings.length - 1];
+            p14.mesh.userData.painting.letterData = {
+                title: "La Noche Estrellada",
+                place: "Tus Ojos",
+                date: "19/12/2025",
+                body: "En vos existe la plenitud, en vos existe el universo, tus ojos como soles iluminan mis días, y tu sonrisa como la luna calma el ardor de mi día. Ay amor mío, no ves que la noche es una combinación de las estrellas y la luna? Como no he de estar cómodo en ella?",
+                signature: "Mandarino"
+            };
+        }
+
         // Puerta Principal (Sur)
         centralRoom.addDoor('South', 4, 3.5);
         this.mainDoor = new DoubleDoor(4, 3.5);
