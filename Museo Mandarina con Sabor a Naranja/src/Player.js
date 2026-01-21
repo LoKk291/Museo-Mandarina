@@ -10,7 +10,7 @@ export class Player {
         this.world = world; // Reference to world for height-map
 
         // Configuración
-        this.speed = 10.0;
+        this.speed = 8.0; // Reduced by 20% (was 10.0)
         this.height = 1.7;
         this.radius = 0.5; // Radio del cuerpo del jugador
 

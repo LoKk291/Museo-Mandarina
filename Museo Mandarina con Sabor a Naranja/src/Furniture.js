@@ -4812,3 +4812,419 @@ export class FlashlightItem {
         this.interactableMesh = hitbox; // Expose for raycasting
     }
 }
+
+export class Mangle {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Materials
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+        const pinkMat = new THREE.MeshStandardMaterial({ color: 0xff66cc, roughness: 0.5 });
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.4 });
+        const darkMetalMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.6 });
+        const yellowEyeMat = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0x333300 });
+        const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const toothMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+
+        // --- BODY (Mess of Wires/Endo) ---
+        // Core/Spine
+        const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8), darkMetalMat);
+        spine.position.y = 0.8;
+        spine.rotation.z = 0.2;
+        this.mesh.add(spine);
+
+        // Hips
+        const hips = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.15, 0.2), darkMetalMat);
+        hips.position.y = 0.4;
+        this.mesh.add(hips);
+
+        // Legs (3 legs - Mangle has 3 feet/standing points in some depictions)
+        const createLeg = (x, rotZ) => {
+            const legGroup = new THREE.Group();
+            legGroup.position.set(x, 0.4, 0);
+            legGroup.rotation.z = rotZ;
+            this.mesh.add(legGroup);
+
+            // Thigh
+            const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5), metalMat);
+            thigh.position.y = -0.25;
+            legGroup.add(thigh);
+
+            // Shin
+            const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), metalMat);
+            shin.position.set(0, -0.6, 0); // Approx knee
+            thigh.add(shin);
+
+            // Foot
+            const foot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.15), pinkMat); // Painted toes
+            foot.position.set(0, -0.25, 0.05);
+            shin.add(foot);
+        };
+
+        createLeg(-0.2, 0.3); // Left
+        createLeg(0.2, -0.3); // Right
+        createLeg(0, 0); // Center back (Tail/Third leg)
+
+        // --- ARMS (Messy) ---
+        // Right Arm (Head 2 location?)
+        const shoulderR = new THREE.Mesh(new THREE.SphereGeometry(0.1), darkMetalMat);
+        shoulderR.position.set(0.2, 1.1, 0);
+        this.mesh.add(shoulderR);
+
+        const armR1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), metalMat);
+        armR1.position.y = -0.2;
+        armR1.rotation.z = -1.0;
+        shoulderR.add(armR1);
+
+        // Forearm R (Holds Endo Head)
+        const armR2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), metalMat);
+        armR2.position.set(0, -0.2, 0);
+        armR1.add(armR2);
+
+        // Endoskeleton Head (Head 2)
+        const endoHeadGroup = new THREE.Group();
+        endoHeadGroup.position.set(0, -0.3, 0);
+        armR2.add(endoHeadGroup);
+
+        const endoSkull = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), metalMat);
+        endoHeadGroup.add(endoSkull);
+
+        // Endo Eye (One)
+        const endoEye = new THREE.Mesh(new THREE.SphereGeometry(0.04), yellowEyeMat);
+        endoEye.position.set(0.05, 0, 0.1);
+        endoHeadGroup.add(endoEye);
+        const endoPupil = new THREE.Mesh(new THREE.SphereGeometry(0.015), blackMat);
+        endoPupil.position.z = 0.04;
+        endoEye.add(endoPupil);
+
+        // Endo Jaw
+        const endoJaw = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.05, 0.18), metalMat);
+        endoJaw.position.set(0, -0.15, 0.05);
+        endoJaw.rotation.x = 0.3;
+        endoHeadGroup.add(endoJaw);
+
+
+        // Left Arm (Normalish hand)
+        const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.1), darkMetalMat);
+        shoulderL.position.set(-0.2, 1.1, 0);
+        this.mesh.add(shoulderL);
+
+        const armL1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), metalMat);
+        armL1.position.y = -0.2;
+        armL1.rotation.z = 0.5;
+        shoulderL.add(armL1);
+
+        const armL2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), metalMat);
+        armL2.position.set(0, -0.2, 0);
+        armL1.add(armL2);
+
+        const handL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.05), pinkMat); // Painted Hand
+        handL.position.set(0, -0.25, 0);
+        armL2.add(handL);
+
+        // --- MAIN HEAD ---
+        // Neck (Long)
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.3), darkMetalMat);
+        neck.position.set(0, 1.2, 0.1);
+        neck.rotation.x = 0.2;
+        this.mesh.add(neck);
+
+        const headGroup = new THREE.Group();
+        headGroup.position.set(0, 0.2, 0);
+        neck.add(headGroup);
+
+        // White Skull
+        const skull = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35, 0.35), whiteMat);
+        headGroup.add(skull);
+
+        // Pink Snout
+        const snout = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 0.2), pinkMat);
+        snout.position.set(0, -0.1, 0.2);
+        headGroup.add(snout);
+
+        // Nose
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.035), blackMat);
+        nose.position.set(0, 0.05, 0.11);
+        snout.add(nose);
+
+        // Cheeks (Red/Pink circles)
+        const cheekGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02);
+        const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red cheeks
+        const cheekL = new THREE.Mesh(cheekGeo, cheekMat);
+        cheekL.position.set(-0.15, -0.05, 0.2);
+        cheekL.rotation.x = Math.PI / 2;
+        headGroup.add(cheekL);
+
+        const cheekR = new THREE.Mesh(cheekGeo, cheekMat);
+        cheekR.position.set(0.15, -0.05, 0.2);
+        cheekR.rotation.x = Math.PI / 2;
+        headGroup.add(cheekR);
+
+        // Jaw (White)
+        const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.05, 0.25), whiteMat);
+        jaw.position.set(0, -0.25, 0.15);
+        jaw.rotation.x = 0.2;
+        headGroup.add(jaw);
+
+        // Teeth
+        for (let i = -2; i <= 2; i++) {
+            const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.015, 0.05, 8), toothMat);
+            tooth.position.set(i * 0.04, 0.05, 0.08);
+            jaw.add(tooth);
+        }
+
+        // Ears
+        const earL = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.25, 4), whiteMat);
+        earL.position.set(-0.2, 0.3, 0);
+        earL.rotation.z = 0.3;
+        headGroup.add(earL);
+        // Pink Inner Ear
+        const innerEarL = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.15, 4), pinkMat);
+        innerEarL.position.z = 0.04;
+        earL.add(innerEarL);
+
+        const earR = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.25, 4), whiteMat);
+        earR.position.set(0.2, 0.3, 0);
+        earR.rotation.z = -0.3;
+        headGroup.add(earR);
+        // Pink Inner Ear
+        const innerEarR = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.15, 4), pinkMat);
+        innerEarR.position.z = 0.04;
+        earR.add(innerEarR);
+
+        // Eyes
+        // Left Eye (Yellow)
+        const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.05), yellowEyeMat);
+        eyeL.position.set(-0.09, 0.05, 0.18);
+        headGroup.add(eyeL);
+        const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.02), blackMat);
+        pupilL.position.z = 0.045;
+        eyeL.add(pupilL);
+
+        // Right Eye (Missing - Black Socket)
+        const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.045), blackMat);
+        eyeR.position.set(0.09, 0.05, 0.18);
+        headGroup.add(eyeR);
+
+        // Shadows
+        this.mesh.castShadow = true;
+        this.mesh.traverse(c => {
+            if (c.isMesh) {
+                c.castShadow = true;
+                c.receiveShadow = true;
+            }
+        });
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}
+export class Foxy {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Materials
+        const redFurMat = new THREE.MeshStandardMaterial({ color: 0x800000, roughness: 0.6 }); // Dark Red
+        const lightRedMat = new THREE.MeshStandardMaterial({ color: 0xcc4444, roughness: 0.6 }); // Snout/Belly
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.4 }); // Endoskeleton
+        const pantsMat = new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.9 }); // Brown shorts
+        const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Eye patch, nose
+        const yellowEyeMat = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0x333300 });
+        const toothMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+
+        // --- LOWER BODY ---
+        const hips = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.4), pantsMat);
+        hips.position.y = 0.9;
+        this.mesh.add(hips);
+
+        // Legs (Endoskeleton lower, Thighs red?? No, reference shows ripped pants on thighs, metal shins)
+        // Thighs
+        const thighL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.6), pantsMat);
+        thighL.position.set(-0.2, -0.4, 0);
+        hips.add(thighL);
+
+        const thighR = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.6), pantsMat);
+        thighR.position.set(0.2, -0.4, 0);
+        hips.add(thighR);
+
+        // Shins (Metal)
+        const shinL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.7), metalMat);
+        shinL.position.set(0, -0.65, 0);
+        thighL.add(shinL);
+
+        const shinR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.7), metalMat);
+        shinR.position.set(0, -0.65, 0);
+        thighR.add(shinR);
+
+        // Feet (Metal claws)
+        const footGeo = new THREE.BoxGeometry(0.15, 0.05, 0.3);
+        const footL = new THREE.Mesh(footGeo, metalMat);
+        footL.position.set(0, -0.35, 0.05);
+        shinL.add(footL);
+
+        const footR = new THREE.Mesh(footGeo, metalMat);
+        footR.position.set(0, -0.35, 0.05);
+        shinR.add(footR);
+
+        // --- UPPER BODY ---
+        // Torso
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.3, 0.8, 8), redFurMat);
+        torso.position.set(0, 0.6, 0); // Relative to hips
+        hips.add(torso);
+
+        // Damaged Chest (Dark patch)
+        const scar = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.4), new THREE.MeshStandardMaterial({ color: 0x221111 }));
+        scar.position.set(0, 0, 0.36);
+        scar.rotation.y = 0.1;
+        torso.add(scar);
+
+        // --- ARMS ---
+        // Shoulders
+        const shoulderGeo = new THREE.SphereGeometry(0.14);
+        const shoulderL = new THREE.Mesh(shoulderGeo, redFurMat);
+        shoulderL.position.set(-0.45, 0.3, 0);
+        torso.add(shoulderL);
+
+        const shoulderR = new THREE.Mesh(shoulderGeo, redFurMat);
+        shoulderR.position.set(0.45, 0.3, 0);
+        torso.add(shoulderR);
+
+        // Upper Arms
+        const bicepL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.5), redFurMat);
+        bicepL.position.set(0, -0.3, 0);
+        shoulderL.add(bicepL);
+
+        const bicepR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.5), redFurMat);
+        bicepR.position.set(0, -0.3, 0);
+        bicepR.rotation.z = -0.5; // Raised slightly
+        shoulderR.add(bicepR);
+
+        // Forearms
+        const forearmL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.5), redFurMat);
+        forearmL.position.set(0, -0.5, 0);
+        bicepL.add(forearmL);
+
+        const forearmR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.5), redFurMat);
+        forearmR.position.set(0, -0.5, 0);
+        forearmR.rotation.z = -1.5; // Raised UP
+        bicepR.add(forearmR);
+
+        // Left Hand (Robotic)
+        const handL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.05), metalMat);
+        handL.position.set(0, -0.3, 0);
+        forearmL.add(handL);
+
+        // Right Hand (HOOK)
+        const hookBase = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.1), metalMat);
+        hookBase.position.set(0, -0.3, 0);
+        forearmR.add(hookBase);
+
+        const hookCurve = new THREE.TorusGeometry(0.1, 0.02, 8, 16, Math.PI * 1.5);
+        const hook = new THREE.Mesh(hookCurve, new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 1.0 }));
+        hook.position.set(0, -0.15, 0);
+        hook.rotation.z = Math.PI / 2;
+        hookBase.add(hook);
+
+
+        // --- HEAD ---
+        const headGroup = new THREE.Group();
+        headGroup.position.set(0, 0.5, 0);
+        torso.add(headGroup);
+
+        // Main Skull
+        const skull = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.4, 0.4), redFurMat);
+        // Add "cheek tufts" via wider geometry?
+        headGroup.add(skull);
+
+        // Snout
+        const snout = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 0.25), lightRedMat);
+        snout.position.set(0, -0.1, 0.25);
+        headGroup.add(snout);
+
+        // Nose
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.04), blackMat);
+        nose.position.set(0, 0.05, 0.13);
+        snout.add(nose);
+
+        // Jaw (Lower)
+        const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.05, 0.25), lightRedMat);
+        jaw.position.set(0, -0.25, 0.2);
+        jaw.rotation.x = 0.3; // Open mouth
+        headGroup.add(jaw);
+
+        // Teeth (Top)
+        for (let i = -2; i <= 2; i++) {
+            if (i === 0) continue;
+            const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.06, 8), toothMat);
+            tooth.position.set(i * 0.05, -0.08, 0.12);
+            tooth.rotation.x = Math.PI;
+            snout.add(tooth);
+        }
+        // Teeth (Bottom)
+        for (let i = -2; i <= 2; i++) {
+            const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.06, 8), toothMat);
+            tooth.position.set(i * 0.05, 0.05, 0.05);
+            jaw.add(tooth);
+        }
+
+
+        // Ears
+        const earL = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.3, 4), redFurMat);
+        earL.position.set(-0.25, 0.35, 0);
+        earL.rotation.z = 0.2;
+        headGroup.add(earL);
+
+        const earR = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.3, 4), redFurMat);
+        earR.position.set(0.25, 0.35, 0);
+        earR.rotation.z = -0.2;
+        headGroup.add(earR);
+
+        // Eyes
+        // Left Eye (Yellow)
+        const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.06), yellowEyeMat);
+        eyeL.position.set(-0.1, 0.05, 0.2);
+        headGroup.add(eyeL);
+        // Pupil
+        const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.02), blackMat);
+        pupilL.position.set(0, 0, 0.05);
+        eyeL.add(pupilL);
+
+        // Right Eye (PATCH)
+        const patch = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.02), blackMat);
+        patch.position.set(0.1, 0.05, 0.21);
+        patch.rotation.x = Math.PI / 2;
+        headGroup.add(patch);
+
+        // Strap
+        const strap = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.02, 0.42), blackMat);
+        strap.position.set(0, 0.05, 0); // Around head
+        // headGroup.add(strap); // Simple box overlap
+
+        this.mesh.castShadow = true;
+        this.mesh.traverse(c => {
+            if (c.isMesh) {
+                c.castShadow = true;
+                c.receiveShadow = true;
+            }
+        });
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}

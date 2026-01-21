@@ -1203,6 +1203,26 @@ function processCommand(cmd) {
         case 'EXIT':
             pcTerminal.classList.add('hidden');
             break;
+        case 'PARTY TIME':
+        case 'PARTYTIME':
+            termOutput.innerHTML += "<p>ACTIVANDO MODO FIESTA...</p>";
+            termOutput.innerHTML += "<p>ESTABLECIENDO HORA: 00:00...</p>";
+            termOutput.innerHTML += "<p>APAGANDO LUCES...</p>";
+
+            // Set Midnight
+            if (sky) sky.time = sky.cycleDuration * 0.75; // Approx midnight?
+            // Sky cycle: Day 600s, Night 300s. Total 900s.
+            // 0s = 06:00.
+            // 600s = 20:00.
+            // Midnight (24:00) is 20:00 + 4 hours.
+            // Night is 300s for 10 hours (20:00 to 06:00). 30s per hour.
+            // 4 hours * 30s = 120s.
+            // Midnight = 600 + 120 = 720s.
+            if (sky) sky.time = 720;
+
+            // Enable Party Mode
+            if (world) world.enablePartyMode();
+            break;
         case '':
             break;
         default:

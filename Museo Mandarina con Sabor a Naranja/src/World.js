@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -104,6 +104,7 @@ export class World {
             metalness: 0.0
         });
 
+        // --- 3. Mesh ---
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
         ground.position.y = -0.05; // Slightly below floor
@@ -290,13 +291,21 @@ export class World {
     }
 
     updateStreetLights(isNight) {
-        this.streetLights.forEach(light => {
-            if (isNight) {
-                light.turnOn();
-            } else {
-                light.turnOff();
+        if (this.isPartyMode) {
+            // Force OFF in Party Mode
+            if (this.streetLights) {
+                this.streetLights.forEach(light => {
+                    light.turnOn(false);
+                });
             }
-        });
+            return;
+        }
+
+        if (this.streetLights) {
+            this.streetLights.forEach(sl => {
+                sl.turnOn(isNight);
+            });
+        }
 
         // Update Window Lights
         this.rooms.forEach(room => {
@@ -994,6 +1003,7 @@ export class World {
         deskLamp.setRotation(Math.PI - 0.2);
         this.scene.add(deskLamp.mesh);
         this.interactables.push(deskLamp.interactableMesh);
+        this.deskLamp = deskLamp; // Store ref
 
         // Palanca (Lever)
         this.lever = new Lever();
@@ -1393,6 +1403,27 @@ export class World {
         roomL2.addDoor('North', 4, 3.5); // Conecta con L3
 
         // Cuadros L2 (ELIMINADOS)
+
+        // --- FOXY THE PIRATE FOX (CINEMA ROOM) ---
+        // Room Center: -25, -25. Size 15x15.
+        // Corner placement: 
+        // SW Corner: -31.5, -31.5 ??
+        // Let's place him in a corner facing the center.
+        // NE Corner: -18.5, -31.5 ? No, Z grows South (+Z). -25 is center. 
+        // North is -Z (-32.5). South is +Z (-17.5).
+        // West is -X (-32.5). East is +X (-17.5).
+        // Let's put him in NW Corner (-31, -31).
+        const foxy = new Foxy();
+        foxy.setPosition(-31, 0, -31);
+        foxy.setRotation(Math.PI / 4); // Facing SE (Center)
+        this.scene.add(foxy.mesh);
+
+        // --- MANGLE (The Mangle) ---
+        // SE Corner of L2
+        const mangle = new Mangle();
+        mangle.setPosition(-19, 0, -19);
+        mangle.setRotation(-Math.PI * 0.75); // Facing NW (Center)
+        this.scene.add(mangle.mesh);
 
         this.addRoom(roomL2, 'L2');
 
@@ -2006,4 +2037,39 @@ export class World {
                 break;
         }
     }
+
+    enablePartyMode() {
+        console.log("PARTY TIME! Lights out!");
+        this.globalLightState = false;
+        this.isPartyMode = true;
+
+        // 1. Rooms (Ceiling Lights & Panels)
+        this.rooms.forEach(room => {
+            room.toggleLights(false);
+        });
+
+        // 2. Floor Lamps
+        this.floorLamps.forEach(lamp => {
+            if (lamp.setState) lamp.setState(false);
+            else if (lamp.toggle) {
+                // Force off if no explicit set
+                if (lamp.isOn) lamp.toggle();
+            }
+        });
+
+        // 3. Desk Lamp
+        if (this.deskLamp) {
+            if (this.deskLamp.setState) this.deskLamp.setState(false);
+            else if (this.deskLamp.toggle && this.deskLamp.isOn) this.deskLamp.toggle();
+        }
+
+        // 4. Chandelier
+        if (this.chandelier && this.chandelier.toggleLight) {
+            this.chandelier.toggleLight(false);
+        }
+
+        // 5. Street Lights (Handled by updateStreetLights flag)
+        this.updateStreetLights(true); // Force update now, passing true (night) but flag will block it acting as OFF
+    }
 }
+
