@@ -15,6 +15,7 @@ export class Room {
         this.paintings = [];
         this.lights = [];
         this.lightPanels = [];
+        this.windowLights = []; // Lights attached to windows
         this.lightsOn = true; // Default state
 
         this.group = new THREE.Group();
@@ -22,6 +23,13 @@ export class Room {
         this.scene.add(this.group);
 
         this.buildStructure();
+    }
+
+    updateWindowLights(isNight) {
+        const intensity = isNight ? 5.0 : 0.0;
+        this.windowLights.forEach(light => {
+            light.intensity = intensity;
+        });
     }
 
     buildStructure() {
@@ -400,6 +408,22 @@ export class Room {
             glass.position.set(px, winY, pz);
             this.group.add(glass);
 
+            // --- LIGHT LOGIC ---
+            // Determine Direction using wallName or pz relative to room center
+            // Room Center (Local) = 0,0,0
+            // If pz > 0 -> South (Front) -> Light should be at pz + offset
+            // If pz < 0 -> North (Back) -> Light should be at pz - offset
+            const isSouth = (pz > 0);
+            const lightOffset = 0.5; // Just outside the glass
+            const lightZ = isSouth ? pz + lightOffset : pz - lightOffset;
+
+            // Create PointLight
+            const wLight = new THREE.PointLight(0xffaa33, 0.0, 15); // Start OFF (0 intensity), warm color
+            wLight.position.set(px, winY, lightZ);
+            wLight.decay = 2;
+            this.group.add(wLight);
+            this.windowLights.push(wLight);
+
         } else {
             // ALONG Z (East/West Segments)
             // Left (Negative Z ... wait. 'Left' depends on perspective. Let's say MINUS Z)
@@ -423,6 +447,20 @@ export class Room {
             const glass = new THREE.Mesh(glassGeo, glassMat);
             glass.position.set(px, winY, pz);
             this.group.add(glass);
+
+            // --- LIGHT LOGIC ---
+            // Local 0,0,0 is center.
+            // If px > 0 -> East -> Light at px + offset
+            // If px < 0 -> West -> Light at px - offset
+            const isEast = (px > 0);
+            const lightOffset = 0.5;
+            const lightX = isEast ? px + lightOffset : px - lightOffset;
+
+            const wLight = new THREE.PointLight(0xffaa33, 0.0, 15);
+            wLight.position.set(lightX, winY, pz);
+            wLight.decay = 2;
+            this.group.add(wLight);
+            this.windowLights.push(wLight);
         }
     }
 

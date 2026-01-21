@@ -297,6 +297,13 @@ export class World {
                 light.turnOff();
             }
         });
+
+        // Update Window Lights
+        this.rooms.forEach(room => {
+            if (room.updateWindowLights) {
+                room.updateWindowLights(isNight);
+            }
+        });
     }
 
     createGrassTexture() {
