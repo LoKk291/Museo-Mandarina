@@ -94,6 +94,22 @@ export class GoldenKey {
         this.mesh.add(bitGroup);
 
         this.mesh.castShadow = true;
+
+        // Add identification for interaction
+        this.mesh.userData = {
+            type: 'golden-key',
+            name: 'Llave Dorada',
+            parentObj: this
+        };
+        // Ensure all children also have the type for raycasting
+        this.mesh.traverse(child => {
+            if (child.isMesh) {
+                child.userData = {
+                    type: 'golden-key',
+                    parentObj: this
+                };
+            }
+        });
     }
 }
 
@@ -117,6 +133,10 @@ export class Drawer {
 
         this.items = new THREE.Group();
         this.mesh.add(this.items);
+
+        this.userData = { type: 'drawer', parentObj: this };
+        this.interactableMesh = null;
+        this.interactables = []; // Items that can be clicked inside
 
         this.build();
     }
@@ -185,6 +205,10 @@ export class Drawer {
 
     addItem(itemMesh) {
         this.items.add(itemMesh);
+        // If the item has interactable userData, add it to our list
+        if (itemMesh.userData && (itemMesh.userData.type === 'golden-key' || itemMesh.userData.type === 'secret-note')) {
+            this.interactables.push(itemMesh);
+        }
     }
 
     toggle() {
@@ -729,10 +753,10 @@ export class Desk {
 
             // Add Items (Key) - Moved to Right
             if (i === 1) { // Middle
-                const key = new GoldenKey();
-                key.mesh.position.set(0, -dH_Real / 2 + 0.05, 0);
-                key.mesh.rotation.y = Math.PI / 4;
-                drawerR.addItem(key.mesh);
+                this.goldenKey = new GoldenKey();
+                this.goldenKey.mesh.position.set(0, -dH_Real / 2 + 0.05, 0);
+                this.goldenKey.mesh.rotation.y = Math.PI / 4;
+                drawerR.addItem(this.goldenKey.mesh);
             }
 
             // Secret Note (Top)

@@ -870,6 +870,17 @@ export class World {
         if (this.desk.secretNote) {
             this.interactables.push(this.desk.secretNote.interactableMesh);
         }
+        if (this.desk.goldenKey) {
+            this.interactables.push(this.desk.goldenKey.mesh);
+        }
+        // Add items inside drawers if any
+        if (this.desk.drawers) {
+            this.desk.drawers.forEach(d => {
+                if (d.interactables) {
+                    this.interactables.push(...d.interactables);
+                }
+            });
+        }
 
         // Computadora Retro
         const pc = new RetroComputer();

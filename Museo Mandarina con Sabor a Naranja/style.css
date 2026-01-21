@@ -1343,3 +1343,56 @@ body {
     color: #888;
     font-size: 12px;
 }
+
+/* --- INVENTORY SYSTEM --- */
+#inventory-gui {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 2500;
+    pointer-events: none;
+}
+
+.inventory-slot {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 215, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    pointer-events: auto;
+}
+
+.inventory-slot:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: rgba(255, 215, 0, 0.6);
+    transform: scale(1.05);
+}
+
+.key-icon {
+    font-size: 30px;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+    animation: golden-glow 2s infinite alternate;
+}
+
+.key-icon.hidden {
+    display: none;
+}
+
+@keyframes golden-glow {
+    from {
+        filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+    }
+
+    to {
+        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.9));
+        transform: scale(1.1);
+    }
+}

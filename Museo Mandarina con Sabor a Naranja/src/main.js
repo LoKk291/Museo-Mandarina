@@ -260,6 +260,9 @@ function checkInteraction() {
         } else if (hitObject.userData.type === 'arcade') {
             interactionMsg.textContent = "Click para Jugar PONG";
             interactionMsg.style.display = 'block';
+        } else if (hitObject.userData.type === 'golden-key') {
+            interactionMsg.textContent = "Click para recoger Llave Dorada";
+            interactionMsg.style.display = 'block';
         } else {
             interactionMsg.textContent = "Click para ver";
             interactionMsg.style.display = 'block';
@@ -370,6 +373,26 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'secret-note') {
                 soundManager.play('click');
                 showLetter("Nota Guardada", "???", "Llamame! 3754-406297", false);
+            } else if (hitObject.userData.type === 'golden-key') {
+                // Collect Golden Key
+                soundManager.play('click'); // Or play a special collection sound
+
+                // 1. Show in UI
+                const keyIcon = document.querySelector('#slot-key .key-icon');
+                if (keyIcon) keyIcon.classList.remove('hidden');
+
+                // 2. Remove from 3D World
+                const keyGroup = hitObject.userData.parentObj.mesh;
+                if (keyGroup.parent) {
+                    keyGroup.parent.remove(keyGroup);
+                }
+
+                // 3. Remove from interactables
+                const idx = world.interactables.indexOf(hitObject);
+                if (idx > -1) world.interactables.splice(idx, 1);
+
+                // Optional: Toast message
+                showLetter("Sistema", "INFO", "Has recogido la Llave Dorada.", true);
             } else if (hitObject.userData.vinyl) {
                 // soundManager.play('click'); // Optional
 
