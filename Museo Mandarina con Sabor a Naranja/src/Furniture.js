@@ -5984,3 +5984,86 @@ export class OldCamera {
 
 
 
+
+// Wall Decoration - Geometric shapes for hallway walls
+export class WallDecoration {
+    constructor(shapeType = 'circle', size = 0.5, color = 0xFF6B35) {
+        this.shapeType = shapeType;
+        this.size = size;
+        this.color = color;
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        const material = new THREE.MeshStandardMaterial({
+            color: this.color,
+            roughness: 0.6,
+            metalness: 0.2
+        });
+
+        let shape;
+        const depth = 0.05;
+
+        switch (this.shapeType) {
+            case 'circle':
+                shape = new THREE.Mesh(
+                    new THREE.CylinderGeometry(this.size, this.size, depth, 32),
+                    material
+                );
+                shape.rotation.x = Math.PI / 2;
+                break;
+
+            case 'triangle':
+                shape = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0, this.size, this.size * 1.5, 3),
+                    material
+                );
+                shape.rotation.x = Math.PI / 2;
+                shape.rotation.z = Math.PI / 6;
+                break;
+
+            case 'square':
+                shape = new THREE.Mesh(
+                    new THREE.BoxGeometry(this.size, this.size, depth),
+                    material
+                );
+                break;
+
+            case 'hexagon':
+                shape = new THREE.Mesh(
+                    new THREE.CylinderGeometry(this.size, this.size, depth, 6),
+                    material
+                );
+                shape.rotation.x = Math.PI / 2;
+                break;
+
+            case 'diamond':
+                shape = new THREE.Mesh(
+                    new THREE.BoxGeometry(this.size, this.size, depth),
+                    material
+                );
+                shape.rotation.z = Math.PI / 4;
+                break;
+
+            default:
+                shape = new THREE.Mesh(
+                    new THREE.CylinderGeometry(this.size, this.size, depth, 32),
+                    material
+                );
+                shape.rotation.x = Math.PI / 2;
+        }
+
+        shape.castShadow = true;
+        shape.receiveShadow = true;
+        this.mesh.add(shape);
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(x, y, z) {
+        this.mesh.rotation.set(x, y, z);
+    }
+}

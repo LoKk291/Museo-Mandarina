@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle, CraftingTable, Furnace, MinecraftBed, BreakableVase, CinemaScreen, OldCamera } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle, CraftingTable, Furnace, MinecraftBed, BreakableVase, CinemaScreen, OldCamera, WallDecoration } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -906,6 +906,54 @@ export class World {
         }
     }
 
+    addHallwayDecorations(room, width, depth) {
+        // Helper method to add decorative shapes to hallway walls
+        // Only decorates LATERAL walls (East and West), not entrance/exit walls
+        const shapes = ['circle', 'triangle', 'square', 'hexagon', 'diamond'];
+        const colors = [
+            0xFF6B35, // Orange
+            0xF7931E, // Bright Orange
+            0xFDC830, // Yellow
+            0x4ECDC4, // Turquoise
+            0x44A08D, // Green
+            0x667EEA, // Purple
+            0xF093FB, // Pink
+            0xC471F5  // Violet
+        ];
+
+        const decorY = 2.0; // Middle height
+
+        // Add decorations ONLY to East and West walls (lateral walls)
+        const eastX = width / 2 - 0.26;
+        const westX = -width / 2 + 0.26;
+
+        const numDecorations = Math.floor(depth / 1.5);
+
+        for (let i = 0; i < numDecorations; i++) {
+            const offsetZ = (i - (numDecorations - 1) / 2) * 1.5;
+
+            // East wall decoration
+            const shapeE = shapes[Math.floor(Math.random() * shapes.length)];
+            const colorE = colors[Math.floor(Math.random() * colors.length)];
+            const sizeE = 0.3 + Math.random() * 0.2;
+
+            const decorE = new WallDecoration(shapeE, sizeE, colorE);
+            decorE.setPosition(eastX, decorY, offsetZ);
+            decorE.setRotation(0, -Math.PI / 2, 0);
+            room.group.add(decorE.mesh);
+
+            // West wall decoration
+            const shapeW = shapes[Math.floor(Math.random() * shapes.length)];
+            const colorW = colors[Math.floor(Math.random() * colors.length)];
+            const sizeW = 0.3 + Math.random() * 0.2;
+
+            const decorW = new WallDecoration(shapeW, sizeW, colorW);
+            decorW.setPosition(westX, decorY, offsetZ);
+            decorW.setRotation(0, Math.PI / 2, 0);
+            room.group.add(decorW.mesh);
+        }
+    }
+
     init() {
         // --- 1. Habitación Central (Recepción) ---
         // Pos: 0,0 | Size: 20x20 | Color: Cream (0xF5F5DC)
@@ -1419,6 +1467,7 @@ export class World {
         this.addRoom(hallCent_L1, 'HALL_L1');
 
 
+
         // --- Room L2 (Norte de L1) ---
         // Pos: -25, -25     (Gap logic: L1 End Z=-7.5. L2 Start Z=-17.5. Center L2=-25)
         const roomL2 = new Room(this.scene, -25, -25, 15, 15, 0xF5F5DC);
@@ -1502,6 +1551,9 @@ export class World {
         hallL1_L2.addDoor('North', 4, 4);
         this.addRoom(hallL1_L2, 'HALL_L2');
 
+        // Add wall decorations
+        this.addHallwayDecorations(hallL1_L2, 4, 10);
+
         // --- Room L3 (Norte de L2) ---
         // Pos: -25, -50
         const roomL3 = new Room(this.scene, -25, -50, 15, 15, 0xF5F5DC);
@@ -1518,6 +1570,9 @@ export class World {
         hallL2_L3.addDoor('South', 4, 4);
         hallL2_L3.addDoor('North', 4, 4);
         this.addRoom(hallL2_L3, 'HALL_L3');
+
+        // Add wall decorations
+        this.addHallwayDecorations(hallL2_L3, 4, 10);
 
 
         // --- ALA ESTE (DERECHA) ---
@@ -1737,6 +1792,9 @@ export class World {
         hallR1_R2.addDoor('North', 4, 4);
         this.addRoom(hallR1_R2, 'HALL_R2');
 
+        // Add wall decorations
+        this.addHallwayDecorations(hallR1_R2, 4, 10);
+
         // --- Room R3 (Norte de R2) ---
         // Pos: 25, -50
         const roomR3 = new Room(this.scene, 25, -50, 15, 15, 0xF5F5DC);
@@ -1851,6 +1909,10 @@ export class World {
         hallR2_R3.addDoor('South', 4, 4);
         hallR2_R3.addDoor('North', 4, 4);
         this.addRoom(hallR2_R3, 'HALL_R3');
+
+        // Add wall decorations
+        this.addHallwayDecorations(hallR2_R3, 4, 10);
+
 
         // Add Light Switches
         this.addSwitches();
