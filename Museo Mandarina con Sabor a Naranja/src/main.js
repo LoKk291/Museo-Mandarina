@@ -100,8 +100,14 @@ const cheats = {
     "goldenkey": () => {
         if (!hasGoldenKey) {
             hasGoldenKey = true;
-            const inventoryGui = document.getElementById('inventory-gui');
-            if (inventoryGui) inventoryGui.style.display = 'flex';
+            // inventory-gui is always flex now
+
+            const keySlot = document.getElementById('slot-key');
+            if (keySlot) keySlot.classList.remove('hidden');
+
+            const keyIcon = document.querySelector('#slot-key .key-icon');
+            if (keyIcon) keyIcon.classList.remove('hidden');
+
             soundManager.play('click');
             showLetter("Sistema", "CHEAT", "Llave Dorada obtenida mediante código.", true);
 
@@ -109,6 +115,30 @@ const cheats = {
             if (world.desk && world.desk.goldenKey) {
                 world.desk.hideGoldenKey();
             }
+        }
+    },
+    // Jumpscare Cheat
+    "foxy": () => {
+        const overlay = document.getElementById('jumpscare-overlay');
+        const video = document.getElementById('jumpscare-video');
+
+        if (overlay && video) {
+            overlay.classList.remove('hidden');
+            video.currentTime = 0;
+            video.play().catch(e => console.error("Video play failed:", e));
+
+            // Resume game/hide on end
+            video.onended = () => {
+                overlay.classList.add('hidden');
+                // Optional: Unlock controls if they were locked? 
+                // User said "in pause menu", so we likely want to stay in pause menu.
+            };
+
+            // Allow skipping with click
+            overlay.onclick = () => {
+                video.pause();
+                overlay.classList.add('hidden');
+            };
         }
     }
 };

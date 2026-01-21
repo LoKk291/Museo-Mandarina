@@ -1407,3 +1407,22 @@ body {
         transform: scale(1.1);
     }
 }
+
+/* Jumpscare Overlay */
+#jumpscare-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    z-index: 5000;
+    /* Highest priority */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#jumpscare-overlay.hidden {
+    display: none;
+}
