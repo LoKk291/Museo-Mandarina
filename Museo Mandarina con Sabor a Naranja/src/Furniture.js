@@ -5394,3 +5394,192 @@ export class MinecraftBed {
         this.mesh.rotation.y = y;
     }
 }
+
+// ===== BREAKABLE VASE =====
+export class BreakableVase {
+    constructor(plantType = 'orchid') {
+        this.plantType = plantType;
+        this.mesh = new THREE.Group();
+        this.interactableMesh = null;
+        this.vase = null;
+        this.plant = null;
+        this.build();
+    }
+
+    build() {
+        // Create Vase (Ceramic Pot)
+        const vaseGeo = new THREE.CylinderGeometry(0.3, 0.25, 0.6, 16);
+        const vaseMat = new THREE.MeshStandardMaterial({
+            color: 0xD2691E, // Terracotta
+            roughness: 0.7,
+            metalness: 0.1
+        });
+        this.vase = new THREE.Mesh(vaseGeo, vaseMat);
+        this.vase.position.y = 0.3;
+        this.vase.castShadow = true;
+        this.mesh.add(this.vase);
+
+        // Create Plant based on type
+        this.plant = new THREE.Group();
+        
+        if (this.plantType === 'orchid') {
+            // Orchid - elegant purple flowers
+            const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
+            const stemMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+            const stem = new THREE.Mesh(stemGeo, stemMat);
+            stem.position.y = 0.85;
+            this.plant.add(stem);
+
+            // Flowers
+            for (let i = 0; i < 3; i++) {
+                const flowerGeo = new THREE.SphereGeometry(0.08, 8, 8);
+                const flowerMat = new THREE.MeshStandardMaterial({ color: 0x9370DB });
+                const flower = new THREE.Mesh(flowerGeo, flowerMat);
+                flower.position.set(
+                    Math.sin(i * 0.5) * 0.1,
+                    0.9 + i * 0.15,
+                    Math.cos(i * 0.5) * 0.1
+                );
+                flower.scale.set(1.2, 0.8, 1);
+                this.plant.add(flower);
+            }
+        } else if (this.plantType === 'sunflower') {
+            // Sunflower - yellow with brown center
+            const stemGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8);
+            const stemMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+            const stem = new THREE.Mesh(stemGeo, stemMat);
+            stem.position.y = 0.95;
+            this.plant.add(stem);
+
+            // Petals
+            const petalCount = 12;
+            for (let i = 0; i < petalCount; i++) {
+                const angle = (i / petalCount) * Math.PI * 2;
+                const petalGeo = new THREE.BoxGeometry(0.06, 0.02, 0.15);
+                const petalMat = new THREE.MeshStandardMaterial({ color: 0xFFD700 });
+                const petal = new THREE.Mesh(petalGeo, petalMat);
+                petal.position.set(
+                    Math.cos(angle) * 0.12,
+                    1.3,
+                    Math.sin(angle) * 0.12
+                );
+                petal.rotation.y = angle;
+                this.plant.add(petal);
+            }
+
+            // Center
+            const centerGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.03, 12);
+            const centerMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+            const center = new THREE.Mesh(centerGeo, centerMat);
+            center.position.y = 1.3;
+            center.rotation.x = Math.PI / 2;
+            this.plant.add(center);
+        } else if (this.plantType === 'snakePlant') {
+            // Snake Plant (Lengua de Suegra) - tall pointed leaves
+            for (let i = 0; i < 5; i++) {
+                const leafGeo = new THREE.BoxGeometry(0.08, 0.6, 0.02);
+                const leafMat = new THREE.MeshStandardMaterial({
+                    color: 0x2F4F2F,
+                    roughness: 0.6
+                });
+                const leaf = new THREE.Mesh(leafGeo, leafMat);
+                const angle = (i / 5) * Math.PI * 2;
+                leaf.position.set(
+                    Math.cos(angle) * 0.1,
+                    0.9,
+                    Math.sin(angle) * 0.1
+                );
+                leaf.rotation.y = angle;
+                leaf.rotation.z = 0.1;
+                this.plant.add(leaf);
+            }
+        }
+
+        this.mesh.add(this.plant);
+
+        // Create Interactable Hitbox
+        const hitboxGeo = new THREE.CylinderGeometry(0.35, 0.3, 1.2, 8);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+        this.interactableMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+        this.interactableMesh.position.y = 0.6;
+        this.interactableMesh.userData = {
+            type: 'breakable-vase',
+            parentObj: this
+        };
+        this.mesh.add(this.interactableMesh);
+    }
+
+    break() {
+        if (!this.vase) return;
+
+        // Create fragments
+        const pieces = [];
+        const fragmentCount = 8;
+
+        for (let i = 0; i < fragmentCount; i++) {
+            const angle = (i / fragmentCount) * Math.PI * 2;
+            const size = 0.1 + Math.random() * 0.1;
+            
+            const fragmentGeo = new THREE.BoxGeometry(size, size, size);
+            const fragmentMat = new THREE.MeshStandardMaterial({
+                color: 0xD2691E,
+                roughness: 0.8
+            });
+            const piece = new THREE.Mesh(fragmentGeo, fragmentMat);
+            
+            piece.position.copy(this.vase.position);
+            piece.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+
+            piece.userData.velocity = new THREE.Vector3(
+                Math.cos(angle) * 2,
+                Math.random() * 2 + 1,
+                Math.sin(angle) * 2
+            );
+
+            pieces.push(piece);
+            this.mesh.add(piece);
+        }
+
+        // Remove original vase and plant
+        this.mesh.remove(this.vase);
+        if (this.plant) this.mesh.remove(this.plant);
+
+        // Animate pieces falling
+        const animate = () => {
+            let allStopped = true;
+            pieces.forEach(piece => {
+                if (piece.position.y > 0) {
+                    piece.userData.velocity.y -= 0.1; // Gravity
+                    piece.position.add(piece.userData.velocity.clone().multiplyScalar(0.016));  
+                    piece.rotation.x += 0.1;
+                    piece.rotation.y += 0.1;
+                    allStopped = false;
+                } else {
+                    piece.position.y = 0;
+                }
+            });
+
+            if (!allStopped) {
+                requestAnimationFrame(animate);
+            } else {
+                // Fade out pieces after 2 seconds
+                setTimeout(() => {
+                    pieces.forEach(p => this.mesh.remove(p));
+                }, 2000);
+            }
+        };
+        animate();
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}

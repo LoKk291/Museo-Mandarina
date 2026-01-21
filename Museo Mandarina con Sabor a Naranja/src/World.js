@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle, CraftingTable, Furnace, MinecraftBed } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, SecretBookshelfDoor, MinecraftPortal, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug, StreetLight, SecretRug, FlashlightItem, Foxy, Mangle, CraftingTable, Furnace, MinecraftBed, BreakableVase } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {

@@ -54,6 +54,7 @@ soundManager.load('phone_guy', 'sounds/phone/phone%20guy.mp3');
 soundManager.load('secret_call', 'sounds/phone/ioamoremio.mp3'); // Secret Call Sound
 soundManager.load('portal_hum', 'sounds/portal_hum.mp3');
 soundManager.load('teleport', 'sounds/tele.mp3');
+soundManager.load('vase_break', 'sounds/jarron.mp3'); // Vase breaking sound
 // Tunning Door Sounds
 
 // Tunning Door Sounds
@@ -546,6 +547,7 @@ document.addEventListener('click', () => {
 
                 // Optional: Toast message
                 showLetter("Sistema", "INFO", "Has recogido la Llave Dorada.", true);
+            } else if (hitObject.userData.type === 'secret-bookshelf-door') {
                 if (hasGoldenKey) {
                     soundManager.play('door_open'); // reuse door sound for now
                     const isOpen = hitObject.userData.parentObj.toggle();
