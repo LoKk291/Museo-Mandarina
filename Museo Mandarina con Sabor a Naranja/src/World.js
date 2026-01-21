@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Room } from './Room.js';
-import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton, ArcadeMachine, WallInstrument } from './Furniture.js';
+import { Desk, RetroComputer, Clock, FloorLamp, DeskLamp, Lever, Chandelier, DoubleDoor, RedCarpet, Chair, OrchidPot, WindowFlowerBox, LightSwitch, Phone, PaperStack, WasteBasket, Statue, Globe, CornerTable, MuseumBarrier, VinylFrame, RecordPlayerTable, Piano, MadHatterHat, Bookshelf, HorseSkeleton, ArcadeMachine, WallInstrument, CentralRug } from './Furniture.js';
 import { Sparrow } from './Sparrow.js';
 
 export class World {
@@ -497,14 +497,20 @@ export class World {
         // --- Wall Instruments (South Wall L1) ---
         // South Wall Z = 7.5. Inner Z approx 7.4. Moved to 7.0 to avoid clipping/invisibility.
         // Center X = -25. Spacing 3 units.
-        const criolla = new WallInstrument('criolla', -25, 2.5, 7.0, Math.PI); // Center
+        const criolla = new WallInstrument('criolla', -25, 1.0, 7.0, Math.PI); // Center
         this.scene.add(criolla.mesh);
 
-        const rock = new WallInstrument('rock', -22, 2.5, 7.0, Math.PI); // Right (East of Center)
+        const rock = new WallInstrument('rock', -22, 1.0, 7.0, Math.PI); // Right (East of Center)
         this.scene.add(rock.mesh);
 
-        const violin = new WallInstrument('violin', -28, 2.5, 7.0, Math.PI); // Left (West of Center)
+        // Violin adjusted to be slightly higher as per user request (Y=1.3)
+        const violin = new WallInstrument('violin', -28, 1.3, 7.0, Math.PI); // Left (West of Center)
         this.scene.add(violin.mesh);
+
+        // --- Central Rug (Room L1) ---
+        const centralRug = new CentralRug();
+        centralRug.setPosition(-25, 0, 0); // Center of L1
+        this.scene.add(centralRug.mesh);
 
         // --- ARCADE MACHINE (Room L1) ---
         const arcade = new ArcadeMachine();

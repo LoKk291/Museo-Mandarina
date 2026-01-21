@@ -3302,56 +3302,228 @@ export class WallInstrument {
         this.type = type; // 'criolla', 'rock', 'violin'
 
         this.build();
+        this.mesh.scale.set(0.6, 0.6, 0.6); // 40% smaller
         this.setPosition(x, y, z);
         this.setRotation(rotationY);
     }
 
     build() {
-        let texturePath = '';
-        let width = 1;
-        let height = 2; // Default approx aspect ratio
-
         if (this.type === 'criolla') {
-            texturePath = 'assets/instruments/guitarra_criolla.png';
-            width = 1.2; height = 3.0;
+            this.buildAcoustic();
+            this.addFrame(2.5, 4.0);
         } else if (this.type === 'rock') {
-            texturePath = 'assets/instruments/guitarra_rock.png';
-            width = 1.2; height = 3.0; // V-shape is wide
+            this.buildRock();
+            this.addFrame(3.0, 4.0);
         } else if (this.type === 'violin') {
-            texturePath = 'assets/instruments/violin.png';
-            width = 0.8; height = 1.8;
+            this.buildViolin();
+            this.addFrame(2.0, 3.0);
         }
+    }
 
-        const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load(texturePath,
-            () => { },
-            undefined,
-            (err) => console.warn(`Failed to load texture: ${texturePath}`, err)
-        );
+    addFrame(w, h) {
+        // Shadow Box Frame
+        const depth = 0.5;
+        const thickness = 0.1;
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0x332211, roughness: 0.8 }); // Dark Wood
 
-        // Fallback colors for visibility if texture fails
-        let color = 0xFFFFFF;
-        if (this.type === 'criolla') color = 0x8B4513; // Brown
-        if (this.type === 'rock') color = 0xFF0000;    // Red
-        if (this.type === 'violin') color = 0xCD853F;  // Light Brown
+        const group = new THREE.Group();
 
-        // Plane Geometry for the image
-        const geometry = new THREE.PlaneGeometry(width, height);
-        const material = new THREE.MeshStandardMaterial({
-            map: texture,
-            color: color,
-            transparent: true,
-            side: THREE.DoubleSide,
-            roughness: 0.8,
-            metalness: 0.2
-        });
+        // Position Frame relative to instrument center (which is roughly Y=1.7 to 2.0 based on build methods)
+        // Acoustic built 0 to 3.5. Center ~1.75.
+        // Rock built 0 to 3.2. Center ~1.6.
+        // Violin built 0 to 2.2. Center ~1.1.
 
-        const mesh = new THREE.Mesh(geometry, material);
-        this.mesh.add(mesh);
+        let centerY = 1.75;
+        if (this.type === 'rock') centerY = 1.6;
+        if (this.type === 'violin') centerY = 1.1;
 
-        // Add a small Hitbox for potential interaction or just solidity feel
-        // const box = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.1), new THREE.MeshBasicMaterial({visible:false}));
-        // this.mesh.add(box);
+        // Backboard
+        const backGeo = new THREE.BoxGeometry(w, h, 0.02);
+        const backMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, side: THREE.DoubleSide }); // Dark felt
+        const back = new THREE.Mesh(backGeo, backMat);
+        back.position.set(0, centerY, -0.1);
+        group.add(back);
+
+        // Top Border
+        const topGeo = new THREE.BoxGeometry(w + thickness * 2, thickness, depth);
+        const top = new THREE.Mesh(topGeo, frameMat);
+        top.position.set(0, centerY + h / 2 + thickness / 2, depth / 2 - 0.1);
+        group.add(top);
+
+        // Bottom Border
+        const bot = top.clone();
+        bot.position.set(0, centerY - h / 2 - thickness / 2, depth / 2 - 0.1);
+        group.add(bot);
+
+        // Left Border
+        const sideGeo = new THREE.BoxGeometry(thickness, h, depth);
+        const left = new THREE.Mesh(sideGeo, frameMat);
+        left.position.set(-w / 2 - thickness / 2, centerY, depth / 2 - 0.1);
+        group.add(left);
+
+        // Right Border
+        const right = left.clone();
+        right.position.set(w / 2 + thickness / 2, centerY, depth / 2 - 0.1);
+        group.add(right);
+
+        this.mesh.add(group);
+    }
+
+    buildAcoustic() {
+        // Materials
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.6 }); // Wood
+        const neckMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.8 }); // Dark Wood
+        const stringMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
+
+        // Body Shape (Figure 8)
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        // Bottom curve
+        shape.bezierCurveTo(0.6, 0, 0.8, 0.5, 0.6, 1.0); // Lower Bout Right
+        shape.bezierCurveTo(0.5, 1.2, 0.5, 1.3, 0.55, 1.4); // Waist Right
+        shape.bezierCurveTo(0.65, 1.6, 0.5, 2.0, 0, 2.0); // Upper Bout Right
+        // Mirror for left side
+        shape.bezierCurveTo(-0.5, 2.0, -0.65, 1.6, -0.55, 1.4); // Upper Bout Left
+        shape.bezierCurveTo(-0.5, 1.3, -0.5, 1.2, -0.6, 1.0); // Waist Left
+        shape.bezierCurveTo(-0.8, 0.5, -0.6, 0, 0, 0); // Lower Bout Left
+
+        const extrudeSettings = { depth: 0.2, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2 };
+        const bodyGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.set(0, 0, 0);
+        this.mesh.add(body);
+
+        // Sound Hole (Circle)
+        const holeGeo = new THREE.CircleGeometry(0.25, 32);
+        const hole = new THREE.Mesh(holeGeo, new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        hole.position.set(0, 1.1, 0.221); // Slightly in front
+        this.mesh.add(hole);
+
+        // Bridge
+        const bridgeGeo = new THREE.BoxGeometry(0.6, 0.1, 0.05);
+        const bridge = new THREE.Mesh(bridgeGeo, neckMat);
+        bridge.position.set(0, 0.5, 0.22);
+        this.mesh.add(bridge);
+
+        // Neck
+        const neckGeo = new THREE.BoxGeometry(0.2, 1.5, 0.05);
+        const neck = new THREE.Mesh(neckGeo, neckMat);
+        neck.position.set(0, 2.5, 0.1);
+        this.mesh.add(neck);
+
+        // Headstock
+        const headGeo = new THREE.BoxGeometry(0.25, 0.5, 0.05);
+        const head = new THREE.Mesh(headGeo, bodyMat);
+        head.position.set(0, 3.4, 0.08); // Tilted back implies manual rotation usually, keeping flat for wall
+        this.mesh.add(head);
+
+        // Strings (Line representation)
+        // Just one thin box representing strings
+        const stringsGeo = new THREE.BoxGeometry(0.12, 2.8, 0.01);
+        const strings = new THREE.Mesh(stringsGeo, stringMat);
+        strings.position.set(0, 2.0, 0.23);
+        this.mesh.add(strings);
+    }
+
+    buildRock() {
+        // Flying V Style
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xCC0000, roughness: 0.2, metalness: 0.4 }); // Red Gloss
+        const pickguardMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+        const hardMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+
+        const vShape = new THREE.Shape();
+        vShape.moveTo(0, 0);
+        vShape.lineTo(0.7, 1.5); // Right Tip
+        vShape.lineTo(0.15, 1.3); // Inner Right
+        vShape.lineTo(0, 1.3); // Center Join (Neck pocket)
+        vShape.lineTo(-0.15, 1.3); // Inner Left
+        vShape.lineTo(-0.7, 1.5); // Left Tip
+        vShape.lineTo(0, 0); // Bottom Point
+
+        const extrudeSettings = { depth: 0.15, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 1 };
+        const bodyGeo = new THREE.ExtrudeGeometry(vShape, extrudeSettings);
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.set(0, 0, 0);
+        this.mesh.add(body);
+
+        // Pickguard (White V inside)
+        const pgShape = new THREE.Shape();
+        pgShape.moveTo(0, 0.2);
+        pgShape.lineTo(0.5, 1.3);
+        pgShape.lineTo(-0.5, 1.3);
+        pgShape.lineTo(0, 0.2);
+        const pgGeo = new THREE.ShapeGeometry(pgShape);
+        const pg = new THREE.Mesh(pgGeo, pickguardMat);
+        pg.position.set(0, 0, 0.171); // On top of bevel
+        this.mesh.add(pg);
+
+        // Neck
+        const neckGeo = new THREE.BoxGeometry(0.15, 1.8, 0.04);
+        const neck = new THREE.Mesh(neckGeo, new THREE.MeshStandardMaterial({ color: 0x332211 }));
+        neck.position.set(0, 2.2, 0.1);
+        this.mesh.add(neck);
+
+        // Headstock (Pointy)
+        const headShape = new THREE.Shape();
+        headShape.moveTo(0, 0);
+        headShape.lineTo(0.15, 0.5);
+        headShape.lineTo(-0.15, 0); // Arrow like
+        headShape.lineTo(0, 0);
+        const headGeo = new THREE.ExtrudeGeometry(headShape, { depth: 0.05, bevelEnabled: false });
+        const head = new THREE.Mesh(headGeo, bodyMat);
+        head.position.set(0, 3.1, 0.1);
+        this.mesh.add(head);
+    }
+
+    buildViolin() {
+        // Violin - Curvy Hourglass
+        const varnishMat = new THREE.MeshStandardMaterial({ color: 0xCD853F, roughness: 0.3, metalness: 0.1 });
+        const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+
+        const shape = new THREE.Shape();
+        // Simplified Violin Body
+        shape.moveTo(0, 0);
+        shape.bezierCurveTo(0.4, 0, 0.5, 0.3, 0.4, 0.6); // Lower Right
+        shape.bezierCurveTo(0.35, 0.7, 0.35, 0.8, 0.4, 0.9); // C-Bout In
+        shape.bezierCurveTo(0.45, 1.0, 0.35, 1.3, 0, 1.3); // Upper Right
+        // Mirror
+        shape.bezierCurveTo(-0.35, 1.3, -0.45, 1.0, -0.4, 0.9);
+        shape.bezierCurveTo(-0.35, 0.8, -0.35, 0.7, -0.4, 0.6);
+        shape.bezierCurveTo(-0.5, 0.3, -0.4, 0, 0, 0);
+
+        const extrudeSettings = { depth: 0.15, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 3 };
+        const bodyGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        const body = new THREE.Mesh(bodyGeo, varnishMat);
+        this.mesh.add(body);
+
+        // Neck
+        const neckGeo = new THREE.BoxGeometry(0.1, 0.8, 0.04);
+        const neck = new THREE.Mesh(neckGeo, blackMat); // Ebony fingerboard
+        neck.position.set(0, 1.5, 0.1);
+        this.mesh.add(neck);
+
+        // Scroll (Head)
+        const scrollGeo = new THREE.CylinderGeometry(0.08, 0.06, 0.2, 8);
+        const scroll = new THREE.Mesh(scrollGeo, varnishMat);
+        scroll.position.set(0, 2.0, 0.05);
+        scroll.rotation.z = Math.PI / 2;
+        this.mesh.add(scroll);
+
+        // Chinrest
+        const chinGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 16);
+        const chin = new THREE.Mesh(chinGeo, blackMat);
+        chin.position.set(-0.15, 0.1, 0.18);
+        chin.rotation.x = Math.PI / 2;
+        this.mesh.add(chin);
+
+        // F-Holes (Simulated with black shapes or cylinders)
+        const holeGeo = new THREE.CapsuleGeometry(0.03, 0.2, 2, 8);
+        const holeL = new THREE.Mesh(holeGeo, blackMat);
+        holeL.position.set(-0.2, 0.7, 0.17);
+        this.mesh.add(holeL);
+        const holeR = new THREE.Mesh(holeGeo, blackMat);
+        holeR.position.set(0.2, 0.7, 0.17);
+        this.mesh.add(holeR);
     }
 
     setPosition(x, y, z) {
@@ -4088,6 +4260,44 @@ export class ArcadeMachine {
 
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
+    }
+
+    setPosition(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setRotation(y) {
+        this.mesh.rotation.y = y;
+    }
+}
+
+export class CentralRug {
+    constructor() {
+        this.mesh = new THREE.Group();
+        this.build();
+    }
+
+    build() {
+        // Rug Dimensions (Rectangular) - e.g. 5x8
+        const width = 8;
+        const depth = 5;
+
+        const textureLoader = new THREE.TextureLoader();
+        // Cache buster added to force refresh
+        const texture = textureLoader.load('assets/rug_l1.png?v=2');
+
+        const geometry = new THREE.PlaneGeometry(width, depth);
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            side: THREE.FrontSide,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+
+        const rug = new THREE.Mesh(geometry, material);
+        rug.rotation.x = -Math.PI / 2; // Flat on floor
+        rug.position.y = 0.02; // Slightly above floor
+        this.mesh.add(rug);
     }
 
     setPosition(x, y, z) {
