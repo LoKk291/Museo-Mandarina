@@ -346,6 +346,7 @@ let activeVinylFrame = null; // Track playing vinyl
 let lastHoveredSparrow = null;
 let isTeleporting = false; // Fix: use a global variable instead of 'this'
 let hasVisitedSecretRoom = false; // Track if player has been to secret room
+let pendingPartyModeWarning = false; // Flag for warning notification
 
 // Loop de Raycast para mostrar mensaje "Click para ver"
 function checkInteraction() {
@@ -789,6 +790,14 @@ function closePc() {
     if (typeof stopSnake === 'function') stopSnake();
     pcCalc.classList.add('hidden');
     player.lock();
+
+    // Trigger pending warning if applicable
+    if (pendingPartyModeWarning) {
+        pendingPartyModeWarning = false;
+        setTimeout(() => {
+            showLetter("¡ADVERTENCIA! 💀", "TEN CUIDADO, FOXY ESTÁ YENDO POR TI, ENCUENTRA LA PALANCA PARA REINICIAL EL SISTEMA<br><br>Pista: A Foxy no le gusta que le apunten con la luz", true);
+        }, 500);
+    }
 }
 
 closePcBtn.onclick = closePc;
@@ -1351,18 +1360,14 @@ function processCommand(cmd) {
             termOutput.innerHTML += "<p>APAGANDO LUCES...</p>";
 
             // Set Midnight
-            if (sky) sky.time = sky.cycleDuration * 0.75; // Approx midnight?
-            // Sky cycle: Day 600s, Night 300s. Total 900s.
-            // 0s = 06:00.
-            // 600s = 20:00.
-            // Midnight (24:00) is 20:00 + 4 hours.
-            // Night is 300s for 10 hours (20:00 to 06:00). 30s per hour.
-            // 4 hours * 30s = 120s.
             // Midnight = 600 + 120 = 720s.
             if (sky) sky.time = 720;
 
             // Enable Party Mode
             if (world) world.enablePartyMode();
+
+            // Queue Warning Notification for when PC is closed
+            pendingPartyModeWarning = true;
             break;
         case 'FOXY':
             termOutput.innerHTML += "<p>Sorpresita de Julepe...</p>";
@@ -1578,7 +1583,7 @@ function animate() {
     delta = Math.min(delta, 0.05); // Max 0.05s (20 FPS minimum physics step)
 
     // --- UPDATE LOOP (Paused if Menu/Modal Open) ---
-    if (player.isLocked) {
+    if (player.isLocked && !isModalOpen) {
         // Update sky
         sky.update(delta);
 
