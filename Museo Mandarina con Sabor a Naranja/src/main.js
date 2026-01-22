@@ -329,6 +329,18 @@ function showLetter(title, content, isSystem = false, customClass = null) {
         }
     }
 
+    // Add scroll for long love letter
+    if (bodyEl && title === "Perlas Traslúcidas") {
+        bodyEl.style.maxHeight = '400px';
+        bodyEl.style.overflowY = 'auto';
+        bodyEl.style.paddingRight = '10px';
+    } else if (bodyEl) {
+        // Reset for other letters
+        bodyEl.style.maxHeight = '';
+        bodyEl.style.overflowY = '';
+        bodyEl.style.paddingRight = '';
+    }
+
     // Show Overlay
     if (letterOverlay) letterOverlay.classList.remove('hidden');
 }
@@ -539,6 +551,23 @@ document.addEventListener('click', () => {
             } else if (hitObject.userData.type === 'arcade') {
                 soundManager.play('click');
                 startPong();
+            } else if (hitObject.userData.customLetter === 'perlas_traslucidas') {
+                soundManager.play('click');
+                const letterContent = `El llanto, que tanto me costaba liberar, ahora abandona mis ojos para convertirse en lágrimas que recorren mi rostro, y el motivo de esas lágrimas son, vida mía, la falta que me hace tu calor, la falta que me hace poder ver el brillo de tus ojos sin nada más que aire de por medio.<br><br>
+
+Te puedo yo jurar ante un altar mi amor sincero, dice una canción, y escritas con una pluma celestial, están grabadas en mi corazón junto a tu nombre.<br><br>
+
+La frase "te extraño" no abarca todo lo que me hace sentir tu falta, porque sin vos amor mío, ¿dónde está el oxígeno que necesito para vivir? ¿Dónde está el agua que componen esas lágrimas tan largamente retenidas, y de qué me sirve comer si no puedo compartir el pan con quien más amo?<br><br>
+
+Esa noche, alma mía, liberaste de mi interior un grillete fuertemente apretado, y ahora cada vez que siento el frío del aire por la ausencia de tu calor, no puedo más que entregarle a la tierra agua de mi cuerpo.<br><br>
+
+Te lo ruego, cielo mío, que con tu agraciado tacto, con tu irresistible presencia, conviertas las gotas de mi espíritu en lágrimas pero de felicidad, agua dulce, porque no habrá más que aire entre nuestras miradas.<br><br>
+
+No confundas, mi amor, esta carta como algo triste, si no más bien como un agradecimiento, de que gracias a vos, a tu amor sincero ahora puedo ser libre, libre de poder expresarme de una forma que creía olvidada.<br><br>
+
+<p style='text-align: right; margin-top: 20px;'>- Un Hombre más Libre</p>
+<p style='text-align: right; font-style: italic;'>La Eternidad</p>`;
+                showLetter("Perlas Traslúcidas", letterContent, false);
             } else if (hitObject.userData.type === 'paper-stack') {
                 soundManager.play('click');
                 showLetter("Informe de Estado", "El comando \"party time\" no funciona, debido al estado actual de los animatronicos, no se recomienda activar el comando, el comportamiento de Foxy y Mangle es algo inestable.<p style='text-align: right; margin-top: 20px;'>- Equipo Mandarina</p>", false);

@@ -320,6 +320,14 @@ export class World {
         orangeTreeEast2.position.set(45, 0, -20); // East side, further north
         orangeTreeEast2.scale.set(2.5, 2.5, 2.5); // Very large
         this.scene.add(orangeTreeEast2);
+
+        // --- LOVE LETTER (Paper note near first East orange tree) ---
+        const loveLetter = new PaperStack();
+        loveLetter.setPosition(47, 0, 2); // Near first East tree (45, 0, 0)
+        this.scene.add(loveLetter.mesh);
+        this.interactables.push(loveLetter.interactableMesh);
+        // Mark it with special userData for custom letter
+        loveLetter.interactableMesh.userData.customLetter = 'perlas_traslucidas';
     }
 
     createStreetLights() {
