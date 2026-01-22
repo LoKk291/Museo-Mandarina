@@ -5723,22 +5723,22 @@ export class CinemaScreen {
     }
 
     build() {
-        // Cinema screen with better visibility
+        // Cinema screen optimized for video playback
         const screenWidth = 6;
         const screenHeight = 3.375;
-        const screenDepth = 0.2; // Increased from 0.05 for better visibility
+        const screenDepth = 0.2;
 
         const screenGeo = new THREE.BoxGeometry(screenWidth, screenHeight, screenDepth);
         const screenMat = new THREE.MeshStandardMaterial({
-            color: 0xEEEEEE,
-            emissive: 0x222222, // Slight glow to make it visible
-            emissiveIntensity: 0.3,
-            roughness: 0.7,
-            metalness: 0.1
+            color: 0xFFFFFF,
+            emissive: 0x000000, // No emissive - videos will provide their own light
+            emissiveIntensity: 0,
+            roughness: 0.9,
+            metalness: 0
         });
 
         this.screenMesh = new THREE.Mesh(screenGeo, screenMat);
-        this.screenMesh.position.y = 2.5;
+        this.screenMesh.position.y = 2.0; // Lowered from 2.5 to avoid ceiling
         this.screenMesh.castShadow = true;
         this.screenMesh.receiveShadow = true;
         this.mesh.add(this.screenMesh);
@@ -5756,12 +5756,12 @@ export class CinemaScreen {
             new THREE.BoxGeometry(screenWidth + frameThickness * 2, frameThickness, screenDepth + 0.1),
             frameMat
         );
-        topFrame.position.set(0, 2.5 + screenHeight / 2 + frameThickness / 2, 0);
+        topFrame.position.set(0, 2.0 + screenHeight / 2 + frameThickness / 2, 0);
         this.mesh.add(topFrame);
 
         // Bottom
         const bottomFrame = topFrame.clone();
-        bottomFrame.position.y = 2.5 - screenHeight / 2 - frameThickness / 2;
+        bottomFrame.position.y = 2.0 - screenHeight / 2 - frameThickness / 2;
         this.mesh.add(bottomFrame);
 
         // Left
@@ -5769,7 +5769,7 @@ export class CinemaScreen {
             new THREE.BoxGeometry(frameThickness, screenHeight + frameThickness * 2, screenDepth + 0.1),
             frameMat
         );
-        leftFrame.position.set(-screenWidth / 2 - frameThickness / 2, 2.5, 0);
+        leftFrame.position.set(-screenWidth / 2 - frameThickness / 2, 2.0, 0);
         this.mesh.add(leftFrame);
 
         // Right

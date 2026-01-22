@@ -1533,8 +1533,8 @@ function playVHS(videoNumber) {
 
     if (world.cinemaScreen && world.cinemaScreen.screenMesh) {
         world.cinemaScreen.screenMesh.material.map = cinemaVideoTexture;
-        world.cinemaScreen.screenMesh.material.emissive.setHex(0xFFFFFF);
-        world.cinemaScreen.screenMesh.material.emissiveIntensity = 0.2; // Slight glow for clarity
+        world.cinemaScreen.screenMesh.material.emissive.setHex(0x000000); // No glow - show video as-is
+        world.cinemaScreen.screenMesh.material.emissiveIntensity = 0;
         world.cinemaScreen.screenMesh.material.needsUpdate = true;
     }
 

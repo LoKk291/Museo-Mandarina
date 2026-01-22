@@ -473,8 +473,59 @@ export class World {
         // Random slight tilt for more natural look
         group.rotation.z = (Math.random() - 0.5) * 0.1;
 
+
         return group;
     }
+
+    createOrangeTree() {
+        const group = new THREE.Group();
+
+        // Brown trunk
+        const trunkHeight = 4;
+        const trunkRadius = 0.3;
+        const trunkGeo = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.3, trunkHeight, 8);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.9 });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = trunkHeight / 2;
+        trunk.castShadow = true;
+        group.add(trunk);
+
+        // Green foliage (spherical canopy)
+        const canopySize = 2.5;
+        const canopyGeo = new THREE.SphereGeometry(canopySize, 8, 8);
+        const canopyMat = new THREE.MeshStandardMaterial({ color: 0x2d5a1e, roughness: 0.8 });
+        const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+        canopy.position.y = trunkHeight + canopySize * 0.5;
+        canopy.castShadow = true;
+        group.add(canopy);
+
+        // Orange fruits scattered in the canopy
+        const orangeCount = 15;
+        const orangeGeo = new THREE.SphereGeometry(0.15, 6, 6);
+        const orangeMat = new THREE.MeshStandardMaterial({
+            color: 0xFF8C00, // Dark orange
+            roughness: 0.6,
+            metalness: 0.1
+        });
+
+        for (let i = 0; i < orangeCount; i++) {
+            const orange = new THREE.Mesh(orangeGeo, orangeMat);
+            // Random position within canopy sphere
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+            const r = canopySize * 0.7 * Math.random();
+            orange.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                trunkHeight + canopySize * 0.5 + r * Math.cos(phi),
+                r * Math.sin(phi) * Math.sin(theta)
+            );
+            orange.castShadow = true;
+            group.add(orange);
+        }
+
+        return group;
+    }
+
 
     createFlowers(boundaryMinX, boundaryMaxX, boundaryMinZ, boundaryMaxZ) {
         const flowerCount = 150; // Reduced for performance
@@ -1568,6 +1619,22 @@ export class World {
         // Store references for video playback
         this.cinemaScreen = cinemaScreen;
         this.oldCamera = oldCamera;
+
+        // --- ORANGE TREES (large, on sides of cinema room) ---
+        // Room L2 center: -25, -25. Size: 15x15.
+        // Place trees on North and South sides
+
+        // North side orange tree (left when facing screen)
+        const orangeTreeNorth = this.createOrangeTree();
+        orangeTreeNorth.position.set(-25, 0, -31); // North side
+        orangeTreeNorth.scale.set(2, 2, 2); // Make it large
+        this.scene.add(orangeTreeNorth);
+
+        // South side orange tree (right when facing screen)
+        const orangeTreeSouth = this.createOrangeTree();
+        orangeTreeSouth.position.set(-25, 0, -19); // South side
+        orangeTreeSouth.scale.set(2, 2, 2); // Make it large
+        this.scene.add(orangeTreeSouth);
 
         // --- CINEMA CHAIRS (2 rows, 4 chairs each) ---
         const chairSpacingX = 2.0;
