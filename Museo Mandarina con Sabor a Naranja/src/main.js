@@ -486,8 +486,8 @@ document.addEventListener('click', () => {
 
                 player.sit(sitPos);
                 interactionMsg.textContent = ""; // Hide text
-                // Show hint to stand up?
-                const hint = document.getElementById('interaction-msg');
+                // Show hint to stand up
+                const hint = document.getElementById('interaction-message');
                 if (hint) {
                     hint.textContent = "SHIFT para levantarse";
                     hint.style.display = "block";
@@ -1530,7 +1530,8 @@ function playVHS(videoNumber) {
 
     if (world.cinemaScreen && world.cinemaScreen.screenMesh) {
         world.cinemaScreen.screenMesh.material.map = cinemaVideoTexture;
-        world.cinemaScreen.screenMesh.material.emissive.setHex(0x000000); // No emissive for clear video
+        world.cinemaScreen.screenMesh.material.emissive.setHex(0xFFFFFF);
+        world.cinemaScreen.screenMesh.material.emissiveIntensity = 0.2; // Slight glow for clarity
         world.cinemaScreen.screenMesh.material.needsUpdate = true;
     }
 
@@ -1559,6 +1560,7 @@ function stopCinema() {
     if (world.cinemaScreen && world.cinemaScreen.screenMesh) {
         world.cinemaScreen.screenMesh.material.map = null;
         world.cinemaScreen.screenMesh.material.emissive.setHex(0x000000); // No glow when off
+        world.cinemaScreen.screenMesh.material.emissiveIntensity = 0;
         world.cinemaScreen.screenMesh.material.color.setHex(0xFFFFFF);
         world.cinemaScreen.screenMesh.material.needsUpdate = true;
     }

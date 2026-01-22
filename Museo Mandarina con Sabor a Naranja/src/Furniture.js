@@ -2335,19 +2335,20 @@ export class Phone {
 }
 
 export class Chair {
-    constructor() {
+    constructor(color = 0x222222) {
         this.mesh = new THREE.Group();
         this.interactableMesh = null;
         this.seatHeight = 0.5; // Seat height from floor
         this.sitHeightOffset = 1.2; // Camera height when sitting (Seat + Body)
+        this.color = color;
         this.build();
     }
 
     build() {
-        const darkGrey = 0x222222;
+        const fabricColor = this.color;
         const chrome = 0xAAAAAA;
 
-        const fabricMat = new THREE.MeshStandardMaterial({ color: darkGrey, roughness: 0.9 });
+        const fabricMat = new THREE.MeshStandardMaterial({ color: fabricColor, roughness: 0.9 });
         const metalMat = new THREE.MeshStandardMaterial({ color: chrome, metalness: 0.8, roughness: 0.2 });
 
         // Seat (0.5m x 0.5m)
@@ -5871,7 +5872,7 @@ export class OldCamera {
         // Projector Light (initially off)
         this.projectorLight = new THREE.SpotLight(0xFFFFAA, 0, 15, Math.PI / 6, 0.5);
         this.projectorLight.position.set(0, 1.5, 0);
-        this.projectorLight.target.position.set(0, 1.5, -10);
+        this.projectorLight.target.position.set(0, 1.5, 10); // Point forward (+Z)
         this.mesh.add(this.projectorLight);
         this.mesh.add(this.projectorLight.target);
 

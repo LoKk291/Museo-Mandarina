@@ -395,8 +395,25 @@ export class Player {
     standUp() {
         if (!this.isSeated) return;
         this.isSeated = false;
-        // Move slightly forward or side to avoid clipping/stuck
-        this.camera.position.x += 0.5;
-        this.camera.position.y = this.height; // Reset height
+
+        // Reset height immediately
+        this.camera.position.y = this.height;
+
+        // Calculate a safe exit position: move BACK relative to where the camera is facing,
+        // but only on the XZ plane to avoid pushing into the floor/ceiling.
+        const forward = new THREE.Vector3();
+        this.camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
+
+        // Move back just enough to clear the current chair (0.9m)
+        // Previous 1.5m was too much and often pushed player into the row behind.
+        this.camera.position.addScaledVector(forward, -0.9);
+
+        // Final sanity check on ground height
+        const groundHeight = this.world ? this.world.getTerrainHeight(this.camera.position.x, this.camera.position.z) : 0;
+        if (this.camera.position.y < groundHeight + this.height) {
+            this.camera.position.y = groundHeight + this.height;
+        }
     }
 }

@@ -1569,6 +1569,36 @@ export class World {
         this.cinemaScreen = cinemaScreen;
         this.oldCamera = oldCamera;
 
+        // --- CINEMA CHAIRS (2 rows, 4 chairs each) ---
+        const chairSpacingX = 2.0;
+        const chairSpacingZ = 2.0;
+        const startX = -1.0; // Two rows: -1 and +1 relative to center
+        const startZ = -3.0; // Relative to room center (-25) -> global -28
+
+        const cinemaChairColor = 0x8B0000; // Deep Red
+
+        for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 4; col++) {
+                const chair = new Chair(cinemaChairColor);
+                const posX = startX + (row * chairSpacingX);
+                const posZ = startZ + (col * chairSpacingZ);
+
+                chair.setPosition(-25 + posX, 0, -25 + posZ);
+                chair.setRotation(Math.PI / 2); // Facing West (Screen)
+                this.scene.add(chair.mesh);
+                this.interactables.push(chair.interactableMesh);
+
+                // Add collision for each chair
+                const chairColl = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.7, 1.5, 0.7),
+                    new THREE.MeshBasicMaterial({ visible: false })
+                );
+                chairColl.position.set(-25 + posX, 0.75, -25 + posZ);
+                this.scene.add(chairColl);
+                this.collidables.push(chairColl);
+            }
+        }
+
         // Add Camera to interactables? User didn't ask, but good practice.
         // Since OldCamera is just a visual prop for now, we leave it.
         // Unless user wants to look through it? User said 'una camara estilo antiguo'.
