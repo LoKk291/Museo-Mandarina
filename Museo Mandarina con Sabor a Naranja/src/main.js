@@ -774,6 +774,7 @@ document.addEventListener('keydown', (e) => {
     if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && player.isSeated) {
         soundManager.play('chair_action');
         player.standUp();
+        player.lock(); // FORCE re-lock to ensure movement works
         // Clear message
         const msgEl = document.getElementById('interaction-message');
         if (msgEl) msgEl.style.display = 'none';
@@ -1496,6 +1497,7 @@ const clock = new THREE.Clock();
 
 // === VHS CINEMA SYSTEM ===
 function openVHSSelector() {
+    isModalOpen = true; // Set modal state
     player.unlock();
     const selector = document.getElementById('vhs-selector');
     selector.classList.remove('hidden');
@@ -1504,6 +1506,7 @@ function openVHSSelector() {
 function closeVHSSelector() {
     const selector = document.getElementById('vhs-selector');
     selector.classList.add('hidden');
+    isModalOpen = false; // Reset modal state
     player.lock();
 }
 
