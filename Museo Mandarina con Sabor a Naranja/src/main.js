@@ -1453,6 +1453,12 @@ function openModal(paintingData) {
         <p style="text-align: right; margin-top: 40px; font-style: italic;">${data.signature}</p>
     `;
 
+    // Apply Paper Design Style
+    const contentBox = document.querySelector('.letter-content');
+    if (contentBox) {
+        contentBox.className = 'letter-content paper-letter';
+    }
+
     // Show Overlay
     document.getElementById('letter-overlay').classList.remove('hidden');
 }
