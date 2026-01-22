@@ -525,21 +525,23 @@ export class World {
         canopy.castShadow = true;
         group.add(canopy);
 
-        // Orange fruits scattered in the canopy
-        const orangeCount = 15;
-        const orangeGeo = new THREE.SphereGeometry(0.15, 6, 6);
+        // Orange fruits - MUCH MORE VISIBLE
+        const orangeCount = 30; // Doubled from 15
+        const orangeGeo = new THREE.SphereGeometry(0.25, 8, 8); // Increased from 0.15
         const orangeMat = new THREE.MeshStandardMaterial({
-            color: 0xFF8C00, // Dark orange
-            roughness: 0.6,
-            metalness: 0.1
+            color: 0xFF8C00, // Bright orange
+            emissive: 0xFF6600, // Add glow for visibility
+            emissiveIntensity: 0.4,
+            roughness: 0.4,
+            metalness: 0.2
         });
 
         for (let i = 0; i < orangeCount; i++) {
             const orange = new THREE.Mesh(orangeGeo, orangeMat);
-            // Random position within canopy sphere
+            // Position on OUTER edge of canopy for better visibility
             const theta = Math.random() * Math.PI * 2;
             const phi = Math.random() * Math.PI;
-            const r = canopySize * 0.7 * Math.random();
+            const r = canopySize * (0.8 + Math.random() * 0.2); // Outer edge (80-100% of radius)
             orange.position.set(
                 r * Math.sin(phi) * Math.cos(theta),
                 trunkHeight + canopySize * 0.5 + r * Math.cos(phi),
@@ -1645,6 +1647,37 @@ export class World {
         // Store references for video playback
         this.cinemaScreen = cinemaScreen;
         this.oldCamera = oldCamera;
+
+        // --- MOVIE POSTERS (as textured planes next to camera) ---
+        const textureLoader = new THREE.TextureLoader();
+
+        // Left poster (Disney)
+        const posterLeftTexture = textureLoader.load('textures/poster_disney.png');
+        const posterLeftGeo = new THREE.PlaneGeometry(1.2, 1.8);
+        const posterLeftMat = new THREE.MeshStandardMaterial({
+            map: posterLeftTexture,
+            side: THREE.DoubleSide
+        });
+        const posterLeft = new THREE.Mesh(posterLeftGeo, posterLeftMat);
+        posterLeft.position.set(6.8, 1.5, -1.5); // East wall, left of camera
+        posterLeft.rotation.y = -Math.PI / 2; // Face West
+        posterLeft.castShadow = true;
+        posterLeft.receiveShadow = true;
+        roomL2.group.add(posterLeft);
+
+        // Right poster (Alice)
+        const posterRightTexture = textureLoader.load('textures/poster_alicia.jpg');
+        const posterRightGeo = new THREE.PlaneGeometry(1.2, 1.8);
+        const posterRightMat = new THREE.MeshStandardMaterial({
+            map: posterRightTexture,
+            side: THREE.DoubleSide
+        });
+        const posterRight = new THREE.Mesh(posterRightGeo, posterRightMat);
+        posterRight.position.set(6.8, 1.5, 1.5); // East wall, right of camera
+        posterRight.rotation.y = -Math.PI / 2; // Face West
+        posterRight.castShadow = true;
+        posterRight.receiveShadow = true;
+        roomL2.group.add(posterRight);
 
         // --- CINEMA CHAIRS (2 rows, 4 chairs each) ---
         const chairSpacingX = 2.0;
