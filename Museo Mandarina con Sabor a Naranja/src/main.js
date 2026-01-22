@@ -314,16 +314,18 @@ function showLetter(title, content, isSystem = false, customClass = null) {
     if (titleEl) titleEl.textContent = title;
     if (bodyEl) bodyEl.innerHTML = `<p>${content}</p>`;
 
-    // Apply System Style if needed
+    // Apply Design Style
     if (contentBox) {
-        contentBox.classList.remove('system-message');
-        contentBox.classList.remove('special-letter');
+        // Reset classes completely to avoid bleed-through
+        contentBox.className = 'letter-content';
 
         if (isSystem) {
             contentBox.classList.add('system-message');
-        }
-        if (customClass) {
+        } else if (customClass) {
             contentBox.classList.add(customClass);
+        } else {
+            // Default look is regular paper
+            contentBox.classList.add('paper-letter');
         }
     }
 

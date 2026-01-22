@@ -1048,18 +1048,23 @@ body {
 }
 
 .letter-content {
-    background: #fdfbf7;
-    /* Paper color */
-    width: 500px;
+    width: 600px;
     padding: 40px;
+    position: relative;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.paper-letter {
+    background: #fdfbf7;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     font-family: 'Courier New', Courier, monospace;
     color: #333;
-    position: relative;
     transform: rotate(-1deg);
+    border: 1px solid #dcdcdc;
 }
 
-.letter-content h2 {
+.paper-letter h2 {
     text-align: center;
     text-transform: uppercase;
     border-bottom: 2px solid #333;
@@ -1081,29 +1086,43 @@ body {
 }
 
 .system-message {
-    background: rgba(0, 0, 0, 0.6) !important;
-    color: #00ff00 !important;
-    border: 2px solid #00ff00;
-    box-shadow: 0 0 20px #00ff00 !important;
-    font-family: 'Courier New', monospace !important;
+    background: #0a0f0a !important;
+    color: #1aff1a !important;
+    border: 3px solid #1aff1a;
+    box-shadow: 0 0 30px rgba(26, 255, 26, 0.4) !important;
+    font-family: 'VT323', monospace !important;
     transform: none !important;
-    border-radius: 10px;
+    border-radius: 4px;
+    /* Retro Terminal look */
+    text-shadow: 0 0 5px #1aff1a;
 }
 
-.system-message h2,
-.system-message .date {
-    border-color: #00ff00 !important;
-    color: #00ff00 !important;
+.system-message h2 {
+    border-color: #1aff1a !important;
+    color: #1aff1a !important;
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.system-message p {
+    font-size: 1.4rem !important;
+    line-height: 1.4 !important;
+    color: #1aff1a !important;
 }
 
 .system-message button {
-    background: #00ff00 !important;
+    background: #1aff1a !important;
     color: #000 !important;
     border: none;
+    font-family: 'VT323', monospace !important;
+    font-size: 1.2rem;
 }
 
 .system-message button:hover {
-    background: #ccffcc !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 15px #1aff1a;
 }
 
 #close-letter {
