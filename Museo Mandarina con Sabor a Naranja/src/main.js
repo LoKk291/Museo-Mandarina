@@ -329,8 +329,8 @@ function showLetter(title, content, isSystem = false, customClass = null) {
         }
     }
 
-    // Add scroll for long love letter
-    if (bodyEl && title === "Perlas Traslúcidas") {
+    // Add scroll for long love letters
+    if (bodyEl && (title === "Perlas Traslúcidas" || title === "365 Días")) {
         bodyEl.style.maxHeight = '400px';
         bodyEl.style.overflowY = 'auto';
         bodyEl.style.paddingRight = '10px';
@@ -713,7 +713,28 @@ No confundas, mi amor, esta carta como algo triste, si no más bien como un agra
                 });
             } else if (hitObject.userData.painting) {
                 soundManager.play('click');
-                openModal(hitObject.userData.painting);
+                // Special case: Painting 18 shows anniversary letter
+                if (hitObject.userData.painting === 18) {
+                    const letterContent = `Cielo, amada mía, Giovana:<br><br>
+
+Hace un año y apenas unas horas decidimos comenzar este viaje. Un viaje hermoso, a veces complejo, pero sin dudas el más valiente y maravilloso en el que me he embarcado jamás.<br><br>
+
+Gracias por tanto amor en tan poco tiempo. Gracias por cada consuelo, por cada palabra suave que supo llegar cuando más la necesitaba. Y, sobre todo, gracias por tu paciencia, por creer en mí, por enseñarme que incluso un hombre simple puede transformarse cuando ama de verdad.<br><br>
+
+Con todo el corazón deseo que sigamos izando velas, que sigamos atravesando este mar juntos. Porque el amor no se mide en años, sino en caminos recorridos, y yo quiero recorrer con vos cada rincón del mundo y de nuestras propias almas.<br><br>
+
+Como escribí en otra carta, y como dice aquel vinilo en la sala de música: "Te puedo yo jurar ante un altar mi amor sincero". Y aquí estoy, con el alma abierta, esperando el día en que ese futuro que soñamos pueda volverse presente.<br><br>
+
+Jamás, en toda mi vida, sentí una fragancia tan dulce, ni un tacto tan suave, ni un descanso tan profundo como el que encontré en tus brazos desde que te conocí. Desde aquel 22 de enero en el que me dijiste "sí", mi mundo cambió para siempre.<br><br>
+
+Te amo, te amé y te amaré. Feliz Aniversario, amor mío.<br><br>
+
+<p style='text-align: right; margin-top: 20px;'>- Carlos David Vega Hernandez</p>
+<p style='text-align: right; font-style: italic;'>Tu Corazón</p>`;
+                    showLetter("365 Días", letterContent, false);
+                } else {
+                    openModal(hitObject.userData.painting);
+                }
             } else if (hitObject.userData.type === 'phone') {
                 soundManager.play('phone_takeoff');
                 openPhone();
