@@ -211,6 +211,14 @@ const cheats = {
                 overlay.classList.add('hidden');
             };
         }
+    },
+    // Win Cheat - Force System Reset and Victory
+    "win": () => {
+        if (world) {
+            world.resetSystems();
+            if (window.triggerWinVideo) window.triggerWinVideo();
+            soundManager.play('click');
+        }
     }
 };
 
@@ -725,7 +733,7 @@ document.addEventListener('click', () => {
                 soundManager.play('switch');
                 hitObject.userData.parentObj.toggle();
                 world.resetSystems();
-                showLetter("REINICIO DE SISTEMA", "ADMIN", "Sistemas de iluminación y seguridad restaurados. Animatronicos reiniciados.", true);
+                if (window.triggerWinVideo) window.triggerWinVideo();
             } else {
                 console.error("Objeto interactuable sin tipo o datos definidos:", hitObject);
                 // ...
@@ -2213,6 +2221,45 @@ window.triggerFoxyJumpscare = function () {
             console.log("Jumpscare skipped. Restarting game...");
             location.reload();
         };
+    }
+};
+
+window.triggerWinVideo = function () {
+    console.log("Triggering Victory Video...");
+
+    const overlay = document.getElementById('jumpscare-overlay');
+    const foxyVideo = document.getElementById('jumpscare-video');
+    const mangleVideo = document.getElementById('jumpscare-video2');
+    const winVideo = document.getElementById('win-video');
+
+    if (overlay && winVideo) {
+        // Stop any other jumpscare videos just in case
+        if (foxyVideo) { foxyVideo.pause(); foxyVideo.style.display = 'none'; }
+        if (mangleVideo) { mangleVideo.pause(); mangleVideo.style.display = 'none'; }
+
+        // Show win video
+        winVideo.style.display = 'block';
+
+        // Show overlay
+        overlay.classList.remove('hidden');
+
+        // Play video
+        winVideo.currentTime = 0;
+        winVideo.play().catch(e => console.error("Video play failed:", e));
+
+        const closeWinVideo = () => {
+            winVideo.pause();
+            overlay.classList.add('hidden');
+            winVideo.style.display = 'none';
+            // Show a success message after the video
+            showLetter("REINICIO EXITOSO", "¡Has vencido a Foxy! Los sistemas han vuelto a la normalidad.", true);
+        };
+
+        // When video ends, hide overlay
+        winVideo.onended = closeWinVideo;
+
+        // Also allow click to skip
+        overlay.onclick = closeWinVideo;
     }
 };
 

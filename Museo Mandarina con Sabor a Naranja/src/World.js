@@ -2673,6 +2673,7 @@ export class World {
 
         // 7. Show Reset Lever
         if (this.resetLever) {
+            this.placeResetLeverRandomly(); // Move to a random wall
             this.resetLever.mesh.visible = true;
             if (!this.interactables.includes(this.resetLever.interactableMesh)) {
                 this.interactables.push(this.resetLever.interactableMesh);
