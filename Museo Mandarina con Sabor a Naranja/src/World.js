@@ -2425,10 +2425,10 @@ export class World {
         if (this.isolatedRoom.paintings.length > 0) {
             const p18 = this.isolatedRoom.paintings[this.isolatedRoom.paintings.length - 1];
             p18.mesh.userData.painting.letterData = {
-                title: "Pelela Momento",
-                place: "Mi Casa de Alem",
-                body: "Mi veterinaria hermosa con mi gatita preciosa, se llevaron bien y encima Pelela se re mimoseaba, que nino todo.",
-                signature: "El Fotografo"
+                title: "Fotito del Mes 11",
+                place: "Sala Secreta",
+                body: "Fotito del mes 11, ahora es cuando tenemos que sacarnos una fotito para el mes 12, no te parece mi vida?",
+                signature: "Tu Amado"
             };
         }
 
