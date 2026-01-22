@@ -5723,17 +5723,18 @@ export class CinemaScreen {
     }
 
     build() {
-        // Simple box screen - guaranteed visible from all angles
+        // Cinema screen with better visibility
         const screenWidth = 6;
         const screenHeight = 3.375;
-        const screenDepth = 0.05;
+        const screenDepth = 0.2; // Increased from 0.05 for better visibility
 
         const screenGeo = new THREE.BoxGeometry(screenWidth, screenHeight, screenDepth);
         const screenMat = new THREE.MeshStandardMaterial({
-            color: 0xFFFFFF,
-            emissive: 0x000000,
-            roughness: 0.9,
-            metalness: 0
+            color: 0xEEEEEE,
+            emissive: 0x222222, // Slight glow to make it visible
+            emissiveIntensity: 0.3,
+            roughness: 0.7,
+            metalness: 0.1
         });
 
         this.screenMesh = new THREE.Mesh(screenGeo, screenMat);
@@ -5742,13 +5743,17 @@ export class CinemaScreen {
         this.screenMesh.receiveShadow = true;
         this.mesh.add(this.screenMesh);
 
-        // Black frame
-        const frameThickness = 0.2;
-        const frameMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
+        // Black frame (thicker and more visible)
+        const frameThickness = 0.3;
+        const frameMat = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            roughness: 0.8,
+            metalness: 0.2
+        });
 
         // Top
         const topFrame = new THREE.Mesh(
-            new THREE.BoxGeometry(screenWidth + frameThickness * 2, frameThickness, screenDepth),
+            new THREE.BoxGeometry(screenWidth + frameThickness * 2, frameThickness, screenDepth + 0.1),
             frameMat
         );
         topFrame.position.set(0, 2.5 + screenHeight / 2 + frameThickness / 2, 0);
@@ -5761,7 +5766,7 @@ export class CinemaScreen {
 
         // Left
         const leftFrame = new THREE.Mesh(
-            new THREE.BoxGeometry(frameThickness, screenHeight + frameThickness * 2, screenDepth),
+            new THREE.BoxGeometry(frameThickness, screenHeight + frameThickness * 2, screenDepth + 0.1),
             frameMat
         );
         leftFrame.position.set(-screenWidth / 2 - frameThickness / 2, 2.5, 0);

@@ -1547,10 +1547,10 @@ export class World {
         // --- CINEMA SETUP ---
         const cinemaScreen = new CinemaScreen();
         // Room L2 Size 15x15. Center relative to room group is 0,0.
-        // North Wall is at Z = -7.5.
-        // Place screen close to North Wall.
-        cinemaScreen.setPosition(-7.3, 0, 0); // West wall (left side of room)
-        cinemaScreen.setRotation(Math.PI / 2); // Face East 
+        // West Wall is at X = -7.5 (relative to room center).
+        // Place screen on West wall, slightly protruding into the room for visibility.
+        cinemaScreen.setPosition(-7.0, 0, 0); // West wall, 0.5 units into room
+        cinemaScreen.setRotation(Math.PI / 2); // Face East (into the room)
         roomL2.group.add(cinemaScreen.mesh);
 
         const oldCamera = new OldCamera();
