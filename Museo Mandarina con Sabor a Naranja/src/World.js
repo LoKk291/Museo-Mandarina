@@ -294,6 +294,32 @@ export class World {
 
         // --- WATERFALL AND LAKE ---
         this.createWaterFeatures();
+
+        // --- LARGE ORANGE TREES (Outside museum, on the sides) ---
+        // Museum is roughly centered around (0, 0)
+        // Place large orange trees on East and West sides
+
+        // West side orange trees (left side of museum)
+        const orangeTreeWest1 = this.createOrangeTree();
+        orangeTreeWest1.position.set(-45, 0, 0); // West side
+        orangeTreeWest1.scale.set(2.5, 2.5, 2.5); // Very large
+        this.scene.add(orangeTreeWest1);
+
+        const orangeTreeWest2 = this.createOrangeTree();
+        orangeTreeWest2.position.set(-45, 0, -20); // West side, further north
+        orangeTreeWest2.scale.set(2.5, 2.5, 2.5); // Very large
+        this.scene.add(orangeTreeWest2);
+
+        // East side orange trees (right side of museum)
+        const orangeTreeEast1 = this.createOrangeTree();
+        orangeTreeEast1.position.set(45, 0, 0); // East side
+        orangeTreeEast1.scale.set(2.5, 2.5, 2.5); // Very large
+        this.scene.add(orangeTreeEast1);
+
+        const orangeTreeEast2 = this.createOrangeTree();
+        orangeTreeEast2.position.set(45, 0, -20); // East side, further north
+        orangeTreeEast2.scale.set(2.5, 2.5, 2.5); // Very large
+        this.scene.add(orangeTreeEast2);
     }
 
     createStreetLights() {
@@ -1619,22 +1645,6 @@ export class World {
         // Store references for video playback
         this.cinemaScreen = cinemaScreen;
         this.oldCamera = oldCamera;
-
-        // --- ORANGE TREES (large, on sides of cinema room) ---
-        // Room L2 center: -25, -25. Size: 15x15.
-        // Place trees on North and South sides
-
-        // North side orange tree (left when facing screen)
-        const orangeTreeNorth = this.createOrangeTree();
-        orangeTreeNorth.position.set(-25, 0, -31); // North side
-        orangeTreeNorth.scale.set(2, 2, 2); // Make it large
-        this.scene.add(orangeTreeNorth);
-
-        // South side orange tree (right when facing screen)
-        const orangeTreeSouth = this.createOrangeTree();
-        orangeTreeSouth.position.set(-25, 0, -19); // South side
-        orangeTreeSouth.scale.set(2, 2, 2); // Make it large
-        this.scene.add(orangeTreeSouth);
 
         // --- CINEMA CHAIRS (2 rows, 4 chairs each) ---
         const chairSpacingX = 2.0;
